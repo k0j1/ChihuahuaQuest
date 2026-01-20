@@ -16,6 +16,7 @@ const App: React.FC = () => {
     timeLeft,
     mapData,
     playerPos,
+    cameraPos,
     targetPos,
     enemies,
     direction,
@@ -24,7 +25,6 @@ const App: React.FC = () => {
     collectedTreasures,
     isDigging,
     sysMessage,
-    openingChest,
     foundTreasure,
     isGeneratingTreasure,
     fps,
@@ -32,7 +32,8 @@ const App: React.FC = () => {
     resetGame,
     handleInteraction,
     handleDig,
-    closeTreasureDialog
+    closeTreasureDialog,
+    panCamera
   } = useGameEngine();
 
   // Screen Routing based on GameState
@@ -60,13 +61,14 @@ const App: React.FC = () => {
             <GameMap 
               tiles={mapData.tiles} 
               playerPos={playerPos} 
+              cameraPos={cameraPos}
               direction={direction}
               isMoving={isMoving}
               isDigging={isDigging}
               enemies={enemies}
               onInteract={handleInteraction}
               targetPos={targetPos}
-              openingChest={openingChest}
+              panCamera={panCamera}
             />
           )}
 

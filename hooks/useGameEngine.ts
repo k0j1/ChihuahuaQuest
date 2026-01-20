@@ -14,6 +14,7 @@ export const useGameEngine = () => {
   
   // Entities State
   const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
+  const [cameraPos, setCameraPos] = useState<Position>({ x: 0, y: 0 }); // Camera center position
   const [targetPos, setTargetPos] = useState<Position | null>(null); 
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   
@@ -26,10 +27,9 @@ export const useGameEngine = () => {
   const [isDigging, setIsDigging] = useState(false);
   const [sysMessage, setSysMessage] = useState<string | null>(null);
   
-  // Chest Minigame State
-  const [openingChest, setOpeningChest] = useState<{x: number, y: number, remaining: number} | null>(null);
+  // Treasure State
   const [foundTreasure, setFoundTreasure] = useState<Treasure | null>(null);
-  // Loading State for API
+  // Loading State for API / Animation
   const [isGeneratingTreasure, setIsGeneratingTreasure] = useState(false);
 
   // Debug State
@@ -37,6 +37,7 @@ export const useGameEngine = () => {
 
   // Refs for loop
   const playerPosRef = useRef<Position>({ x: 0, y: 0 });
+  const cameraPosRef = useRef<Position>({ x: 0, y: 0 });
   const targetPosRef = useRef<Position | null>(null);
   const enemiesRef = useRef<Enemy[]>([]); 
   const frameCountRef = useRef<number>(0);
@@ -86,6 +87,10 @@ export const useGameEngine = () => {
     
     setPlayerPos(startPos);
     playerPosRef.current = startPos;
+    
+    setCameraPos(startPos);
+    cameraPosRef.current = startPos;
+
     setTargetPos(null);
     targetPosRef.current = null;
     
@@ -98,7 +103,6 @@ export const useGameEngine = () => {
     setGameState(GameState.PLAYING);
     setSysMessage("マップをタップして移動、自分で穴掘り！");
     setTimeout(() => setSysMessage(null), 3000);
-    setOpeningChest(null);
     setFoundTreasure(null);
     setIsGeneratingTreasure(false);
   }, []);
@@ -163,77 +167,47 @@ export const useGameEngine = () => {
             return;
         }
 
-        // Update Map
+        // Update Map - Always turns to hole
         const newTiles = mapData.tiles.map(row => [...row]);
-        let newTreasureMap = mapData.treasureMap;
-
+        newTiles[tileY][tileX] = TileType.HOLE;
+        
+        // Check for Treasure
         if (mapData.treasureMap[tileY][tileX]) {
-            // Found Treasure! Mark it on map.
-            // Do NOT collect yet. User must tap it.
-            newTiles[tileY][tileX] = TileType.TREASURE_MARK;
-            setMapData({ tiles: newTiles, treasureMap: newTreasureMap }); 
-
-            // Remove from hidden map so it doesn't trigger again
-            newTreasureMap = mapData.treasureMap.map(row => [...row]);
+            // Found Treasure! 
+            // Remove from hidden map
+            const newTreasureMap = mapData.treasureMap.map(row => [...row]);
             newTreasureMap[tileY][tileX] = false;
             
-            setSysMessage("！！何か埋まっているワン！！");
-            setTimeout(() => setSysMessage(null), 2000);
+            // Update map state
+            setMapData({ tiles: newTiles, treasureMap: newTreasureMap }); 
+            
+            // Stop digging animation and start treasure generation
+            setIsDigging(false);
+            setIsGeneratingTreasure(true);
+
+            try {
+                const treasure = await generateTreasure();
+                setFoundTreasure(treasure);
+                setCollectedTreasures(prev => [...prev, treasure]);
+                setGold(prev => prev + treasure.value);
+                
+                // Show result dialog
+                setGameState(GameState.TREASURE_FOUND);
+            } catch (e) {
+                setGameState(GameState.PLAYING);
+                setSysMessage("...何かあったようだが消えてしまったワン");
+                setTimeout(() => setSysMessage(null), 1500);
+            } finally {
+                setIsGeneratingTreasure(false);
+            }
             
         } else {
             // Just a hole
-            newTiles[tileY][tileX] = TileType.HOLE;
             setMapData({ ...mapData, tiles: newTiles });
+            setIsDigging(false);
         }
 
-        setIsDigging(false);
     }, 300); // 300ms delay matches animation
-  };
-
-  const handleChestTap = async (tx: number, ty: number) => {
-    if (!mapData) return;
-
-    // Initialize tap counter if not started
-    if (!openingChest || openingChest.x !== tx || openingChest.y !== ty) {
-        const requiredTaps = Math.floor(Math.random() * 6) + 5; // 5 to 10
-        setOpeningChest({ x: tx, y: ty, remaining: requiredTaps - 1 });
-        return;
-    }
-
-    // Decrement
-    const newRemaining = openingChest.remaining - 1;
-    
-    if (newRemaining <= 0) {
-        // OPENED!
-        setOpeningChest(null);
-        
-        // Start Loading Animation (Pauses Timer via useEffect)
-        setIsGeneratingTreasure(true);
-
-        try {
-            const treasure = await generateTreasure();
-            setFoundTreasure(treasure);
-            setCollectedTreasures(prev => [...prev, treasure]);
-            setGold(prev => prev + treasure.value);
-            
-            // Show result dialog (This state also pauses timer)
-            setGameState(GameState.TREASURE_FOUND);
-
-            // Turn the chest into a hole
-            const newTiles = mapData.tiles.map(row => [...row]);
-            newTiles[ty][tx] = TileType.HOLE;
-            setMapData(prev => prev ? ({ ...prev, tiles: newTiles }) : null);
-
-        } catch (e) {
-            setGameState(GameState.PLAYING);
-            setSysMessage("...中身は空っぽだったワン");
-            setTimeout(() => setSysMessage(null), 1500);
-        } finally {
-            setIsGeneratingTreasure(false);
-        }
-    } else {
-        setOpeningChest({ ...openingChest, remaining: newRemaining });
-    }
   };
 
   const closeTreasureDialog = () => {
@@ -241,47 +215,56 @@ export const useGameEngine = () => {
       setGameState(GameState.PLAYING);
   };
 
-  // Handle Tap Interaction (Move or Dig or Chest)
-  const handleInteraction = useCallback((clientX: number, clientY: number) => {
-    // Allow tapping only when playing (treasure dialog blocks interactions via overlay)
-    // Also block interaction if generating treasure
-    if (gameState !== GameState.PLAYING || isGeneratingTreasure) return;
-    if (isDigging) return; // Ignore input while digging animation
+  // Manual Camera Pan
+  const panCamera = useCallback((deltaXPixels: number, deltaYPixels: number) => {
+    const deltaTilesX = deltaXPixels / GAME_CONFIG.TILE_SIZE;
+    const deltaTilesY = deltaYPixels / GAME_CONFIG.TILE_SIZE;
 
+    let newX = cameraPosRef.current.x - deltaTilesX;
+    let newY = cameraPosRef.current.y - deltaTilesY;
+
+    // Clamp to map bounds
+    const vpW = window.innerWidth / GAME_CONFIG.TILE_SIZE;
+    const vpH = window.innerHeight / GAME_CONFIG.TILE_SIZE;
+    
+    const minCamX = vpW / 2 - 0.5;
+    const maxCamX = GAME_CONFIG.MAP_WIDTH - vpW / 2 + 0.5;
+    const minCamY = vpH / 2 - 0.5;
+    const maxCamY = GAME_CONFIG.MAP_HEIGHT - vpH / 2 + 0.5;
+
+    if (GAME_CONFIG.MAP_WIDTH > vpW) {
+        newX = Math.max(minCamX, Math.min(maxCamX, newX));
+    } else {
+        newX = GAME_CONFIG.MAP_WIDTH / 2;
+    }
+    
+    if (GAME_CONFIG.MAP_HEIGHT > vpH) {
+        newY = Math.max(minCamY, Math.min(maxCamY, newY));
+    } else {
+        newY = GAME_CONFIG.MAP_HEIGHT / 2;
+    }
+
+    cameraPosRef.current = { x: newX, y: newY };
+    setCameraPos({ x: newX, y: newY });
+  }, []);
+
+  // Handle Tap Interaction (Move or Dig)
+  const handleInteraction = useCallback((clientX: number, clientY: number) => {
+    if (gameState !== GameState.PLAYING || isGeneratingTreasure) return;
+    if (isDigging) return;
+
+    // Adjust interaction coordinates based on Camera position
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
     
-    const dxPx = clientX - centerX;
-    const dyPx = clientY - centerY;
+    const worldXPx = clientX + (cameraPosRef.current.x * GAME_CONFIG.TILE_SIZE) - centerX;
+    const worldYPx = clientY + (cameraPosRef.current.y * GAME_CONFIG.TILE_SIZE) - centerY;
     
-    const dxTiles = dxPx / GAME_CONFIG.TILE_SIZE;
-    const dyTiles = dyPx / GAME_CONFIG.TILE_SIZE;
-    
-    // Exact tile clicked (Adjust for 0.5 center offset of player view)
-    const clickedTileX = Math.floor(playerPosRef.current.x + 0.5 + dxTiles);
-    const clickedTileY = Math.floor(playerPosRef.current.y + 0.5 + dyTiles);
-
-    // Check if clicked on a visible Treasure Mark
-    if (
-        clickedTileX >= 0 && clickedTileX < GAME_CONFIG.MAP_WIDTH &&
-        clickedTileY >= 0 && clickedTileY < GAME_CONFIG.MAP_HEIGHT &&
-        mapData?.tiles[clickedTileY][clickedTileX] === TileType.TREASURE_MARK
-    ) {
-        // Stop movement if any
-        setTargetPos(null);
-        targetPosRef.current = null;
-        setIsMoving(false);
-        
-        handleChestTap(clickedTileX, clickedTileY);
-        return;
-    }
-    
-    // Normal Move/Dig logic
-    const worldX = playerPosRef.current.x + dxTiles;
-    const worldY = playerPosRef.current.y + dyTiles;
+    const worldX = worldXPx / GAME_CONFIG.TILE_SIZE;
+    const worldY = worldYPx / GAME_CONFIG.TILE_SIZE;
     
     // Check if tap is close to player (Self-Tap for Digging)
-    const distToPlayer = Math.sqrt(dxTiles * dxTiles + dyTiles * dyTiles);
+    const distToPlayer = Math.sqrt(Math.pow(worldX - playerPosRef.current.x, 2) + Math.pow(worldY - playerPosRef.current.y, 2));
     
     if (distToPlayer < 0.8) {
         handleDig();
@@ -294,10 +277,8 @@ export const useGameEngine = () => {
         setTargetPos(newTarget);
         targetPosRef.current = newTarget;
         setIsMoving(true);
-        // Clear chest interaction if moving away
-        setOpeningChest(null);
     }
-  }, [gameState, mapData, isDigging, openingChest, isGeneratingTreasure]);
+  }, [gameState, isDigging, isGeneratingTreasure]);
 
   // Game Loop
   const update = useCallback((time: number) => {
@@ -315,7 +296,9 @@ export const useGameEngine = () => {
     }
 
     // --- Player Movement Logic (Tap to Move) ---
-    // Stop moving if generating treasure
+    // Only move camera automatically if player is moving
+    const isPlayerMoving = !!targetPosRef.current;
+
     if (targetPosRef.current && !isDigging && !isGeneratingTreasure) {
         const dx = targetPosRef.current.x - playerPosRef.current.x;
         const dy = targetPosRef.current.y - playerPosRef.current.y;
@@ -343,7 +326,7 @@ export const useGameEngine = () => {
 
             const checkCollision = (x: number, y: number) => {
                 if (!mapData) return true;
-                const tx = Math.floor(x + 0.5);
+                const tx = Math.floor(x + 0.5); // Center check
                 const ty = Math.floor(y + 0.5);
                 if (tx < 0 || tx >= GAME_CONFIG.MAP_WIDTH || ty < 0 || ty >= GAME_CONFIG.MAP_HEIGHT) return true;
                 const tile = mapData.tiles[ty][tx];
@@ -370,8 +353,48 @@ export const useGameEngine = () => {
         }
     }
 
+    // --- Camera Update (Auto Follow / Deadzone Logic) ---
+    if (isPlayerMoving) {
+        const vpW = window.innerWidth / GAME_CONFIG.TILE_SIZE;
+        const vpH = window.innerHeight / GAME_CONFIG.TILE_SIZE;
+        
+        const marginX = Math.min(3, vpW * 0.25);
+        const marginY = Math.min(4, vpH * 0.25);
+        
+        const thresholdX = (vpW / 2) - marginX;
+        const thresholdY = (vpH / 2) - marginY;
+
+        let newCamX = cameraPosRef.current.x;
+        let newCamY = cameraPosRef.current.y;
+        
+        const diffX = playerPosRef.current.x - newCamX;
+        const diffY = playerPosRef.current.y - newCamY;
+        
+        if (diffX > thresholdX) newCamX += (diffX - thresholdX);
+        if (diffX < -thresholdX) newCamX += (diffX + thresholdX);
+        
+        if (diffY > thresholdY) newCamY += (diffY - thresholdY);
+        if (diffY < -thresholdY) newCamY += (diffY + thresholdY);
+        
+        // Clamp
+        const minCamX = vpW / 2 - 0.5;
+        const maxCamX = GAME_CONFIG.MAP_WIDTH - vpW / 2 + 0.5;
+        const minCamY = vpH / 2 - 0.5;
+        const maxCamY = GAME_CONFIG.MAP_HEIGHT - vpH / 2 + 0.5;
+
+        if (GAME_CONFIG.MAP_WIDTH > vpW) {
+            newCamX = Math.max(minCamX, Math.min(maxCamX, newCamX));
+        }
+        if (GAME_CONFIG.MAP_HEIGHT > vpH) {
+            newCamY = Math.max(minCamY, Math.min(maxCamY, newCamY));
+        }
+
+        cameraPosRef.current = { x: newCamX, y: newCamY };
+        setCameraPos({ x: newCamX, y: newCamY });
+    }
+
+
     // --- Enemy Logic ---
-    // Pause enemies if generating treasure
     if (mapData && !isGeneratingTreasure) {
         let currentEnemies = [...enemiesRef.current];
         let tilesChanged = false;
@@ -472,6 +495,7 @@ export const useGameEngine = () => {
     timeLeft,
     mapData,
     playerPos,
+    cameraPos,
     targetPos,
     enemies,
     direction,
@@ -480,7 +504,6 @@ export const useGameEngine = () => {
     collectedTreasures,
     isDigging,
     sysMessage,
-    openingChest,
     foundTreasure,
     isGeneratingTreasure,
     fps,
@@ -488,6 +511,7 @@ export const useGameEngine = () => {
     resetGame,
     handleInteraction,
     handleDig,
-    closeTreasureDialog
+    closeTreasureDialog,
+    panCamera
   };
 };

@@ -1,61 +1,68 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { TileType, Position, Direction, Enemy as EnemyType } from '../types';
 import { GAME_CONFIG } from '../constants';
 import Chihuahua from './Chihuahua';
 import Enemy from './Enemy';
-import { X, Hand } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface GameMapProps {
   tiles: TileType[][];
   playerPos: Position;
+  cameraPos: Position;
   direction: Direction;
   isMoving: boolean;
   isDigging: boolean;
   enemies: EnemyType[];
-  onInteract?: (clientX: number, clientY: number) => void;
+  onInteract: (clientX: number, clientY: number) => void;
   targetPos: Position | null;
-  openingChest?: { x: number, y: number, remaining: number } | null;
+  panCamera: (dx: number, dy: number) => void;
 }
 
 const GameMap: React.FC<GameMapProps> = ({ 
     tiles, 
     playerPos, 
+    cameraPos,
     direction, 
     isMoving, 
     isDigging, 
     enemies, 
     onInteract,
     targetPos,
-    openingChest
+    panCamera
 }) => {
   const tileSize = GAME_CONFIG.TILE_SIZE;
-  
-  // Calculate viewport offset to keep player centered
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Drag State Refs
+  const dragRef = useRef({
+      isDown: false,
+      isDragging: false,
+      startX: 0,
+      startY: 0,
+      lastX: 0,
+      lastY: 0,
+      isMultiTouch: false
+  });
+
+  // Calculate viewport based on CAMERA position
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
 
-  // Viewport Culling Calculations
+  // Viewport Culling
   const viewportWidthTiles = Math.ceil(window.innerWidth / tileSize);
   const viewportHeightTiles = Math.ceil(window.innerHeight / tileSize);
-  
   const buffer = 2; 
   
-  const startX = Math.max(0, Math.floor(playerPos.x - viewportWidthTiles / 2) - buffer);
-  const endX = Math.min(GAME_CONFIG.MAP_WIDTH, Math.ceil(playerPos.x + viewportWidthTiles / 2) + buffer);
-  
-  const startY = Math.max(0, Math.floor(playerPos.y - viewportHeightTiles / 2) - buffer);
-  const endY = Math.min(GAME_CONFIG.MAP_HEIGHT, Math.ceil(playerPos.y + viewportHeightTiles / 2) + buffer);
+  const startX = Math.max(0, Math.floor(cameraPos.x - viewportWidthTiles / 2) - buffer);
+  const endX = Math.min(GAME_CONFIG.MAP_WIDTH, Math.ceil(cameraPos.x + viewportWidthTiles / 2) + buffer);
+  const startY = Math.max(0, Math.floor(cameraPos.y - viewportHeightTiles / 2) - buffer);
+  const endY = Math.min(GAME_CONFIG.MAP_HEIGHT, Math.ceil(cameraPos.y + viewportHeightTiles / 2) + buffer);
 
-  // Generate only visible tiles
   const visibleTiles = useMemo(() => {
     const renderedTiles = [];
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
-        renderedTiles.push({
-          x,
-          y,
-          type: tiles[y][x]
-        });
+        renderedTiles.push({ x, y, type: tiles[y][x] });
       }
     }
     return renderedTiles;
@@ -63,72 +70,140 @@ const GameMap: React.FC<GameMapProps> = ({
 
   const mapContainerStyle = {
     transform: `translate3d(
-      ${-playerPos.x * tileSize + centerX - tileSize / 2}px, 
-      ${-playerPos.y * tileSize + centerY - tileSize / 2}px, 
+      ${-cameraPos.x * tileSize + centerX - tileSize / 2}px, 
+      ${-cameraPos.y * tileSize + centerY - tileSize / 2}px, 
       0
     )`,
   };
 
-  const getTileClass = (type: TileType, x: number, y: number) => {
-    let base = '';
+  const getTileClass = (type: TileType) => {
     switch(type) {
-      case TileType.GRASS: base = 'tile-grass'; break;
-      case TileType.DIRT: base = 'tile-dirt'; break;
-      case TileType.WATER: base = 'tile-water'; break;
-      case TileType.ROCK: base = 'tile-rock'; break;
-      case TileType.SAND: base = 'tile-sand'; break;
-      case TileType.HOLE: base = 'tile-hole'; break;
-      case TileType.TREASURE_MARK: base = 'tile-treasure-mark'; break;
-      default: base = '';
+      case TileType.GRASS: return 'tile-grass';
+      case TileType.DIRT: return 'tile-dirt';
+      case TileType.WATER: return 'tile-water';
+      case TileType.ROCK: return 'tile-rock';
+      case TileType.SAND: return 'tile-sand';
+      case TileType.HOLE: return 'tile-hole';
+      case TileType.TREASURE_MARK: return 'tile-treasure-mark';
+      default: return '';
     }
-    
-    // Add shake animation if this is the chest currently being opened
-    if (openingChest && openingChest.x === x && openingChest.y === y) {
-        return `${base} animate-shake`;
-    }
-    return base;
   };
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-      if (onInteract) {
-          onInteract(e.clientX, e.clientY);
+  // --- Event Handling Implementation ---
+  
+  const handleStart = useCallback((clientX: number, clientY: number, isMulti: boolean) => {
+      dragRef.current = {
+          isDown: true,
+          isDragging: isMulti, // If multi-touch, start dragging immediately
+          startX: clientX,
+          startY: clientY,
+          lastX: clientX,
+          lastY: clientY,
+          isMultiTouch: isMulti
+      };
+  }, []);
+
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+      if (!dragRef.current.isDown) return;
+
+      const dx = clientX - dragRef.current.lastX;
+      const dy = clientY - dragRef.current.lastY;
+
+      // Check threshold if not yet dragging
+      if (!dragRef.current.isDragging) {
+          const totalDx = clientX - dragRef.current.startX;
+          const totalDy = clientY - dragRef.current.startY;
+          if (Math.sqrt(totalDx * totalDx + totalDy * totalDy) > 10) {
+              dragRef.current.isDragging = true;
+          }
       }
+
+      if (dragRef.current.isDragging) {
+          panCamera(dx, dy);
+      }
+
+      dragRef.current.lastX = clientX;
+      dragRef.current.lastY = clientY;
+  }, [panCamera]);
+
+  const handleEnd = useCallback(() => {
+      if (dragRef.current.isDown && !dragRef.current.isDragging) {
+          // Tap detected
+          onInteract(dragRef.current.startX, dragRef.current.startY);
+      }
+      dragRef.current.isDown = false;
+      dragRef.current.isDragging = false;
+      dragRef.current.isMultiTouch = false;
   }, [onInteract]);
+
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+        const isMulti = e.touches.length >= 2;
+        handleStart(e.touches[0].clientX, e.touches[0].clientY, isMulti);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+        if (e.touches.length === 0) {
+            handleEnd();
+        }
+    };
+
+    const onMouseDown = (e: MouseEvent) => {
+        handleStart(e.clientX, e.clientY, false);
+    };
+    const onMouseMove = (e: MouseEvent) => {
+        handleMove(e.clientX, e.clientY);
+    };
+    const onMouseUp = () => {
+        handleEnd();
+    };
+    const onMouseLeave = () => {
+        dragRef.current.isDown = false;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mousemove', onMouseMove);
+    el.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('mouseleave', onMouseLeave);
+
+    return () => {
+        el.removeEventListener('touchstart', onTouchStart);
+        el.removeEventListener('touchmove', onTouchMove);
+        el.removeEventListener('touchend', onTouchEnd);
+        el.removeEventListener('mousedown', onMouseDown);
+        el.removeEventListener('mousemove', onMouseMove);
+        el.removeEventListener('mouseup', onMouseUp);
+        el.removeEventListener('mouseleave', onMouseLeave);
+    };
+  }, [handleStart, handleMove, handleEnd]);
+
 
   return (
     <div 
-        className="absolute inset-0 overflow-hidden bg-black"
-        onPointerDown={handlePointerDown}
+        ref={containerRef}
+        className="absolute inset-0 overflow-hidden bg-black touch-none"
     >
-      <style>{`
-        @keyframes shake {
-          0% { transform: translate(1px, 1px) rotate(0deg); }
-          10% { transform: translate(-1px, -2px) rotate(-1deg); }
-          20% { transform: translate(-3px, 0px) rotate(1deg); }
-          30% { transform: translate(3px, 2px) rotate(0deg); }
-          40% { transform: translate(1px, -1px) rotate(1deg); }
-          50% { transform: translate(-1px, 2px) rotate(-1deg); }
-          60% { transform: translate(-3px, 1px) rotate(0deg); }
-          70% { transform: translate(3px, 1px) rotate(-1deg); }
-          80% { transform: translate(-1px, -1px) rotate(1deg); }
-          90% { transform: translate(1px, 2px) rotate(0deg); }
-          100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .animate-shake {
-          animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
-        }
-      `}</style>
-
-      {/* Map Container - Moved by transform */}
+      {/* Map Container */}
       <div 
         className="absolute top-0 left-0 map-container"
         style={mapContainerStyle}
       >
-        {/* Render visible tiles using absolute positioning relative to the map container */}
         {visibleTiles.map((tile) => (
           <div
             key={`${tile.x}-${tile.y}`}
-            className={`absolute ${getTileClass(tile.type, tile.x, tile.y)}`}
+            className={`absolute ${getTileClass(tile.type)}`}
             style={{
               width: tileSize,
               height: tileSize,
@@ -136,26 +211,12 @@ const GameMap: React.FC<GameMapProps> = ({
               top: tile.y * tileSize,
             }}
           >
-            {/* Minimal Decor */}
             {tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0) && (
                 <div className="absolute bottom-1 right-1 w-1 h-1 bg-green-200 opacity-40"></div>
-            )}
-            
-            {/* Chest Tap UI Overlay */}
-            {openingChest && openingChest.x === tile.x && openingChest.y === tile.y && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-red-600 font-bold text-lg animate-bounce drop-shadow-md bg-white/80 px-1 rounded">
-                        TAP!
-                    </span>
-                    <span className="text-white font-black text-sm drop-shadow-md">
-                        {openingChest.remaining}
-                    </span>
-                </div>
             )}
           </div>
         ))}
 
-        {/* Target Cursor (Mark X) */}
         {targetPos && (
              <div 
                 className="absolute text-red-500 animate-pulse pointer-events-none z-10"
@@ -164,7 +225,7 @@ const GameMap: React.FC<GameMapProps> = ({
                     top: targetPos.y * tileSize,
                     width: tileSize,
                     height: tileSize,
-                    transform: 'translate(0, 0)', // Aligned to tile
+                    transform: 'translate(0, 0)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -175,7 +236,6 @@ const GameMap: React.FC<GameMapProps> = ({
              </div>
         )}
 
-        {/* Enemies Layer */}
         {enemies.map((enemy) => {
           if (enemy.x < startX || enemy.x > endX || enemy.y < startY || enemy.y > endY) {
             return null;
@@ -194,20 +254,18 @@ const GameMap: React.FC<GameMapProps> = ({
             </div>
           );
         })}
-      </div>
 
-      {/* Player Layer - Always centered on screen */}
-      <div 
-        className="absolute z-20 pointer-events-none"
-        style={{
-          width: tileSize,
-          height: tileSize,
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
-      >
-        <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} />
+        <div 
+          className="absolute z-20 pointer-events-none transition-transform duration-100 linear will-change-transform"
+          style={{
+            width: tileSize,
+            height: tileSize,
+            transform: `translate3d(${playerPos.x * tileSize}px, ${playerPos.y * tileSize}px, 0)`
+          }}
+        >
+          <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} />
+        </div>
+
       </div>
     </div>
   );
