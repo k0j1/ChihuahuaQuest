@@ -1,6 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Treasure } from "../types";
 
+// The API key must be obtained from process.env.API_KEY as per guidelines.
+// We assume it is pre-configured and valid.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Using a specific model suitable for creative text generation
