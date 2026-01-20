@@ -32,9 +32,6 @@ jobs:
         
       - name: Build
         run: npm run build
-        env:
-          # GitHub SecretsからAPIキーを環境変数として注入
-          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
