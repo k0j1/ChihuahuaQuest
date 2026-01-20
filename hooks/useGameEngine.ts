@@ -41,7 +41,7 @@ export const useGameEngine = () => {
   const enemiesRef = useRef<Enemy[]>([]); 
   const frameCountRef = useRef<number>(0);
   const lastFpsTimeRef = useRef<number>(0);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(0);
 
   // Spawn Enemy Helper with weighted random types
   const spawnEnemy = (count: number, currentTiles: TileType[][], playerP: Position): Enemy[] => {
