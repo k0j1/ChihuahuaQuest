@@ -71,6 +71,7 @@ const App: React.FC = () => {
 
     case GameState.PLAYING:
     case GameState.TREASURE_FOUND:
+    case GameState.DYING: // Render Game Map during Dying Animation
       return (
         <div className="relative w-screen h-screen bg-black overflow-hidden select-none">
           
@@ -87,6 +88,7 @@ const App: React.FC = () => {
               targetPos={targetPos}
               panCamera={panCamera}
               isPendingDig={isPendingDig}
+              isDefeated={gameState === GameState.DYING}
             />
           )}
 

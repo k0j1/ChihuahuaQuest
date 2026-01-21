@@ -2,6 +2,7 @@
 export enum GameState {
   TITLE = 'TITLE',
   PLAYING = 'PLAYING',
+  DYING = 'DYING', // Animation state before Game Over
   TREASURE_FOUND = 'TREASURE_FOUND',
   GAME_OVER = 'GAME_OVER',
   TIME_UP = 'TIME_UP',

@@ -17,6 +17,7 @@ interface GameMapProps {
   targetPos: Position | null;
   panCamera: (dx: number, dy: number) => void;
   isPendingDig?: boolean;
+  isDefeated?: boolean;
 }
 
 const GameMap: React.FC<GameMapProps> = ({ 
@@ -30,7 +31,8 @@ const GameMap: React.FC<GameMapProps> = ({
     onInteract,
     targetPos,
     panCamera,
-    isPendingDig = false
+    isPendingDig = false,
+    isDefeated = false
 }) => {
   const tileSize = GAME_CONFIG.TILE_SIZE;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,6 +96,9 @@ const GameMap: React.FC<GameMapProps> = ({
   // --- Event Handling Implementation ---
   
   const handleStart = useCallback((clientX: number, clientY: number, isMulti: boolean) => {
+      // Disable interaction if defeated
+      if (isDefeated) return;
+
       dragRef.current = {
           isDown: true,
           isDragging: isMulti, // If multi-touch, start dragging immediately
@@ -103,7 +108,7 @@ const GameMap: React.FC<GameMapProps> = ({
           lastY: clientY,
           isMultiTouch: isMulti
       };
-  }, []);
+  }, [isDefeated]);
 
   const handleMove = useCallback((clientX: number, clientY: number) => {
       if (!dragRef.current.isDown) return;
@@ -269,10 +274,28 @@ const GameMap: React.FC<GameMapProps> = ({
             transform: `translate3d(${playerPos.x * tileSize}px, ${playerPos.y * tileSize}px, 0)`
           }}
         >
-          <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} />
+          <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} isDefeated={isDefeated} />
         </div>
 
       </div>
+
+      {/* Game Over Text Overlay */}
+      {isDefeated && (
+          <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-black/40 animate-fade-in-slow">
+              <h1 className="text-6xl md:text-8xl font-bold text-red-600 pixel-text-shadow tracking-tighter animate-bounce-in">
+                  GAME OVER
+              </h1>
+              <style>{`
+                  @keyframes fade-in-slow {
+                      0% { opacity: 0; }
+                      100% { opacity: 1; }
+                  }
+                  .animate-fade-in-slow {
+                      animation: fade-in-slow 1s ease-out forwards;
+                  }
+              `}</style>
+          </div>
+      )}
     </div>
   );
 };

@@ -5,12 +5,15 @@ interface ChihuahuaProps {
   direction: Direction;
   isMoving: boolean;
   isDigging: boolean;
+  isDefeated?: boolean;
 }
 
-const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging }) => {
+const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, isDefeated = false }) => {
   // Determine animation class
   let animationClass = "";
-  if (isDigging) {
+  if (isDefeated) {
+      animationClass = "animate-defeat";
+  } else if (isDigging) {
     animationClass = "animate-dig";
   } else if (isMoving) {
     animationClass = "animate-bounce-short";
@@ -37,6 +40,16 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging })
         }
         .animate-dig {
           animation: dig 0.2s infinite;
+        }
+
+        @keyframes defeat {
+            0% { transform: scale(1) rotate(0deg); filter: grayscale(0%); }
+            20% { transform: scale(1.3) rotate(-20deg); filter: grayscale(0%); }
+            50% { transform: scale(1.0) rotate(180deg); filter: grayscale(50%); }
+            100% { transform: scale(0.8) rotate(360deg) translateY(10px); opacity: 0.6; filter: grayscale(100%); }
+        }
+        .animate-defeat {
+            animation: defeat 1.5s forwards ease-in-out;
         }
         
         @keyframes throw-left {
@@ -67,16 +80,25 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging })
 
       {/* Sprite Container */}
       <div className={`w-10 h-10 relative transition-transform duration-100 z-10 ${
-        direction === Direction.LEFT ? 'scale-x-[-1]' : ''
+        direction === Direction.LEFT && !isDefeated ? 'scale-x-[-1]' : ''
       }`}>
         {/* Head */}
         <div className="absolute top-1 left-2 w-6 h-5 bg-yellow-200 pixel-corners">
           {/* Ears */}
           <div className="absolute -top-2 -left-1 w-2 h-3 bg-yellow-700"></div>
           <div className="absolute -top-2 right-0 w-2 h-3 bg-yellow-700"></div>
-          {/* Eyes */}
-          <div className="absolute top-2 left-1 w-1 h-1 bg-black"></div>
-          <div className="absolute top-2 right-1 w-1 h-1 bg-black"></div>
+          {/* Eyes (Change to X when defeated) */}
+          {isDefeated ? (
+             <>
+                <div className="absolute top-2 left-1 text-[8px] leading-none font-bold text-black">X</div>
+                <div className="absolute top-2 right-1 text-[8px] leading-none font-bold text-black">X</div>
+             </>
+          ) : (
+             <>
+                <div className="absolute top-2 left-1 w-1 h-1 bg-black"></div>
+                <div className="absolute top-2 right-1 w-1 h-1 bg-black"></div>
+             </>
+          )}
           {/* Nose */}
           <div className="absolute top-3 left-2.5 w-1 h-1 bg-black"></div>
         </div>

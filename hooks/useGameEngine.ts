@@ -340,6 +340,13 @@ export const useGameEngine = () => {
 
   // Game Loop
   const update = useCallback((time: number) => {
+    // If we are DYING, just render loop (camera updates etc if needed), but skip physics
+    if (gameState === GameState.DYING) {
+        // Just in case we want to render animations, we request frame but do no logic
+        animationFrameRef.current = requestAnimationFrame(update);
+        return;
+    }
+
     if (gameState !== GameState.PLAYING) {
       animationFrameRef.current = requestAnimationFrame(update);
       return;
@@ -497,7 +504,6 @@ export const useGameEngine = () => {
                     setTimeout(() => setSysMessage(null), 1000);
                     
                     // --- EMERGENCY UNSTUCK LOGIC ---
-                    // If player is on the exact tile that just turned to rock, move them!
                     const px = Math.round(playerPosRef.current.x);
                     const py = Math.round(playerPosRef.current.y);
                     if (px === tx && py === ty) {
@@ -517,7 +523,6 @@ export const useGameEngine = () => {
                         if (safeSpot) {
                             playerPosRef.current = { x: safeSpot.x, y: safeSpot.y };
                             setPlayerPos({ x: safeSpot.x, y: safeSpot.y });
-                            // Stop current movement target to avoid confusion
                             targetPosRef.current = null;
                             setTargetPos(null);
                             setIsMoving(false);
@@ -537,8 +542,20 @@ export const useGameEngine = () => {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 0.6) { 
-                setGameState(GameState.GAME_OVER);
-                return true;
+                // HIT! Enter DYING state instead of GAME_OVER directly
+                setGameState(GameState.DYING);
+                
+                // Stop movement
+                setIsMoving(false);
+                setTargetPos(null);
+                targetPosRef.current = null;
+                
+                // Transition to results after animation
+                setTimeout(() => {
+                    setGameState(GameState.GAME_OVER);
+                }, 2500);
+
+                return true; 
             }
 
             // 3. Movement
