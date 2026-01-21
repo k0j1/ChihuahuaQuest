@@ -3,7 +3,7 @@ import { TileType, Position, Direction, Enemy as EnemyType } from '../types';
 import { GAME_CONFIG } from '../constants';
 import Chihuahua from './Chihuahua';
 import Enemy from './Enemy';
-import { X } from 'lucide-react';
+import { X, Shovel } from 'lucide-react';
 
 interface GameMapProps {
   tiles: TileType[][];
@@ -16,6 +16,7 @@ interface GameMapProps {
   onInteract: (clientX: number, clientY: number) => void;
   targetPos: Position | null;
   panCamera: (dx: number, dy: number) => void;
+  isPendingDig?: boolean;
 }
 
 const GameMap: React.FC<GameMapProps> = ({ 
@@ -28,7 +29,8 @@ const GameMap: React.FC<GameMapProps> = ({
     enemies, 
     onInteract,
     targetPos,
-    panCamera
+    panCamera,
+    isPendingDig = false
 }) => {
   const tileSize = GAME_CONFIG.TILE_SIZE;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -219,7 +221,7 @@ const GameMap: React.FC<GameMapProps> = ({
 
         {targetPos && (
              <div 
-                className="absolute text-red-500 animate-pulse pointer-events-none z-10"
+                className={`absolute animate-pulse pointer-events-none z-10 ${isPendingDig ? 'text-yellow-400' : 'text-red-500'}`}
                 style={{
                     left: targetPos.x * tileSize,
                     top: targetPos.y * tileSize,
@@ -229,10 +231,14 @@ const GameMap: React.FC<GameMapProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    opacity: 0.7
+                    opacity: 0.9
                 }}
              >
-                <X size={32} className="drop-shadow-md" />
+                {isPendingDig ? (
+                    <Shovel size={32} className="drop-shadow-md animate-bounce" />
+                ) : (
+                    <X size={32} className="drop-shadow-md" />
+                )}
              </div>
         )}
 

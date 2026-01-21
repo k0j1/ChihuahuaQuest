@@ -9,6 +9,7 @@ import MiniMap from './components/MiniMap';
 import TreasureDialog from './components/TreasureDialog';
 import TitleScreen from './components/screens/TitleScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
+import TreasureBookScreen from './components/screens/TreasureBookScreen';
 
 const App: React.FC = () => {
   const {
@@ -28,8 +29,11 @@ const App: React.FC = () => {
     foundTreasure,
     isGeneratingTreasure,
     fps,
+    discoveredCatalogIds,
+    isPendingDig,
     startGame,
     resetGame,
+    openTreasureBook,
     handleInteraction,
     handleDig,
     closeTreasureDialog,
@@ -39,7 +43,20 @@ const App: React.FC = () => {
   // Screen Routing based on GameState
   switch (gameState) {
     case GameState.TITLE:
-      return <TitleScreen onStart={startGame} />;
+      return (
+        <TitleScreen 
+            onStart={startGame} 
+            onOpenBook={openTreasureBook}
+        />
+      );
+
+    case GameState.TREASURE_BOOK:
+      return (
+        <TreasureBookScreen 
+            discoveredIds={discoveredCatalogIds} 
+            onBack={resetGame} 
+        />
+      );
 
     case GameState.GAME_OVER:
     case GameState.TIME_UP:
@@ -69,6 +86,7 @@ const App: React.FC = () => {
               onInteract={handleInteraction}
               targetPos={targetPos}
               panCamera={panCamera}
+              isPendingDig={isPendingDig}
             />
           )}
 

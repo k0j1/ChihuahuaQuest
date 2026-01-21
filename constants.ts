@@ -44,10 +44,10 @@ export const ENEMY_STATS = {
     flying: false,
     ghost: false,
   },
-  BAT: {
-    speed: 0.05, // Fast
-    range: 7, // Smaller detection range (ambush)
-    flying: true, // Ignores terrain hazards
+  SNAKE: {
+    speed: 0.035, // Medium speed
+    range: 12, 
+    flying: false, // Falls in holes
     ghost: false,
   },
   GHOST: {
@@ -60,4 +60,64 @@ export const ENEMY_STATS = {
 
 export const SPRITE_CONFIG = {
   FRAME_RATE: 10, // Animation speed
+};
+
+// --- Rarity System ---
+
+export interface RarityDef {
+  stars: number;
+  label: string;
+  colorClass: string;
+  bgClass: string;
+  borderClass: string;
+  shadowClass: string;
+}
+
+export const getRarity = (value: number): RarityDef => {
+  if (value >= 1000) {
+    return { 
+      stars: 5, 
+      label: "LEGENDARY", 
+      colorClass: "text-yellow-400", 
+      bgClass: "bg-gradient-to-br from-yellow-900 to-yellow-600",
+      borderClass: "border-yellow-300",
+      shadowClass: "shadow-yellow-500/50"
+    };
+  } else if (value >= 300) {
+    return { 
+      stars: 4, 
+      label: "EPIC", 
+      colorClass: "text-purple-400", 
+      bgClass: "bg-gradient-to-br from-purple-900 to-purple-600",
+      borderClass: "border-purple-300",
+      shadowClass: "shadow-purple-500/50"
+    };
+  } else if (value >= 100) {
+    return { 
+      stars: 3, 
+      label: "RARE", 
+      colorClass: "text-blue-400", 
+      bgClass: "bg-gradient-to-br from-blue-900 to-blue-600",
+      borderClass: "border-blue-300",
+      shadowClass: "shadow-blue-500/50"
+    };
+  } else if (value >= 50) {
+    return { 
+      stars: 2, 
+      label: "UNCOMMON", 
+      colorClass: "text-green-400", 
+      bgClass: "bg-gradient-to-br from-green-900 to-green-700",
+      borderClass: "border-green-300",
+      shadowClass: "shadow-green-500/50"
+    };
+  } else {
+    return { 
+      stars: 1, 
+      label: "COMMON", 
+      colorClass: "text-gray-400", 
+      bgClass: "bg-gradient-to-br from-gray-800 to-gray-700",
+      borderClass: "border-gray-500",
+      shadowClass: "shadow-gray-500/50"
+    };
+  }
 };

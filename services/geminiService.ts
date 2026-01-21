@@ -1,7 +1,7 @@
 import { Treasure } from "../types";
 
-// 静的なお宝データリスト (約100種類)
-const TREASURE_LIST: Omit<Treasure, 'id'>[] = [
+// --- 既存のユニークお宝リスト (100種) ---
+const UNIQUE_TREASURES = [
   // --- 骨・おやつ系 (Common) ---
   { name: "ただの骨", description: "何の変哲もない骨。カルシウムたっぷり。", value: 10, icon: "🦴" },
   { name: "干からびたジャーキー", description: "いつ埋めたか覚えていない熟成肉。", value: 15, icon: "🥩" },
@@ -120,16 +120,104 @@ const TREASURE_LIST: Omit<Treasure, 'id'>[] = [
   { name: "雪だるま", description: "なぜ溶けていないのか不思議だ。", value: 0, icon: "⛄" }
 ];
 
+// --- 自動生成用の設定 ---
+
+// 接頭辞（状態やランク）
+const PREFIXES = [
+  { name: "ボロボロの", valueMod: 0.5, desc: "かなり使い込まれた" },
+  { name: "普通の", valueMod: 1.0, desc: "どこにでもありそうな" },
+  { name: "少し良い", valueMod: 1.2, desc: "ちょっと高級な" },
+  { name: "硬い", valueMod: 1.5, desc: "噛みごたえのある" },
+  { name: "大きな", valueMod: 2.0, desc: "存在感のある" },
+  { name: "銀の", valueMod: 5.0, desc: "銀色に輝く" },
+  { name: "金の", valueMod: 10.0, desc: "黄金に輝く" },
+  { name: "伝説の", valueMod: 50.0, desc: "歴史に名を残す" },
+];
+
+// ベースアイテム（50種）
+const BASE_ITEMS = [
+    { name: "ホネ", icon: "🦴", baseVal: 10, desc: "骨。" },
+    { name: "肉", icon: "🥩", baseVal: 15, desc: "お肉。" },
+    { name: "魚", icon: "🐟", baseVal: 12, desc: "お魚。" },
+    { name: "クッキー", icon: "🍪", baseVal: 20, desc: "おやつ。" },
+    { name: "ボール", icon: "⚾", baseVal: 30, desc: "遊び道具。" },
+    { name: "フリスビー", icon: "🥏", baseVal: 40, desc: "投げる円盤。" },
+    { name: "ぬいぐるみ", icon: "🧸", baseVal: 50, desc: "もふもふ。" },
+    { name: "靴", icon: "👞", baseVal: 25, desc: "足に履くもの。" },
+    { name: "靴下", icon: "🧦", baseVal: 10, desc: "片方だけ。" },
+    { name: "手袋", icon: "🧤", baseVal: 15, desc: "手に着けるもの。" },
+    { name: "帽子", icon: "🧢", baseVal: 30, desc: "頭に乗せるもの。" },
+    { name: "シャツ", icon: "👕", baseVal: 40, desc: "着るもの。" },
+    { name: "ズボン", icon: "👖", baseVal: 45, desc: "履くもの。" },
+    { name: "メガネ", icon: "👓", baseVal: 50, desc: "視界良好。" },
+    { name: "時計", icon: "⌚", baseVal: 100, desc: "時を刻む。" },
+    { name: "指輪", icon: "💍", baseVal: 300, desc: "キラキラ。" },
+    { name: "数珠", icon: "📿", baseVal: 80, desc: "祈り。" },
+    { name: "コイン", icon: "🪙", baseVal: 5, desc: "お金。" },
+    { name: "お札", icon: "💵", baseVal: 1000, desc: "大金。" },
+    { name: "宝石", icon: "💎", baseVal: 500, desc: "高価な石。" },
+    { name: "王冠", icon: "👑", baseVal: 800, desc: "王の証。" },
+    { name: "剣", icon: "⚔️", baseVal: 200, desc: "武器。" },
+    { name: "盾", icon: "🛡️", baseVal: 150, desc: "防具。" },
+    { name: "杖", icon: "🪄", baseVal: 180, desc: "魔法。" },
+    { name: "道着", icon: "🥋", baseVal: 100, desc: "武道。" },
+    { name: "ヘルメット", icon: "🪖", baseVal: 120, desc: "安全。" },
+    { name: "薬", icon: "💊", baseVal: 30, desc: "健康。" },
+    { name: "注射器", icon: "💉", baseVal: 40, desc: "チクッとする。" },
+    { name: "本", icon: "📕", baseVal: 60, desc: "知識。" },
+    { name: "手紙", icon: "✉️", baseVal: 0, desc: "想い。" },
+    { name: "ペン", icon: "🖊️", baseVal: 20, desc: "書くもの。" },
+    { name: "ハサミ", icon: "✂️", baseVal: 30, desc: "切るもの。" },
+    { name: "カギ", icon: "🔑", baseVal: 50, desc: "開けるもの。" },
+    { name: "スマホ", icon: "📱", baseVal: 600, desc: "ハイテク。" },
+    { name: "カメラ", icon: "📷", baseVal: 400, desc: "思い出。" },
+    { name: "ラジオ", icon: "📻", baseVal: 80, desc: "音声。" },
+    { name: "テレビ", icon: "📺", baseVal: 200, desc: "映像。" },
+    { name: "パソコン", icon: "💻", baseVal: 800, desc: "計算機。" },
+    { name: "電球", icon: "💡", baseVal: 10, desc: "明かり。" },
+    { name: "電池", icon: "🔋", baseVal: 5, desc: "パワー。" },
+    { name: "車", icon: "🚗", baseVal: 150, desc: "乗り物。" },
+    { name: "飛行機", icon: "✈️", baseVal: 300, desc: "飛ぶもの。" },
+    { name: "ロケット", icon: "🚀", baseVal: 1000, desc: "宇宙へ。" },
+    { name: "花", icon: "🌼", baseVal: 20, desc: "植物。" },
+    { name: "キノコ", icon: "🍄", baseVal: 15, desc: "菌類。" },
+    { name: "リンゴ", icon: "🍎", baseVal: 30, desc: "果物。" },
+    { name: "バナナ", icon: "🍌", baseVal: 25, desc: "黄色い果物。" },
+    { name: "バーガー", icon: "🍔", baseVal: 60, desc: "ジャンクフード。" },
+    { name: "ケーキ", icon: "🍰", baseVal: 80, desc: "スイーツ。" },
+    { name: "アイス", icon: "🍦", baseVal: 50, desc: "冷たいお菓子。" }
+];
+
+// 生成リストの作成 (50アイテム * 8プレフィックス = 400種)
+const GENERATED_TREASURES = [];
+BASE_ITEMS.forEach(item => {
+    PREFIXES.forEach(prefix => {
+        GENERATED_TREASURES.push({
+            name: `${prefix.name}${item.name}`,
+            description: `${prefix.desc}${item.desc}`,
+            value: Math.floor(item.baseVal * prefix.valueMod),
+            icon: item.icon
+        });
+    });
+});
+
+// Assign IDs 1-N for the Picture Book
+// 先頭100個はユニーク、以降は生成アイテム (合計500個)
+export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => ({
+    ...item,
+    catalogId: index + 1
+}));
+
 // 重み付けなどのロジックはなく、完全にランダムに選択する
 export const generateTreasure = async (): Promise<Treasure> => {
   // 鑑定している演出のために少し待機時間を設ける
   await new Promise(resolve => setTimeout(resolve, 800));
 
-  const randomIndex = Math.floor(Math.random() * TREASURE_LIST.length);
-  const selectedTreasure = TREASURE_LIST[randomIndex];
+  const randomIndex = Math.floor(Math.random() * TREASURE_REGISTRY.length);
+  const selectedTreasure = TREASURE_REGISTRY[randomIndex];
 
   return {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID(), // Unique instance ID
     ...selectedTreasure
   };
 };

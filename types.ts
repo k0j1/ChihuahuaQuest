@@ -5,6 +5,7 @@ export enum GameState {
   TREASURE_FOUND = 'TREASURE_FOUND',
   GAME_OVER = 'GAME_OVER',
   TIME_UP = 'TIME_UP',
+  TREASURE_BOOK = 'TREASURE_BOOK', // 図鑑画面
 }
 
 // Map Tile Types
@@ -32,7 +33,7 @@ export interface Position {
   y: number;
 }
 
-export type EnemyTypeStr = 'SLIME' | 'BAT' | 'GHOST';
+export type EnemyTypeStr = 'SLIME' | 'SNAKE' | 'GHOST';
 
 export interface Enemy {
   id: string;
@@ -42,7 +43,8 @@ export interface Enemy {
 }
 
 export interface Treasure {
-  id: string;
+  id: string; // Instance ID (UUID)
+  catalogId: number; // Book ID (1-100)
   name: string;
   description: string;
   value: number; // Gold value

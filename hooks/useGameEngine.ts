@@ -26,16 +26,21 @@ export const useGameEngine = () => {
   const [collectedTreasures, setCollectedTreasures] = useState<Treasure[]>([]);
   const [isDigging, setIsDigging] = useState(false);
   const [sysMessage, setSysMessage] = useState<string | null>(null);
+  const [isPendingDig, setIsPendingDig] = useState(false); // UI表示用
   
   // Treasure State
   const [foundTreasure, setFoundTreasure] = useState<Treasure | null>(null);
   // Loading State for API / Animation
   const [isGeneratingTreasure, setIsGeneratingTreasure] = useState(false);
 
+  // Persistent Treasure Book State
+  const [discoveredCatalogIds, setDiscoveredCatalogIds] = useState<number[]>([]);
+
   // Debug State
   const [fps, setFps] = useState(0);
 
   // Refs for loop
+  const mapDataRef = useRef<{ tiles: TileType[][], treasureMap: boolean[][] } | null>(null);
   const playerPosRef = useRef<Position>({ x: 0, y: 0 });
   const cameraPosRef = useRef<Position>({ x: 0, y: 0 });
   const targetPosRef = useRef<Position | null>(null);
@@ -43,6 +48,26 @@ export const useGameEngine = () => {
   const frameCountRef = useRef<number>(0);
   const lastFpsTimeRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
+  
+  // Dig Pending Ref (Move then Dig) - Logic sync
+  const pendingDigRef = useRef<boolean>(false);
+
+  // Sync mapDataRef with state
+  useEffect(() => {
+    mapDataRef.current = mapData;
+  }, [mapData]);
+
+  // Load Discovered Treasures from LocalStorage
+  useEffect(() => {
+    try {
+        const saved = localStorage.getItem('chihuahua_quest_book');
+        if (saved) {
+            setDiscoveredCatalogIds(JSON.parse(saved));
+        }
+    } catch (e) {
+        console.error("Failed to load treasure book", e);
+    }
+  }, []);
 
   // Spawn Enemy Helper with weighted random types
   const spawnEnemy = (count: number, currentTiles: TileType[][], playerP: Position): Enemy[] => {
@@ -65,7 +90,7 @@ export const useGameEngine = () => {
                 const rand = Math.random();
                 let type: EnemyTypeStr = 'SLIME';
                 if (rand > 0.85) type = 'GHOST'; 
-                else if (rand > 0.65) type = 'BAT'; 
+                else if (rand > 0.65) type = 'SNAKE'; 
                 
                 newEnemies.push({
                     id: crypto.randomUUID(),
@@ -83,7 +108,9 @@ export const useGameEngine = () => {
   // Initialize Game
   const startGame = useCallback(() => {
     const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
-    setMapData({ tiles, treasureMap });
+    const initialMapData = { tiles, treasureMap };
+    setMapData(initialMapData);
+    mapDataRef.current = initialMapData; // Immediately sync ref
     
     setPlayerPos(startPos);
     playerPosRef.current = startPos;
@@ -101,14 +128,20 @@ export const useGameEngine = () => {
     setCollectedTreasures([]);
     setTimeLeft(GAME_CONFIG.GAME_DURATION);
     setGameState(GameState.PLAYING);
-    setSysMessage("マップをタップして移動、自分で穴掘り！");
+    setSysMessage("マップをタップして移動＆穴掘り！");
     setTimeout(() => setSysMessage(null), 3000);
     setFoundTreasure(null);
     setIsGeneratingTreasure(false);
+    pendingDigRef.current = false;
+    setIsPendingDig(false);
   }, []);
 
   const resetGame = useCallback(() => {
     setGameState(GameState.TITLE);
+  }, []);
+
+  const openTreasureBook = useCallback(() => {
+    setGameState(GameState.TREASURE_BOOK);
   }, []);
 
   // Timer Effect
@@ -131,17 +164,26 @@ export const useGameEngine = () => {
 
   // Dig Logic
   const handleDig = async () => {
-    if (!mapData || isDigging || gameState !== GameState.PLAYING) return;
+    if (!mapDataRef.current || isDigging || gameState !== GameState.PLAYING) return;
 
     // Stop moving when digging
     setTargetPos(null);
     targetPosRef.current = null;
     setIsMoving(false);
+    pendingDigRef.current = false; // Clear pending
+    setIsPendingDig(false);
 
     setIsDigging(true);
     
     // DELAY for animation (0.3s)
     setTimeout(async () => {
+        // Use Ref to get the LATEST map data
+        const currentMapData = mapDataRef.current;
+        if (!currentMapData) {
+            setIsDigging(false);
+            return;
+        }
+
         const tileX = Math.round(playerPosRef.current.x);
         const tileY = Math.round(playerPosRef.current.y);
 
@@ -150,7 +192,7 @@ export const useGameEngine = () => {
             return;
         }
 
-        const tileType = mapData.tiles[tileY][tileX];
+        const tileType = currentMapData.tiles[tileY][tileX];
         
         // Cannot dig hard surfaces, already dug holes, or treasure marks
         if (tileType === TileType.WATER || tileType === TileType.ROCK) {
@@ -168,14 +210,14 @@ export const useGameEngine = () => {
         }
 
         // Update Map - Always turns to hole
-        const newTiles = mapData.tiles.map(row => [...row]);
+        const newTiles = currentMapData.tiles.map(row => [...row]);
         newTiles[tileY][tileX] = TileType.HOLE;
         
         // Check for Treasure
-        if (mapData.treasureMap[tileY][tileX]) {
+        if (currentMapData.treasureMap[tileY][tileX]) {
             // Found Treasure! 
             // Remove from hidden map
-            const newTreasureMap = mapData.treasureMap.map(row => [...row]);
+            const newTreasureMap = currentMapData.treasureMap.map(row => [...row]);
             newTreasureMap[tileY][tileX] = false;
             
             // Update map state
@@ -190,6 +232,16 @@ export const useGameEngine = () => {
                 setFoundTreasure(treasure);
                 setCollectedTreasures(prev => [...prev, treasure]);
                 setGold(prev => prev + treasure.value);
+
+                // Update Discovery Book
+                setDiscoveredCatalogIds(prev => {
+                    if (!prev.includes(treasure.catalogId)) {
+                        const newIds = [...prev, treasure.catalogId];
+                        localStorage.setItem('chihuahua_quest_book', JSON.stringify(newIds));
+                        return newIds;
+                    }
+                    return prev;
+                });
                 
                 // Show result dialog
                 setGameState(GameState.TREASURE_FOUND);
@@ -203,7 +255,7 @@ export const useGameEngine = () => {
             
         } else {
             // Just a hole
-            setMapData({ ...mapData, tiles: newTiles });
+            setMapData({ ...currentMapData, tiles: newTiles });
             setIsDigging(false);
         }
 
@@ -268,16 +320,22 @@ export const useGameEngine = () => {
     
     if (distToPlayer < 0.8) {
         handleDig();
-    } else {
-        // Move
-        const clampedX = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH - 0.1, worldX));
-        const clampedY = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT - 0.1, worldY));
-        
-        const newTarget = { x: clampedX, y: clampedY };
-        setTargetPos(newTarget);
-        targetPosRef.current = newTarget;
-        setIsMoving(true);
-    }
+        return; // Priority exit
+    } 
+
+    // New move target logic: Always move AND pending Dig
+    const clampedX = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH - 0.1, worldX));
+    const clampedY = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT - 0.1, worldY));
+    
+    const newTarget = { x: clampedX, y: clampedY };
+    setTargetPos(newTarget);
+    targetPosRef.current = newTarget;
+    setIsMoving(true);
+    
+    // Always pending dig on move
+    pendingDigRef.current = true;
+    setIsPendingDig(true);
+
   }, [gameState, isDigging, isGeneratingTreasure]);
 
   // Game Loop
@@ -306,9 +364,20 @@ export const useGameEngine = () => {
 
         // Stop if reached target
         if (dist < 0.1) {
+            // Reached destination!
+            const wasPendingDig = pendingDigRef.current;
+            
             targetPosRef.current = null;
             setTargetPos(null);
             setIsMoving(false);
+            pendingDigRef.current = false; // Reset
+            setIsPendingDig(false);
+
+            if (wasPendingDig) {
+                // If dig was pending, trigger it now
+                handleDig();
+            }
+
         } else {
             // Move towards target
             const speed = GAME_CONFIG.PLAYER_SPEED;
@@ -325,11 +394,12 @@ export const useGameEngine = () => {
             const nextY = playerPosRef.current.y + vy;
 
             const checkCollision = (x: number, y: number) => {
-                if (!mapData) return true;
+                const currentMapData = mapDataRef.current;
+                if (!currentMapData) return true;
                 const tx = Math.floor(x + 0.5); // Center check
                 const ty = Math.floor(y + 0.5);
                 if (tx < 0 || tx >= GAME_CONFIG.MAP_WIDTH || ty < 0 || ty >= GAME_CONFIG.MAP_HEIGHT) return true;
-                const tile = mapData.tiles[ty][tx];
+                const tile = currentMapData.tiles[ty][tx];
                 return tile === TileType.ROCK || tile === TileType.WATER;
             };
 
@@ -347,6 +417,8 @@ export const useGameEngine = () => {
                 targetPosRef.current = null;
                 setTargetPos(null);
                 setIsMoving(false);
+                pendingDigRef.current = false;
+                setIsPendingDig(false);
             }
 
             setPlayerPos({ x: playerPosRef.current.x, y: playerPosRef.current.y });
@@ -395,10 +467,12 @@ export const useGameEngine = () => {
 
 
     // --- Enemy Logic ---
-    if (mapData && !isGeneratingTreasure) {
+    if (mapDataRef.current && !isGeneratingTreasure) {
         let currentEnemies = [...enemiesRef.current];
         let tilesChanged = false;
-        const newTiles = mapData.tiles.map(row => [...row]);
+        // Use Ref for source of truth to avoid stale state
+        const currentTilesOriginal = mapDataRef.current.tiles;
+        const newTiles = currentTilesOriginal.map(row => [...row]);
 
         const spawnedEnemies: Enemy[] = [];
 
@@ -410,12 +484,50 @@ export const useGameEngine = () => {
             const ty = Math.round(enemy.y);
             
             if (tx >= 0 && tx < GAME_CONFIG.MAP_WIDTH && ty >= 0 && ty < GAME_CONFIG.MAP_HEIGHT) {
+                // Check against newTiles in case multiple enemies fall in same frame (rare but possible)
                 if (newTiles[ty][tx] === TileType.HOLE && !stats.flying) {
-                    newTiles[ty][tx] = TileType.DIRT;
+                    // Turn HOLE into ROCK
+                    newTiles[ty][tx] = TileType.ROCK;
                     tilesChanged = true;
+                    
                     const newSpawns = spawnEnemy(1, newTiles, playerPosRef.current);
                     spawnedEnemies.push(...newSpawns);
-                    return false;
+                    
+                    setSysMessage(`敵を倒した！`);
+                    setTimeout(() => setSysMessage(null), 1000);
+                    
+                    // --- EMERGENCY UNSTUCK LOGIC ---
+                    // If player is on the exact tile that just turned to rock, move them!
+                    const px = Math.round(playerPosRef.current.x);
+                    const py = Math.round(playerPosRef.current.y);
+                    if (px === tx && py === ty) {
+                        const neighbors = [
+                            { x: px, y: py - 1 }, // Up
+                            { x: px, y: py + 1 }, // Down
+                            { x: px - 1, y: py }, // Left
+                            { x: px + 1, y: py }  // Right
+                        ];
+                        // Find first safe neighbor
+                        const safeSpot = neighbors.find(n => {
+                            if (n.x < 0 || n.x >= GAME_CONFIG.MAP_WIDTH || n.y < 0 || n.y >= GAME_CONFIG.MAP_HEIGHT) return false;
+                            const t = newTiles[n.y][n.x];
+                            return t !== TileType.ROCK && t !== TileType.WATER;
+                        });
+
+                        if (safeSpot) {
+                            playerPosRef.current = { x: safeSpot.x, y: safeSpot.y };
+                            setPlayerPos({ x: safeSpot.x, y: safeSpot.y });
+                            // Stop current movement target to avoid confusion
+                            targetPosRef.current = null;
+                            setTargetPos(null);
+                            setIsMoving(false);
+                            pendingDigRef.current = false;
+                            setIsPendingDig(false);
+                        }
+                    }
+                    // -------------------------------
+
+                    return false; // Remove old enemy
                 }
             }
 
@@ -453,6 +565,7 @@ export const useGameEngine = () => {
                  const tY = Math.round(y);
                  if (tX < 0 || tX >= GAME_CONFIG.MAP_WIDTH || tY < 0 || tY >= GAME_CONFIG.MAP_HEIGHT) return true;
                  if (stats.ghost) return false;
+                 // Use newTiles for wall checking to reflect immediate changes
                  const tile = newTiles[tY][tX];
                  if (stats.flying) return tile === TileType.ROCK;
                  return tile === TileType.ROCK || tile === TileType.WATER;
@@ -466,22 +579,18 @@ export const useGameEngine = () => {
 
         if (spawnedEnemies.length > 0) {
             currentEnemies = [...currentEnemies, ...spawnedEnemies];
-            if (!sysMessage) {
-                setSysMessage(`敵が現れた！`);
-                setTimeout(() => setSysMessage(null), 1000);
-            }
         }
 
         enemiesRef.current = currentEnemies;
         setEnemies(currentEnemies);
 
-        if (tilesChanged) {
-            setMapData({ ...mapData, tiles: newTiles });
+        if (tilesChanged && mapDataRef.current) {
+            setMapData({ ...mapDataRef.current, tiles: newTiles });
         }
     }
 
     animationFrameRef.current = requestAnimationFrame(update);
-  }, [gameState, mapData, sysMessage, isDigging, isGeneratingTreasure]);
+  }, [gameState, isDigging, isGeneratingTreasure]); // removed mapData from dependency
 
   useEffect(() => {
     animationFrameRef.current = requestAnimationFrame(update);
@@ -507,8 +616,11 @@ export const useGameEngine = () => {
     foundTreasure,
     isGeneratingTreasure,
     fps,
+    discoveredCatalogIds,
+    isPendingDig,
     startGame,
     resetGame,
+    openTreasureBook,
     handleInteraction,
     handleDig,
     closeTreasureDialog,
