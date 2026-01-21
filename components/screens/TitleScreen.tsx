@@ -9,7 +9,7 @@ interface TitleScreenProps {
 
 const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook }) => {
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden">
       <div className="absolute inset-0 opacity-10" 
         style={{ backgroundImage: `radial-gradient(${THEME.colors.primary} 2px, transparent 2px)`, backgroundSize: '32px 32px' }} 
       />

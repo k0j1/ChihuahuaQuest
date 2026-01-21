@@ -30,7 +30,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden">
         {/* Header */}
         <div className="flex-none p-4 bg-gray-800 border-b-4 border-yellow-600 shadow-md z-20 flex justify-between items-center">
             <button 

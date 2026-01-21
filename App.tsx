@@ -73,7 +73,7 @@ const App: React.FC = () => {
     case GameState.TREASURE_FOUND:
     case GameState.DYING: // Render Game Map during Dying Animation
       return (
-        <div className="relative w-screen h-screen bg-black overflow-hidden select-none">
+        <div className="relative w-screen h-[100dvh] bg-black overflow-hidden select-none">
           
           {mapData && (
             <GameMap 

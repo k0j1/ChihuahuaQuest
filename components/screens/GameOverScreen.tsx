@@ -13,7 +13,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   const isTimeUp = gameState === GameState.TIME_UP;
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen w-screen bg-black text-white z-50 p-4">
+    <div className="flex flex-col items-center justify-center h-[100dvh] w-screen bg-black text-white z-50 p-4">
       <div className="text-center mb-6">
           {isTimeUp ? (
               <Clock size={48} className="animate-bounce mx-auto mb-2 text-yellow-400" />

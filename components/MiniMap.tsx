@@ -102,7 +102,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
   }, [tiles, playerPos, enemies, CANVAS_WIDTH, CANVAS_HEIGHT, MAP_WIDTH, MAP_HEIGHT]);
 
   return (
-    <div className="absolute bottom-6 left-6 z-[55] flex flex-col items-center pointer-events-none animate-fade-in">
+    <div className="absolute bottom-24 left-4 md:bottom-6 md:left-6 z-[55] flex flex-col items-center pointer-events-none animate-fade-in">
       {/* Radar Label */}
       <div className="mb-1 flex items-center gap-1 px-2 py-0.5 bg-gray-900/90 rounded-t text-[10px] text-blue-300 font-bold tracking-widest border-t border-x border-gray-600">
         <MapIcon size={10} />
