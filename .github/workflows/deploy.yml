@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
+# FTPデプロイを優先するため、自動実行トリガー(push)を無効化しました。
+# 必要であれば手動で実行可能です。
 on:
-  push:
-    branches: ["main", "master"]
   workflow_dispatch:
 
 permissions:
@@ -25,7 +25,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # package-lock.jsonがない場合のエラーを防ぐためcache設定を削除
 
       - name: Install dependencies
         run: npm install

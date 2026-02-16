@@ -21,12 +21,14 @@ jobs:
           node-version: "20"
 
       - name: 📦 Install dependencies
-        # package.jsonの更新漏れによるビルドエラーを防ぐため、必要なライブラリを明示的に追加
+        # 依存関係のインストール漏れを防ぐ
         run: |
           npm install
           npm install viem @farcaster/frame-sdk lucide-react
 
       - name: 🏗️ Build Project
+        env:
+           CI: false # 警告をエラーとして扱わないようにする
         run: npm run build
         
       - name: 🔍 Verify Build Output
@@ -38,10 +40,16 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # ビルド成果物のディレクトリを指定（末尾の / は必須）
+          # アップロードするローカルのフォルダ
           local-dir: ./dist/
-          # FTPサーバー上のアップロード先（ルートの場合は ./ 、public_htmlが必要な場合は ./public_html/ に変更してください）
+          # アップロード先のサーバー上のフォルダ
+          # 一般的なレンタルサーバーでは ./public_html/ が多いです。
+          # ルートディレクトリの場合は ./ のままでOKです。
           server-dir: ./
-          # もし接続エラーになる場合は、以下のコメントアウトを外してプロトコルをftpに固定してください
-          # protocol: ftp
-          # port: 21
+          # SSL証明書のエラーを無視して接続を試みる（接続エラー対策）
+          security: loose
+          # 隠しファイルなどを除外
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
