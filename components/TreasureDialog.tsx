@@ -50,7 +50,7 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
           </p>
 
           <div className="mt-2 px-6 py-2 bg-black/40 rounded-full border border-white/30 text-yellow-300 font-mono text-xl font-bold z-10">
-            {treasure.value.toLocaleString()} G
+            {treasure.value.toLocaleString()} $CHH
           </div>
 
           <button

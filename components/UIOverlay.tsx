@@ -29,7 +29,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGenera
           style={{ backgroundColor: THEME.colors.uiBg, color: THEME.colors.primary }}
         >
           <Coins size={20} />
-          <span className="text-xl font-bold tracking-widest">{gold.toLocaleString()} G</span>
+          <span className="text-xl font-bold tracking-widest">{gold.toLocaleString()} $CHH</span>
         </div>
 
         {/* Timer */}

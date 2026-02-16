@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { FarcasterUser } from '../types';
-import { X, User, ExternalLink } from 'lucide-react';
+import { X, User, ExternalLink, Wallet } from 'lucide-react';
 import { THEME } from '../constants';
+import { useTokenBalance } from '../hooks/useTokenBalance';
 
 interface UserInfoModalProps {
   user: FarcasterUser;
@@ -10,6 +11,17 @@ interface UserInfoModalProps {
 }
 
 const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) => {
+  // Aggregate all addresses to check
+  const allAddresses = useMemo(() => {
+      const addrs = [...(user.verifications || [])];
+      if (user.custodyAddress && !addrs.includes(user.custodyAddress)) {
+          addrs.push(user.custodyAddress);
+      }
+      return addrs;
+  }, [user]);
+
+  const { balance: chhBalance, isLoading: isChhLoading } = useTokenBalance(allAddresses);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
       <div 
@@ -56,11 +68,32 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) =>
                 @{user.username} (FID: {user.fid})
             </div>
 
-            {/* Stats Card */}
-            <div className="bg-gray-100 rounded-lg p-4 border-2 border-gray-200 mb-6 pixel-corners">
-                <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Current Wealth</div>
-                <div className="text-3xl font-bold text-yellow-600 drop-shadow-sm">
-                    {gold.toLocaleString()} <span className="text-lg text-yellow-700">G</span>
+            {/* Stats Card Grid */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+                {/* Game Score */}
+                <div className="bg-gray-100 rounded-lg p-3 border-2 border-gray-200 pixel-corners flex flex-col items-center justify-center">
+                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Score</div>
+                    <div className="text-xl font-bold text-yellow-600 drop-shadow-sm truncate w-full">
+                        {gold.toLocaleString()} <span className="text-sm text-yellow-700">$CHH</span>
+                    </div>
+                </div>
+
+                {/* Wallet Balance */}
+                <div className="bg-blue-50 rounded-lg p-3 border-2 border-blue-100 pixel-corners flex flex-col items-center justify-center">
+                    <div className="text-[10px] text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                        <Wallet size={10} />
+                        Wallet
+                    </div>
+                    <div className="text-xl font-bold text-blue-600 drop-shadow-sm truncate w-full flex items-center justify-center gap-1">
+                        {isChhLoading ? (
+                            <span className="animate-pulse">...</span>
+                        ) : (
+                            <>
+                                <span>{chhBalance !== null ? chhBalance : '0'}</span>
+                                <span className="text-sm text-blue-400">$CHH</span>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 

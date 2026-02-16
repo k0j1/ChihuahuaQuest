@@ -1,6 +1,8 @@
 import React from 'react';
 import { MapPin, BookOpen } from 'lucide-react';
 import { GAME_CONFIG, THEME } from '../../constants';
+import Chihuahua from '../Chihuahua';
+import { Direction } from '../../types';
 
 interface TitleScreenProps {
   onStart: () => void;
@@ -22,8 +24,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook }) => {
           <p className="text-gray-400 text-sm md:text-base">穴掘りトラップRPG</p>
         </div>
 
-        <div className="w-32 h-32 mx-auto bg-yellow-200 rounded-full flex items-center justify-center border-4 border-yellow-600 shadow-xl">
-            <span className="text-6xl">🐕</span>
+        <div className="w-32 h-32 mx-auto bg-yellow-200 rounded-full flex items-center justify-center border-4 border-yellow-600 shadow-xl overflow-hidden relative">
+            <div className="scale-[3]">
+                <Chihuahua 
+                    direction={Direction.DOWN} 
+                    isMoving={true} 
+                    isDigging={false} 
+                />
+            </div>
         </div>
         
         <div className="text-sm text-gray-400">

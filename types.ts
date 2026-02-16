@@ -58,6 +58,8 @@ export interface FarcasterUser {
   username?: string;
   displayName?: string;
   pfpUrl?: string;
+  verifications?: string[];
+  custodyAddress?: string;
 }
 
 // Config Types

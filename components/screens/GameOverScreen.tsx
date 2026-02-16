@@ -50,7 +50,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         {/* Score Box */}
         <div className="bg-slate-800 text-yellow-400 w-full p-4 rounded-lg mb-6 text-center pixel-corners relative overflow-hidden border-2 border-slate-600">
             <div className="text-xs text-slate-400 mb-1 tracking-widest uppercase">Total Score</div>
-            <div className="text-4xl font-bold drop-shadow-md">{gold.toLocaleString()} <span className="text-xl">G</span></div>
+            <div className="text-4xl font-bold drop-shadow-md">{gold.toLocaleString()} <span className="text-xl">$CHH</span></div>
             <Trophy className="absolute -bottom-4 -right-4 text-yellow-600 opacity-20 rotate-12" size={80} />
         </div>
 
@@ -75,7 +75,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
                                 <div className="text-[10px] text-gray-500 truncate">{t.description}</div>
                             </div>
                             <div className="text-sm font-bold font-mono text-yellow-600">
-                                {t.value} G
+                                {t.value} $CHH
                             </div>
                         </div>
                     ))}

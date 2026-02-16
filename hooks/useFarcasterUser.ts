@@ -16,11 +16,17 @@ export const useFarcasterUser = () => {
 
         const context = await sdk.context;
         if (context && context.user) {
+          // Type assertion to access potential properties not yet in the @farcaster/frame-sdk definition
+          // or just safety for verifications
+          const contextUser = context.user as any;
+          
           setUser({
-            fid: context.user.fid,
-            username: context.user.username,
-            displayName: context.user.displayName,
-            pfpUrl: context.user.pfpUrl,
+            fid: contextUser.fid,
+            username: contextUser.username,
+            displayName: contextUser.displayName,
+            pfpUrl: contextUser.pfpUrl,
+            verifications: contextUser.verifications || [], // Array of connected addresses
+            custodyAddress: contextUser.custodyAddress, // Custody address
           });
         }
       } catch (error) {
