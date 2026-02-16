@@ -52,6 +52,14 @@ export interface Treasure {
   icon: string; // Emoji or icon name
 }
 
+// Farcaster User Type
+export interface FarcasterUser {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+}
+
 // Config Types
 export interface MapConfig {
   width: number;

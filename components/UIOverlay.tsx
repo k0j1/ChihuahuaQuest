@@ -21,11 +21,11 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGenera
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-4 z-50">
       
-      {/* Top HUD */}
-      <div className="flex justify-between items-start">
+      {/* Top HUD - Align left to make room for UserBadge on right */}
+      <div className="flex flex-col items-start gap-2">
         {/* Gold Counter */}
         <div 
-          className="flex items-center gap-2 px-4 py-2 rounded-lg pixel-corners"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg pixel-corners shadow-lg"
           style={{ backgroundColor: THEME.colors.uiBg, color: THEME.colors.primary }}
         >
           <Coins size={20} />
@@ -34,7 +34,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGenera
 
         {/* Timer */}
         <div 
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg pixel-corners ${isLowTime ? 'animate-pulse' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg pixel-corners shadow-lg transition-colors duration-300 ${isLowTime ? 'animate-pulse' : ''}`}
           style={{ 
             backgroundColor: THEME.colors.uiBg, 
             color: isLowTime ? THEME.colors.accent : '#fff',
