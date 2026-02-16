@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
@@ -19,10 +21,16 @@ jobs:
           node-version: "20"
 
       - name: 📦 Install dependencies
-        run: npm install
+        # package.jsonの更新漏れによるビルドエラーを防ぐため、必要なライブラリを明示的に追加
+        run: |
+          npm install
+          npm install viem @farcaster/frame-sdk lucide-react
 
       - name: 🏗️ Build Project
         run: npm run build
+        
+      - name: 🔍 Verify Build Output
+        run: ls -la ./dist
 
       - name: 📂 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -30,8 +38,10 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          # ビルド成果物のディレクトリを指定
+          # ビルド成果物のディレクトリを指定（末尾の / は必須）
           local-dir: ./dist/
-          # FTPサーバー上のアップロード先ディレクトリ (ルートの場合は ./)
-          # 必要に応じて変更してください（例: ./public_html/）
+          # FTPサーバー上のアップロード先（ルートの場合は ./ 、public_htmlが必要な場合は ./public_html/ に変更してください）
           server-dir: ./
+          # もし接続エラーになる場合は、以下のコメントアウトを外してプロトコルをftpに固定してください
+          # protocol: ftp
+          # port: 21
