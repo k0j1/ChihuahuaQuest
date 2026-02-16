@@ -78,7 +78,7 @@ const UNIQUE_TREASURES = [
   { name: "モアイ像", description: "なぜこんなところにミニモアイが？", value: 500, icon: "🗿" },
   { name: "宇宙人の仮面", description: "我々は来ました。", value: 150, icon: "👽" },
   { name: "ラブレター", description: "読まずに埋めたようだ。", value: 0, icon: "💌" },
-  { name: "テストの答案", description: "0点だったので隠蔽された。", value: -10, icon: "📝" },
+  { name: "テストの答案", description: "0点だったので隠蔽された。", value: 5, icon: "📝" },
   { name: "誰かの入れ歯", description: "おじいちゃんが探している。", value: 100, icon: "🦷" },
   { name: "魔法のランプ", description: "こすっても魔人は出てこない。", value: 600, icon: "🧞" },
   { name: "ビデオテープ", description: "再生デッキがない。", value: 30, icon: "📼" },

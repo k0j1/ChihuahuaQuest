@@ -7,6 +7,7 @@ export enum GameState {
   GAME_OVER = 'GAME_OVER',
   TIME_UP = 'TIME_UP',
   TREASURE_BOOK = 'TREASURE_BOOK', // 図鑑画面
+  LITEPAPER = 'LITEPAPER', // ライトペーパー画面
 }
 
 // Map Tile Types

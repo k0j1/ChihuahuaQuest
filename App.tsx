@@ -11,6 +11,7 @@ import TreasureDialog from './components/TreasureDialog';
 import TitleScreen from './components/screens/TitleScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
 import TreasureBookScreen from './components/screens/TreasureBookScreen';
+import LitepaperScreen from './components/screens/LitepaperScreen';
 import UserBadge from './components/UserBadge';
 import UserInfoModal from './components/UserInfoModal';
 
@@ -37,6 +38,7 @@ const App: React.FC = () => {
     startGame,
     resetGame,
     openTreasureBook,
+    openLitepaper, // Added
     handleInteraction,
     handleDig,
     closeTreasureDialog,
@@ -69,6 +71,7 @@ const App: React.FC = () => {
             <TitleScreen 
                 onStart={startGame} 
                 onOpenBook={openTreasureBook}
+                onOpenLitepaper={openLitepaper}
             />
         );
 
@@ -78,6 +81,11 @@ const App: React.FC = () => {
                 discoveredIds={discoveredCatalogIds} 
                 onBack={resetGame} 
             />
+        );
+
+        case GameState.LITEPAPER:
+        return (
+            <LitepaperScreen onBack={resetGame} />
         );
 
         case GameState.GAME_OVER:

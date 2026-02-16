@@ -144,6 +144,10 @@ export const useGameEngine = () => {
     setGameState(GameState.TREASURE_BOOK);
   }, []);
 
+  const openLitepaper = useCallback(() => {
+    setGameState(GameState.LITEPAPER);
+  }, []);
+
   // Timer Effect
   useEffect(() => {
     let timer: number;
@@ -638,6 +642,7 @@ export const useGameEngine = () => {
     startGame,
     resetGame,
     openTreasureBook,
+    openLitepaper, // Added
     handleInteraction,
     handleDig,
     closeTreasureDialog,

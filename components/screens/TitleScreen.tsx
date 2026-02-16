@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, BookOpen } from 'lucide-react';
+import { MapPin, BookOpen, FileText } from 'lucide-react';
 import { GAME_CONFIG, THEME } from '../../constants';
 import Chihuahua from '../Chihuahua';
 import { Direction } from '../../types';
@@ -7,15 +7,26 @@ import { Direction } from '../../types';
 interface TitleScreenProps {
   onStart: () => void;
   onOpenBook: () => void;
+  onOpenLitepaper: () => void;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper }) => {
   return (
     <div className="flex flex-col items-center justify-center h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden">
       <div className="absolute inset-0 opacity-10" 
         style={{ backgroundImage: `radial-gradient(${THEME.colors.primary} 2px, transparent 2px)`, backgroundSize: '32px 32px' }} 
       />
       
+      {/* Litepaper Button */}
+      <button 
+        onClick={onOpenLitepaper}
+        className="absolute top-4 left-4 p-3 bg-gray-800 rounded-lg hover:bg-gray-700 active:scale-95 border-2 border-gray-600 shadow-lg z-50 pixel-corners group"
+        aria-label="Litepaper"
+      >
+        <FileText className="text-gray-300 group-hover:text-yellow-400" />
+        <span className="sr-only">ライトペーパー</span>
+      </button>
+
       <div className="z-10 text-center space-y-8 animate-fade-in flex flex-col items-center">
         <div className="space-y-2">
           <h1 className="text-5xl md:text-7xl font-bold text-yellow-400 pixel-text-shadow tracking-widest">
