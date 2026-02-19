@@ -42,7 +42,8 @@ const App: React.FC = () => {
     handleInteraction,
     handleDig,
     closeTreasureDialog,
-    panCamera
+    panCamera,
+    currentPath // Added
   } = useGameEngine();
 
   // Farcaster User Integration
@@ -116,6 +117,7 @@ const App: React.FC = () => {
                 enemies={enemies}
                 onInteract={handleInteraction}
                 targetPos={targetPos}
+                currentPath={currentPath} // Added
                 panCamera={panCamera}
                 isPendingDig={isPendingDig}
                 isDefeated={gameState === GameState.DYING}

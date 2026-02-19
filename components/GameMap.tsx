@@ -3,7 +3,7 @@ import { TileType, Position, Direction, Enemy as EnemyType } from '../types';
 import { GAME_CONFIG } from '../constants';
 import Chihuahua from './Chihuahua';
 import Enemy from './Enemy';
-import { X, Shovel } from 'lucide-react';
+import { Shovel } from 'lucide-react';
 
 interface GameMapProps {
   tiles: TileType[][];
@@ -15,6 +15,7 @@ interface GameMapProps {
   enemies: EnemyType[];
   onInteract: (clientX: number, clientY: number) => void;
   targetPos: Position | null;
+  currentPath?: Position[]; // Added
   panCamera: (dx: number, dy: number) => void;
   isPendingDig?: boolean;
   isDefeated?: boolean;
@@ -30,6 +31,7 @@ const GameMap: React.FC<GameMapProps> = ({
     enemies, 
     onInteract,
     targetPos,
+    currentPath = [], // Added
     panCamera,
     isPendingDig = false,
     isDefeated = false
@@ -71,6 +73,14 @@ const GameMap: React.FC<GameMapProps> = ({
     }
     return renderedTiles;
   }, [tiles, startX, endX, startY, endY]);
+
+  // Determine display target (final destination)
+  const displayTarget = useMemo(() => {
+      if (currentPath && currentPath.length > 0) {
+          return currentPath[currentPath.length - 1];
+      }
+      return targetPos;
+  }, [currentPath, targetPos]);
 
   const mapContainerStyle = {
     transform: `translate3d(
@@ -224,25 +234,21 @@ const GameMap: React.FC<GameMapProps> = ({
           </div>
         ))}
 
-        {targetPos && (
+        {displayTarget && (
              <div 
-                className={`absolute animate-pulse pointer-events-none z-10 ${isPendingDig ? 'text-yellow-400' : 'text-red-500'}`}
+                className={`absolute pointer-events-none z-10 target-marker ${isPendingDig ? 'text-yellow-400' : 'text-white'}`}
                 style={{
-                    left: targetPos.x * tileSize,
-                    top: targetPos.y * tileSize,
+                    left: displayTarget.x * tileSize,
+                    top: displayTarget.y * tileSize,
                     width: tileSize,
                     height: tileSize,
-                    transform: 'translate(0, 0)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    opacity: 0.9
                 }}
              >
-                {isPendingDig ? (
-                    <Shovel size={32} className="drop-shadow-md animate-bounce" />
-                ) : (
-                    <X size={32} className="drop-shadow-md" />
+                {isPendingDig && (
+                    <Shovel size={24} className="drop-shadow-md animate-bounce" />
                 )}
              </div>
         )}

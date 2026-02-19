@@ -3,6 +3,7 @@ import { GameState, TileType, Position, Direction, Treasure, Enemy, EnemyTypeStr
 import { GAME_CONFIG, ENEMY_STATS } from '../constants';
 import { generateMap } from '../utils/mapGenerator';
 import { generateTreasure } from '../services/geminiService';
+import { findPath } from '../utils/pathfinding'; // Import pathfinding
 
 export const useGameEngine = () => {
   // Game State
@@ -16,6 +17,7 @@ export const useGameEngine = () => {
   const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
   const [cameraPos, setCameraPos] = useState<Position>({ x: 0, y: 0 }); // Camera center position
   const [targetPos, setTargetPos] = useState<Position | null>(null); 
+  const [currentPath, setCurrentPath] = useState<Position[]>([]); // Pathfinding path
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   
   const [direction, setDirection] = useState<Direction>(Direction.DOWN);
@@ -44,6 +46,7 @@ export const useGameEngine = () => {
   const playerPosRef = useRef<Position>({ x: 0, y: 0 });
   const cameraPosRef = useRef<Position>({ x: 0, y: 0 });
   const targetPosRef = useRef<Position | null>(null);
+  const currentPathRef = useRef<Position[]>([]); // Ref for path
   const enemiesRef = useRef<Enemy[]>([]); 
   const frameCountRef = useRef<number>(0);
   const lastFpsTimeRef = useRef<number>(0);
@@ -120,6 +123,8 @@ export const useGameEngine = () => {
 
     setTargetPos(null);
     targetPosRef.current = null;
+    setCurrentPath([]);
+    currentPathRef.current = [];
     
     setEnemies(initialEnemies);
     enemiesRef.current = JSON.parse(JSON.stringify(initialEnemies));
@@ -173,6 +178,8 @@ export const useGameEngine = () => {
     // Stop moving when digging
     setTargetPos(null);
     targetPosRef.current = null;
+    setCurrentPath([]);
+    currentPathRef.current = [];
     setIsMoving(false);
     pendingDigRef.current = false; // Clear pending
     setIsPendingDig(false);
@@ -327,18 +334,37 @@ export const useGameEngine = () => {
         return; // Priority exit
     } 
 
-    // New move target logic: Always move AND pending Dig
-    const clampedX = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH - 0.1, worldX));
-    const clampedY = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT - 0.1, worldY));
-    
-    const newTarget = { x: clampedX, y: clampedY };
-    setTargetPos(newTarget);
-    targetPosRef.current = newTarget;
-    setIsMoving(true);
-    
-    // Always pending dig on move
-    pendingDigRef.current = true;
-    setIsPendingDig(true);
+    // Pathfinding Logic
+    const startNode = { x: Math.round(playerPosRef.current.x), y: Math.round(playerPosRef.current.y) };
+    const endNode = { x: Math.round(worldX), y: Math.round(worldY) };
+
+    // Clamp endNode
+    endNode.x = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH - 1, endNode.x));
+    endNode.y = Math.max(0, Math.min(GAME_CONFIG.MAP_HEIGHT - 1, endNode.y));
+
+    if (mapDataRef.current) {
+        const path = findPath(startNode, endNode, mapDataRef.current.tiles, GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
+        
+        if (path.length > 0) {
+            setCurrentPath(path);
+            currentPathRef.current = path;
+            
+            // Set first target
+            const nextTarget = path[0];
+            setTargetPos(nextTarget);
+            targetPosRef.current = nextTarget;
+            
+            setIsMoving(true);
+            
+            // Always pending dig on move
+            pendingDigRef.current = true;
+            setIsPendingDig(true);
+        } else {
+             // Cannot move there
+             setSysMessage("そこには行けないワン...");
+             setTimeout(() => setSysMessage(null), 1000);
+        }
+    }
 
   }, [gameState, isDigging, isGeneratingTreasure]);
 
@@ -364,7 +390,7 @@ export const useGameEngine = () => {
       lastFpsTimeRef.current = time;
     }
 
-    // --- Player Movement Logic (Tap to Move) ---
+    // --- Player Movement Logic (Tap to Move with Pathfinding) ---
     // Only move camera automatically if player is moving
     const isPlayerMoving = !!targetPosRef.current;
 
@@ -373,20 +399,57 @@ export const useGameEngine = () => {
         const dy = targetPosRef.current.y - playerPosRef.current.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Stop if reached target
+        // Stop if reached current target node
         if (dist < 0.1) {
-            // Reached destination!
-            const wasPendingDig = pendingDigRef.current;
+            // Reached current node!
             
-            targetPosRef.current = null;
-            setTargetPos(null);
-            setIsMoving(false);
-            pendingDigRef.current = false; // Reset
-            setIsPendingDig(false);
+            // Snap to exact position
+            playerPosRef.current = { x: targetPosRef.current.x, y: targetPosRef.current.y };
+            setPlayerPos({ x: targetPosRef.current.x, y: targetPosRef.current.y });
 
-            if (wasPendingDig) {
-                // If dig was pending, trigger it now
-                handleDig();
+            // Check if there are more nodes in the path
+            if (currentPathRef.current.length > 0) {
+                // Remove the node we just reached (it should be the first one)
+                // Note: In handleInteraction we set path[0] as target.
+                // If we are here, we reached path[0].
+                // So we shift it out.
+                
+                // However, we need to be careful. 
+                // If we just reached targetPos, we should check if it matches currentPath[0].
+                if (currentPathRef.current[0].x === targetPosRef.current.x && currentPathRef.current[0].y === targetPosRef.current.y) {
+                    currentPathRef.current.shift();
+                    setCurrentPath([...currentPathRef.current]); // Update state for UI if needed
+                }
+                
+                if (currentPathRef.current.length > 0) {
+                    // Set next target
+                    const nextTarget = currentPathRef.current[0];
+                    setTargetPos(nextTarget);
+                    targetPosRef.current = nextTarget;
+                } else {
+                    // Path finished
+                    targetPosRef.current = null;
+                    setTargetPos(null);
+                    setIsMoving(false);
+                    
+                    // Trigger pending dig if set
+                    if (pendingDigRef.current) {
+                        handleDig();
+                        pendingDigRef.current = false;
+                        setIsPendingDig(false);
+                    }
+                }
+            } else {
+                // No path left (should be covered above, but safety)
+                targetPosRef.current = null;
+                setTargetPos(null);
+                setIsMoving(false);
+                
+                if (pendingDigRef.current) {
+                    handleDig();
+                    pendingDigRef.current = false;
+                    setIsPendingDig(false);
+                }
             }
 
         } else {
@@ -404,6 +467,7 @@ export const useGameEngine = () => {
             const nextX = playerPosRef.current.x + vx;
             const nextY = playerPosRef.current.y + vy;
 
+            // Collision check (Safety check, though pathfinding should avoid obstacles)
             const checkCollision = (x: number, y: number) => {
                 const currentMapData = mapDataRef.current;
                 if (!currentMapData) return true;
@@ -425,8 +489,11 @@ export const useGameEngine = () => {
             }
             
             if (!moved) {
+                // Stuck? Cancel path
                 targetPosRef.current = null;
                 setTargetPos(null);
+                currentPathRef.current = [];
+                setCurrentPath([]);
                 setIsMoving(false);
                 pendingDigRef.current = false;
                 setIsPendingDig(false);
@@ -646,6 +713,7 @@ export const useGameEngine = () => {
     handleInteraction,
     handleDig,
     closeTreasureDialog,
-    panCamera
+    panCamera,
+    currentPath // Added
   };
 };
