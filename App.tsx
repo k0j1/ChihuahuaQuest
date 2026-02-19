@@ -51,18 +51,23 @@ const App: React.FC = () => {
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
 
   // Common UI Wrapper logic to include User Badge everywhere
-  const renderUserLayer = () => (
-    <>
-      <UserBadge user={user} onClick={() => setIsUserInfoOpen(true)} />
-      {isUserInfoOpen && user && (
-        <UserInfoModal 
-            user={user} 
-            gold={gold} 
-            onClose={() => setIsUserInfoOpen(false)} 
-        />
-      )}
-    </>
-  );
+  const renderUserLayer = () => {
+    // Hide UserBadge on Litepaper screen to prevent overlap with language toggle
+    if (gameState === GameState.LITEPAPER) return null;
+
+    return (
+      <>
+        <UserBadge user={user} onClick={() => setIsUserInfoOpen(true)} />
+        {isUserInfoOpen && user && (
+          <UserInfoModal 
+              user={user} 
+              gold={gold} 
+              onClose={() => setIsUserInfoOpen(false)} 
+          />
+        )}
+      </>
+    );
+  };
 
   // Screen Routing based on GameState
   const renderScreen = () => {

@@ -150,7 +150,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
 
           {/* Footer Info */}
           <div className="text-white/60 text-[10px] text-center pointer-events-auto bg-black/40 px-4 py-1 rounded-full backdrop-blur-md mb-2">
-              <p>Ver 0.1.5</p>
+              <p>Ver 0.1.6</p>
           </div>
       </div>
 
