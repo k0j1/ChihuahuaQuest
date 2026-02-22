@@ -10,6 +10,12 @@ export enum GameState {
   LITEPAPER = 'LITEPAPER', // ライトペーパー画面
 }
 
+export enum MapTheme {
+  NORMAL = 'NORMAL',
+  VOLCANO = 'VOLCANO',
+  GLACIER = 'GLACIER',
+}
+
 // Map Tile Types
 export enum TileType {
   GRASS = 0,

@@ -320,23 +320,23 @@ export const useGameEngine = () => {
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
     
-    const worldXPx = clientX + (cameraPosRef.current.x * GAME_CONFIG.TILE_SIZE) - centerX;
-    const worldYPx = clientY + (cameraPosRef.current.y * GAME_CONFIG.TILE_SIZE) - centerY;
-    
-    const worldX = worldXPx / GAME_CONFIG.TILE_SIZE;
-    const worldY = worldYPx / GAME_CONFIG.TILE_SIZE;
+    // Correct world coordinate calculation:
+    // screenX = (worldX - cameraPos.x - 0.5) * tileSize + centerX
+    // worldX = (screenX - centerX) / tileSize + cameraPos.x + 0.5
+    const worldX = (clientX - centerX) / GAME_CONFIG.TILE_SIZE + cameraPosRef.current.x + 0.5;
+    const worldY = (clientY - centerY) / GAME_CONFIG.TILE_SIZE + cameraPosRef.current.y + 0.5;
     
     // Check if tap is close to player (Self-Tap for Digging)
-    const distToPlayer = Math.sqrt(Math.pow(worldX - playerPosRef.current.x, 2) + Math.pow(worldY - playerPosRef.current.y, 2));
+    const distToPlayer = Math.sqrt(Math.pow(worldX - (playerPosRef.current.x + 0.5), 2) + Math.pow(worldY - (playerPosRef.current.y + 0.5), 2));
     
-    if (distToPlayer < 0.8) {
+    if (distToPlayer < 0.6) {
         handleDig();
         return; // Priority exit
     } 
 
     // Pathfinding Logic
     const startNode = { x: Math.round(playerPosRef.current.x), y: Math.round(playerPosRef.current.y) };
-    const endNode = { x: Math.round(worldX), y: Math.round(worldY) };
+    const endNode = { x: Math.floor(worldX), y: Math.floor(worldY) };
 
     // Clamp endNode
     endNode.x = Math.max(0, Math.min(GAME_CONFIG.MAP_WIDTH - 1, endNode.x));
@@ -400,7 +400,8 @@ export const useGameEngine = () => {
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         // Stop if reached current target node
-        if (dist < 0.1) {
+        const speed = GAME_CONFIG.PLAYER_SPEED;
+        if (dist <= speed) {
             // Reached current node!
             
             // Snap to exact position

@@ -105,9 +105,21 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
           
           {/* Header Area */}
           <div className="flex flex-col items-center space-y-4 pointer-events-auto animate-drop-in mt-8">
-              <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-[#FFF5C3] via-[#FDB931] to-[#9F7928] dq-text-shadow tracking-widest" style={{ fontFamily: 'serif' }}>
-                CHIHUAHUA<br/>QUEST
-              </h1>
+              <div className="relative">
+                  {/* Decorative Ornaments */}
+                  <div className="absolute -top-8 -left-10 text-3xl animate-pulse select-none">✨</div>
+                  <div className="absolute -bottom-4 -right-10 text-3xl animate-pulse delay-300 select-none">✨</div>
+                  <div className="absolute top-0 -right-12 text-2xl animate-bounce select-none">⭐</div>
+                  <div className="absolute -bottom-6 -left-12 text-2xl animate-bounce delay-150 select-none">⭐</div>
+                  
+                  {/* Decorative lines */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3/4 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-50"></div>
+
+                  <h1 className="text-5xl md:text-7xl font-black text-black dq-text-shadow tracking-widest text-center" style={{ fontFamily: 'serif' }}>
+                    CHIHUAHUA<br/>QUEST
+                  </h1>
+              </div>
               <div className="bg-black/60 px-6 py-2 rounded-xl backdrop-blur-sm border-2 border-[#9F7928] flex flex-col items-center gap-1">
                   <p className="text-[#FDB931] text-sm md:text-base font-bold tracking-wider uppercase">Digging Trap RPG</p>
                   <div className="w-full h-px bg-[#9F7928]/50 my-0.5"></div>
@@ -150,7 +162,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
 
           {/* Footer Info */}
           <div className="text-white/60 text-[10px] text-center pointer-events-auto bg-black/40 px-4 py-1 rounded-full backdrop-blur-md mb-2">
-              <p>Ver 0.1.6</p>
+              <p>Ver 0.2.0</p>
           </div>
       </div>
 
@@ -167,12 +179,12 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
         }
         .dq-text-shadow {
             text-shadow: 
-                3px 3px 0 #000,
-                -1px -1px 0 #000,  
-                1px -1px 0 #000,
-                -1px 1px 0 #000,
-                1px 1px 0 #000;
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+                3px 3px 0 #fffbeb,
+                -1px -1px 0 #fffbeb,  
+                1px -1px 0 #fffbeb,
+                -1px 1px 0 #fffbeb,
+                1px 1px 0 #fffbeb;
+            filter: drop-shadow(0 5px 10px rgba(255, 251, 235, 0.6));
         }
         @keyframes float-slow {
             0%, 100% { transform: translate(0, 0); }
