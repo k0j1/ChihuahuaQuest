@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { createPublicClient, http, parseAbi, formatUnits } from 'viem';
-import { base } from 'viem/chains';
+import { parseAbi, formatUnits } from 'viem';
+import { usePublicClient } from 'wagmi';
 
 const CHH_CONTRACT_ADDRESS = '0xb0525542E3D818460546332e76E511562dFf9B07';
 const CHH_ABI = parseAbi(['function balanceOf(address) view returns (uint256)']);
@@ -8,9 +8,10 @@ const CHH_ABI = parseAbi(['function balanceOf(address) view returns (uint256)'])
 export const useTokenBalance = (addresses: string[] | undefined) => {
   const [balance, setBalance] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const publicClient = usePublicClient();
 
   useEffect(() => {
-    if (!addresses || addresses.length === 0) {
+    if (!addresses || addresses.length === 0 || !publicClient) {
         setBalance(null);
         return;
     }
@@ -18,15 +19,10 @@ export const useTokenBalance = (addresses: string[] | undefined) => {
     const fetchBalance = async () => {
       setIsLoading(true);
       try {
-        const client = createPublicClient({
-          chain: base,
-          transport: http()
-        });
-
         // Fetch balances for all addresses and sum them up
         const promises = addresses.map(addr => 
             // @ts-ignore
-            client.readContract({
+            publicClient.readContract({
                 address: CHH_CONTRACT_ADDRESS,
                 abi: CHH_ABI,
                 functionName: 'balanceOf',
@@ -52,7 +48,7 @@ export const useTokenBalance = (addresses: string[] | undefined) => {
     };
 
     fetchBalance();
-  }, [addresses]);
+  }, [addresses, publicClient]);
 
   return { balance, isLoading };
 };

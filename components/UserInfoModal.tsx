@@ -3,6 +3,7 @@ import { FarcasterUser } from '../types';
 import { X, User, ExternalLink, Wallet } from 'lucide-react';
 import { THEME } from '../constants';
 import { useTokenBalance } from '../hooks/useTokenBalance';
+import { useAccount } from 'wagmi';
 
 interface UserInfoModalProps {
   user: FarcasterUser;
@@ -11,6 +12,8 @@ interface UserInfoModalProps {
 }
 
 const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) => {
+  const { address, isConnected } = useAccount();
+
   // Aggregate all addresses to check
   const allAddresses = useMemo(() => {
       const addrs = [...(user.verifications || [])];
@@ -30,7 +33,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) =>
       >
         {/* Header Background */}
         <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-blue-500 to-blue-300"></div>
-
+        
         {/* Close Button */}
         <button 
           onClick={onClose}
@@ -67,6 +70,13 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) =>
             <div className="text-gray-500 font-mono text-sm mb-4">
                 @{user.username} (FID: {user.fid})
             </div>
+            
+            {/* Wallet Address Display */}
+            {isConnected && address && (
+                <div className="mb-4 text-xs font-mono text-gray-600 bg-gray-100 p-2 rounded truncate">
+                    {address}
+                </div>
+            )}
 
             {/* Stats Card Grid */}
             <div className="grid grid-cols-2 gap-3 mb-6">

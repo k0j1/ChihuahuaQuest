@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Database, Upload, RefreshCw } from 'lucide-react';
-import { createWalletClient, custom, createPublicClient } from 'viem';
+import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClient } from 'wagmi';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
-
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
 
 interface AdminScreenProps {
   onBack: () => void;
@@ -44,58 +38,35 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const [registeredCount, setRegisteredCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const BATCH_SIZE = 100;
   const totalTreasures = TREASURE_REGISTRY.slice(0, 500);
 
   useEffect(() => {
     checkRegisteredCount();
-    checkWallet();
-  }, []);
+  }, [publicClient]);
 
-  const checkWallet = async () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        const client = createWalletClient({
-          transport: custom(window.ethereum)
-        });
-        const [address] = await client.getAddresses();
-        if (address) setWalletAddress(address);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  };
-
-  const connectWallet = async () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      try {
-        const client = createWalletClient({
-          transport: custom(window.ethereum)
-        });
-        const [address] = await client.requestAddresses();
-        setWalletAddress(address);
-      } catch (e) {
-        setStatusMsg('ウォレット接続に失敗しました');
-      }
+  const connectWallet = () => {
+    const connector = connectors[0];
+    if (connector) {
+      connect({ connector });
     } else {
-      setStatusMsg('MetaMaskなどのウォレットが見つかりません');
+      setStatusMsg('ウォレットコネクターが見つかりません');
     }
   };
 
   const checkRegisteredCount = async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      setStatusMsg('ウォレットが見つからないため確認できません');
-      return;
-    }
+    if (!publicClient) return;
+    
     setIsLoading(true);
     setStatusMsg('登録件数を確認中...');
     try {
-      const publicClient = createPublicClient({
-        transport: custom(window.ethereum)
-      });
-
       let count = 0;
       // Check in batches to avoid too many requests at once
       for (let i = 0; i < totalTreasures.length; i += 50) {
@@ -123,7 +94,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   };
 
   const registerBatch = async (startIndex: number) => {
-    if (!walletAddress) {
+    if (!isConnected || !address) {
       setStatusMsg('ウォレットを接続してください');
       return;
     }
@@ -132,31 +103,23 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     setStatusMsg(`${startIndex + 1}〜${Math.min(startIndex + BATCH_SIZE, totalTreasures.length)}件目を登録中...`);
 
     try {
-      const walletClient = createWalletClient({
-        transport: custom(window.ethereum)
-      });
-
       const batch = totalTreasures.slice(startIndex, startIndex + BATCH_SIZE);
       const ids = batch.map(t => BigInt(t.catalogId));
       const amounts = batch.map(t => BigInt(t.value) * BigInt(10**18));
 
       // @ts-ignore
-      const hash = await walletClient.writeContract({
+      const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: ABI,
         functionName: 'setTreasureRewards',
         args: [ids, amounts],
-        account: walletAddress as `0x${string}`,
-        chain: null
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
       
-      const publicClient = createPublicClient({
-        transport: custom(window.ethereum)
-      });
-      
-      await publicClient.waitForTransactionReceipt({ hash });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
       
       setStatusMsg(`登録成功！`);
       checkRegisteredCount();
@@ -209,15 +172,22 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           <div>
             <h3 className="text-gray-400 text-sm mb-1">ウォレット状態</h3>
             <p className="font-mono text-sm">
-              {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : '未接続'}
+              {isConnected && address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '未接続'}
             </p>
           </div>
-          {!walletAddress && (
+          {!isConnected ? (
             <button 
               onClick={connectWallet}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold"
             >
               接続
+            </button>
+          ) : (
+            <button 
+              onClick={() => disconnect()}
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded text-sm font-bold"
+            >
+              切断
             </button>
           )}
         </div>
@@ -254,7 +224,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
               <button
                 key={startIndex}
                 onClick={() => registerBatch(startIndex)}
-                disabled={isLoading || !walletAddress}
+                disabled={isLoading || !isConnected}
                 className="flex items-center justify-between px-4 py-3 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg font-bold transition-colors"
               >
                 <span>バッチ {idx + 1} ({startIndex + 1}〜{Math.min(startIndex + BATCH_SIZE, totalTreasures.length)})</span>
