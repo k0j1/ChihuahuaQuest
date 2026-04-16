@@ -23,8 +23,8 @@ jobs:
       - name: 📦 Install dependencies
         # 依存関係のインストール漏れを防ぐ
         run: |
-          npm install
-          npm install viem @farcaster/frame-sdk lucide-react
+          npm install --legacy-peer-deps
+          npm install viem @farcaster/frame-sdk lucide-react --legacy-peer-deps
 
       - name: 🏗️ Build Project
         env:
