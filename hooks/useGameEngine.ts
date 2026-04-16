@@ -153,6 +153,10 @@ export const useGameEngine = () => {
     setGameState(GameState.LITEPAPER);
   }, []);
 
+  const openAdmin = useCallback(() => {
+    setGameState(GameState.ADMIN);
+  }, []);
+
   // Timer Effect
   useEffect(() => {
     let timer: number;
@@ -711,6 +715,7 @@ export const useGameEngine = () => {
     resetGame,
     openTreasureBook,
     openLitepaper, // Added
+    openAdmin, // Added
     handleInteraction,
     handleDig,
     closeTreasureDialog,

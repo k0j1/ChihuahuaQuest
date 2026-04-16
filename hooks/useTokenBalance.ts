@@ -25,6 +25,7 @@ export const useTokenBalance = (addresses: string[] | undefined) => {
 
         // Fetch balances for all addresses and sum them up
         const promises = addresses.map(addr => 
+            // @ts-ignore
             client.readContract({
                 address: CHH_CONTRACT_ADDRESS,
                 abi: CHH_ABI,

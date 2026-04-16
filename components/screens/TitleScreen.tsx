@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, BookOpen, FileText, Play } from 'lucide-react';
+import { MapPin, BookOpen, FileText, Play, Settings } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants';
 import Chihuahua from '../Chihuahua';
 import Enemy from '../Enemy';
@@ -9,9 +9,11 @@ interface TitleScreenProps {
   onStart: () => void;
   onOpenBook: () => void;
   onOpenLitepaper: () => void;
+  onOpenAdmin?: () => void;
+  isAdmin?: boolean;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, isAdmin }) => {
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
       
@@ -158,11 +160,21 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
                     <span className="font-bold">LITEPAPER</span>
                   </button>
               </div>
+
+              {isAdmin && (
+                  <button 
+                    onClick={onOpenAdmin}
+                    className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-b from-purple-500 to-purple-700 hover:from-purple-400 hover:to-purple-600 text-white border-2 border-white/40 shadow-[0_4px_0_#4c1d95,0_6px_6px_rgba(0,0,0,0.3)] active:shadow-[0_1px_0_#4c1d95,0_2px_2px_rgba(0,0,0,0.3)] active:translate-y-1 transition-all rounded-lg mt-2"
+                  >
+                    <Settings className="w-5 h-5 mr-2" />
+                    <span className="font-bold">ADMIN PANEL</span>
+                  </button>
+              )}
           </div>
 
           {/* Footer Info */}
           <div className="text-white/60 text-[10px] text-center pointer-events-auto bg-black/40 px-4 py-1 rounded-full backdrop-blur-md mb-2">
-              <p>Ver 0.2.0</p>
+              <p>Ver 0.2.1</p>
           </div>
       </div>
 

@@ -15,6 +15,8 @@ import LitepaperScreen from './components/screens/LitepaperScreen';
 import UserBadge from './components/UserBadge';
 import UserInfoModal from './components/UserInfoModal';
 
+import AdminScreen from './components/screens/AdminScreen';
+
 const App: React.FC = () => {
   const {
     gameState,
@@ -39,6 +41,7 @@ const App: React.FC = () => {
     resetGame,
     openTreasureBook,
     openLitepaper, // Added
+    openAdmin, // Added
     handleInteraction,
     handleDig,
     closeTreasureDialog,
@@ -49,11 +52,12 @@ const App: React.FC = () => {
   // Farcaster User Integration
   const { user } = useFarcasterUser();
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
+  const isAdmin = user?.fid === 406233;
 
   // Common UI Wrapper logic to include User Badge everywhere
   const renderUserLayer = () => {
-    // Hide UserBadge on Litepaper screen to prevent overlap with language toggle
-    if (gameState === GameState.LITEPAPER) return null;
+    // Hide UserBadge on Litepaper and Admin screen to prevent overlap
+    if (gameState === GameState.LITEPAPER || gameState === GameState.ADMIN) return null;
 
     return (
       <>
@@ -78,7 +82,14 @@ const App: React.FC = () => {
                 onStart={startGame} 
                 onOpenBook={openTreasureBook}
                 onOpenLitepaper={openLitepaper}
+                onOpenAdmin={openAdmin}
+                isAdmin={isAdmin}
             />
+        );
+
+        case GameState.ADMIN:
+        return (
+            <AdminScreen onBack={resetGame} />
         );
 
         case GameState.TREASURE_BOOK:

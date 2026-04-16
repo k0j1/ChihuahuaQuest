@@ -8,6 +8,7 @@ export enum GameState {
   TIME_UP = 'TIME_UP',
   TREASURE_BOOK = 'TREASURE_BOOK', // 図鑑画面
   LITEPAPER = 'LITEPAPER', // ライトペーパー画面
+  ADMIN = 'ADMIN', // 管理画面
 }
 
 export enum MapTheme {
