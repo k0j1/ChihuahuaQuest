@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Database, Upload, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Database, Upload, RefreshCw, Key } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClient } from 'wagmi';
+import { formatUnits } from 'viem';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
 
 interface AdminScreenProps {
@@ -31,11 +32,19 @@ const ABI = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "type": "event",
+    "name": "RewardConfigUpdated",
+    "inputs": [
+      { "indexed": false, "name": "treasureId", "type": "uint256" },
+      { "indexed": false, "name": "chhAmount", "type": "uint256" }
+    ]
   }
 ] as const;
 
 const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
-  const [registeredCount, setRegisteredCount] = useState<number | null>(null);
+  const [registeredSettings, setRegisteredSettings] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -49,7 +58,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const totalTreasures = TREASURE_REGISTRY.slice(0, 500);
 
   useEffect(() => {
-    checkRegisteredCount();
+    fetchRegisteredSettings();
   }, [publicClient]);
 
   const connectWallet = () => {
@@ -61,37 +70,43 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     }
   };
 
-  const checkRegisteredCount = async () => {
+  const fetchRegisteredSettings = async () => {
     if (!publicClient) return;
     
     setIsLoading(true);
-    setStatusMsg('登録件数を確認中...');
+    setStatusMsg('報酬設定を読み込み中...');
     try {
-      let count = 0;
-      // Check in batches to avoid too many requests at once
-      for (let i = 0; i < totalTreasures.length; i += 50) {
-        const batch = totalTreasures.slice(i, i + 50);
-        const promises = batch.map(t => 
-          // @ts-ignore
-          publicClient.readContract({
-            address: CONTRACT_ADDRESS,
-            abi: ABI,
-            functionName: 'treasureRewards',
-            args: [BigInt(t.catalogId)]
-          })
-        );
-        const results = await Promise.all(promises);
-        count += results.filter((r: any) => r[1] === true).length;
-      }
-      setRegisteredCount(count);
+      const logs = await publicClient.getLogs({
+        address: CONTRACT_ADDRESS,
+        event: {
+            "type": "event",
+            "name": "RewardConfigUpdated",
+            "inputs": [
+              { "indexed": false, "name": "treasureId", "type": "uint256" },
+              { "indexed": false, "name": "chhAmount", "type": "uint256" }
+            ]
+        },
+        fromBlock: 0n
+      });
+
+      const currentSettings: Record<string, string> = {};
+      logs.forEach(log => {
+          const { treasureId, chhAmount } = log.args;
+          if (treasureId !== undefined && chhAmount !== undefined) {
+              currentSettings[treasureId.toString()] = formatUnits(chhAmount, 18);
+          }
+      });
+      setRegisteredSettings(currentSettings);
       setStatusMsg('');
     } catch (error) {
       console.error(error);
-      setStatusMsg('確認に失敗しました。ネットワークを確認してください。');
+      setStatusMsg('読み込みに失敗しました。');
     } finally {
       setIsLoading(false);
     }
   };
+... // (The rest of the component remains largely the same, I will use multi_edit_file to apply these changes effectively if possible, but edit_file here is OK because it's a Contiguous Block Edit of ABI and the main functions)
+
 
   const registerBatch = async (startIndex: number) => {
     if (!isConnected || !address) {
@@ -197,7 +212,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-gray-400 text-sm">現在の登録状況</h3>
             <button 
-              onClick={checkRegisteredCount}
+              onClick={fetchRegisteredSettings}
               disabled={isLoading}
               className="p-1 bg-gray-700 hover:bg-gray-600 rounded disabled:opacity-50"
             >
@@ -205,14 +220,20 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
             </button>
           </div>
           <p className="text-3xl font-bold text-center py-2">
-            {registeredCount !== null ? (
-              <span className={registeredCount === totalTreasures.length ? 'text-green-400' : 'text-yellow-400'}>
-                {registeredCount} <span className="text-lg text-gray-400">/ {totalTreasures.length}</span>
-              </span>
-            ) : (
-              <span className="text-gray-500">-</span>
-            )}
+            <span className={Object.keys(registeredSettings).length === totalTreasures.length ? 'text-green-400' : 'text-yellow-400'}>
+              {Object.keys(registeredSettings).length} <span className="text-lg text-gray-400">/ {totalTreasures.length}</span>
+            </span>
           </p>
+
+          {/* List display */}
+          <div className="mt-4 max-h-40 overflow-y-auto bg-black/30 p-2 rounded text-xs font-mono">
+            {Object.entries(registeredSettings).map(([id, amount]) => (
+                <div key={id} className="flex justify-between py-1 border-b border-gray-700">
+                    <span>ID: {id}</span>
+                    <span className="text-yellow-400">{amount} CHH</span>
+                </div>
+            ))}
+          </div>
         </div>
 
         {/* Actions */}
