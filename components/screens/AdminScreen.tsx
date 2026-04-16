@@ -105,7 +105,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       setIsLoading(false);
     }
   };
-... // (The rest of the component remains largely the same, I will use multi_edit_file to apply these changes effectively if possible, but edit_file here is OK because it's a Contiguous Block Edit of ABI and the main functions)
 
 
   const registerBatch = async (startIndex: number) => {
@@ -137,7 +136,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       }
       
       setStatusMsg(`登録成功！`);
-      checkRegisteredCount();
+      fetchRegisteredSettings();
     } catch (error: any) {
       console.error(error);
       setStatusMsg(`エラー: ${error.message || '登録に失敗しました'}`);
