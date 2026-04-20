@@ -98,9 +98,9 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       });
       setRegisteredSettings(currentSettings);
       setStatusMsg('');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setStatusMsg('読み込みに失敗しました。');
+      setStatusMsg(`読み込みに失敗しました: ${error.message || '不明なエラー'}`);
     } finally {
       setIsLoading(false);
     }
