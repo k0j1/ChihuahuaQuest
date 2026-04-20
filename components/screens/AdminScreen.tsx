@@ -256,7 +256,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
 
         {/* Messages */}
         {statusMsg && (
-          <div className="p-3 bg-black/50 border border-gray-600 rounded text-sm text-center">
+          <div className={`p-3 border rounded text-sm text-center ${statusMsg.includes('失敗') ? 'bg-red-900/50 border-red-600 text-red-200' : 'bg-black/50 border-gray-600'}`}>
             {statusMsg}
           </div>
         )}
