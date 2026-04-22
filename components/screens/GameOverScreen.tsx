@@ -18,6 +18,14 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   const publicClient = usePublicClient();
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+
+  const copyError = () => {
+    if (errorDetail) {
+      navigator.clipboard.writeText(errorDetail);
+      setClaimStatus(prev => prev + " (コピーしました！)");
+    }
+  };
 
   const handleClaim = async () => {
     if (!isConnected || !address) {
@@ -31,6 +39,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
 
     setIsClaiming(true);
     setClaimStatus("署名を取得中...");
+    setErrorDetail(null); // Reset error
 
     try {
         const treasureIds = collectedTreasures.map(t => t.catalogId);
@@ -49,14 +58,15 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         });
 
         if (!res.ok) {
-            throw new Error(`署名の取得に失敗しました: ${res.statusText}`);
+            const errorText = await res.text();
+            throw new Error(`署名の取得に失敗しました (Status: ${res.status}): ${errorText}`);
         }
 
         const data = await res.json();
         const signature = data.signature;
 
         if (!signature || !signature.startsWith('0x')) {
-            throw new Error("無効な署名データを受信しました");
+            throw new Error("無効な署名データを受信しました: " + JSON.stringify(data));
         }
 
         setClaimStatus("トランザクション送信中...");
@@ -79,6 +89,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
     } catch (err: any) {
         console.error(err);
         setClaimStatus(`エラー: ${err.message || '不明なエラー'}`);
+        setErrorDetail(err.toString());
     } finally {
         setIsClaiming(false);
     }
@@ -157,10 +168,24 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         
         {/* Claim Status Message */}
         {claimStatus && (
-            <div className={`w-full mb-4 p-2 text-xs font-bold text-center rounded border ${claimStatus.includes('エラー') ? 'bg-red-100 text-red-600 border-red-300' : claimStatus.includes('成功') ? 'bg-green-100 text-green-600 border-green-300' : 'bg-blue-100 text-blue-600 border-blue-300'}`}>
-                {claimStatus}
+            <div className="w-full mb-4">
+                <div className={`p-2 text-xs font-bold text-center rounded border ${claimStatus.includes('エラー') ? 'bg-red-100 text-red-600 border-red-300' : claimStatus.includes('成功') ? 'bg-green-100 text-green-600 border-green-300' : 'bg-blue-100 text-blue-600 border-blue-300'}`}>
+                    {claimStatus}
+                </div>
+                {errorDetail && (
+                    <div className="mt-2 p-2 bg-slate-900 border border-slate-700 rounded text-[10px] text-slate-300 font-mono break-all max-h-24 overflow-y-auto">
+                        {errorDetail}
+                        <button 
+                            onClick={copyError}
+                            className="block mt-1 w-full bg-slate-700 hover:bg-slate-600 text-white py-1 rounded"
+                        >
+                            詳細をコピー
+                        </button>
+                    </div>
+                )}
             </div>
         )}
+
 
         {/* Action Buttons */}
         <div className="w-full flex flex-col gap-3">
