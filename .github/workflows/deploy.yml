@@ -30,6 +30,8 @@ jobs:
         run: npm install --legacy-peer-deps
         
       - name: Build
+        env:
+          VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
         run: npm run build
         
       - name: Upload artifact

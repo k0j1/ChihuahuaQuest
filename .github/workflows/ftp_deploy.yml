@@ -29,6 +29,7 @@ jobs:
       - name: 🏗️ Build Project
         env:
            CI: false # 警告をエラーとして扱わないようにする
+           VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
         run: npm run build
         
       - name: 🔍 Verify Build Output
