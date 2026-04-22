@@ -144,21 +144,6 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
 
               {/* Sub Buttons */}
               <div className="flex gap-4 w-full">
-                  <button 
-                    onClick={onOpenBook}
-                    className="flex-1 flex items-center justify-center px-4 py-3 bg-gradient-to-b from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-yellow-950 border-2 border-white/40 shadow-[0_4px_0_#713f12,0_6px_6px_rgba(0,0,0,0.3)] active:shadow-[0_1px_0_#713f12,0_2px_2px_rgba(0,0,0,0.3)] active:translate-y-1 transition-all rounded-lg"
-                  >
-                    <BookOpen className="w-5 h-5 mr-2" />
-                    <span className="font-bold">CATALOG</span>
-                  </button>
-
-                  <button 
-                    onClick={onOpenLitepaper}
-                    className="flex-1 flex items-center justify-center px-4 py-3 bg-gradient-to-b from-slate-500 to-slate-700 hover:from-slate-400 hover:to-slate-600 text-white border-2 border-white/40 shadow-[0_4px_0_#1e293b,0_6px_6px_rgba(0,0,0,0.3)] active:shadow-[0_1px_0_#1e293b,0_2px_2px_rgba(0,0,0,0.3)] active:translate-y-1 transition-all rounded-lg"
-                  >
-                    <FileText className="w-5 h-5 mr-2" />
-                    <span className="font-bold">LITEPAPER</span>
-                  </button>
               </div>
 
               {isAdmin && (
@@ -174,7 +159,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
 
           {/* Footer Info */}
           <div className="text-white/60 text-[10px] text-center pointer-events-auto bg-black/40 px-4 py-1 rounded-full backdrop-blur-md mb-2">
-              <p>Ver 0.2.1</p>
+              <p>Ver 0.2.3</p>
           </div>
       </div>
 

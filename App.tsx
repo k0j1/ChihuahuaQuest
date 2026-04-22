@@ -18,6 +18,7 @@ import UserBadge from './components/UserBadge';
 import UserInfoModal from './components/UserInfoModal';
 
 import AdminScreen from './components/screens/AdminScreen';
+import BottomNav from './components/BottomNav';
 
 const App: React.FC = () => {
   const [treasureInventory, setTreasureInventory] = useState<Record<string, { count: number, lastFound: number }>>({});
@@ -78,6 +79,7 @@ const App: React.FC = () => {
     fps,
     discoveredCatalogIds,
     isPendingDig,
+    setGameState,
     startGame,
     resetGame,
     openTreasureBook,
@@ -119,13 +121,18 @@ const App: React.FC = () => {
     switch (gameState) {
         case GameState.TITLE:
         return (
-            <TitleScreen 
-                onStart={startGame} 
-                onOpenBook={openTreasureBook}
-                onOpenLitepaper={openLitepaper}
-                onOpenAdmin={openAdmin}
-                isAdmin={isAdmin}
-            />
+            <div className="h-[100dvh] flex flex-col">
+                <div className="flex-1 overflow-hidden">
+                    <TitleScreen 
+                        onStart={startGame} 
+                        onOpenBook={openTreasureBook}
+                        onOpenLitepaper={openLitepaper}
+                        onOpenAdmin={openAdmin}
+                        isAdmin={isAdmin}
+                    />
+                </div>
+                <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
+            </div>
         );
 
         case GameState.ADMIN:
@@ -135,16 +142,26 @@ const App: React.FC = () => {
 
         case GameState.TREASURE_BOOK:
         return (
-            <TreasureBookScreen 
-                discoveredIds={discoveredCatalogIds} 
-                inventory={treasureInventory}
-                onBack={resetGame} 
-            />
+            <div className="h-[100dvh] flex flex-col bg-slate-900">
+                <div className="flex-1 overflow-hidden">
+                    <TreasureBookScreen 
+                        discoveredIds={discoveredCatalogIds} 
+                        inventory={treasureInventory}
+                        onBack={resetGame} 
+                    />
+                </div>
+                <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
+            </div>
         );
 
         case GameState.LITEPAPER:
         return (
-            <LitepaperScreen onBack={resetGame} />
+            <div className="h-[100dvh] flex flex-col bg-slate-900">
+                <div className="flex-1 overflow-hidden">
+                    <LitepaperScreen onBack={resetGame} />
+                </div>
+                <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
+            </div>
         );
 
         case GameState.GAME_OVER:

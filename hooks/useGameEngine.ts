@@ -711,6 +711,7 @@ export const useGameEngine = () => {
     fps,
     discoveredCatalogIds,
     isPendingDig,
+    setGameState,
     startGame,
     resetGame,
     openTreasureBook,
