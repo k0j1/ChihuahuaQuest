@@ -76,26 +76,31 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     setIsLoading(true);
     setStatusMsg('報酬設定を読み込み中...');
     try {
-      const logs = await publicClient.getLogs({
-        address: CONTRACT_ADDRESS,
-        event: {
-            "type": "event",
-            "name": "RewardConfigUpdated",
-            "inputs": [
-              { "indexed": false, "name": "treasureId", "type": "uint256" },
-              { "indexed": false, "name": "chhAmount", "type": "uint256" }
-            ]
-        },
-        fromBlock: 0n
+      // 1-500までのIDリストを作成
+      const ids = Array.from({ length: 500 }, (_, i) => i + 1);
+      
+      // プロミスを作成して並列で実行
+      const results = await Promise.all(
+        ids.map(id => 
+          publicClient.readContract({
+            address: CONTRACT_ADDRESS,
+            abi: ABI,
+            functionName: 'treasureRewards',
+            args: [BigInt(id)]
+          })
+        )
+      );
+
+      // データの整形 (resは [chhAmount, exists] のタプル)
+      const currentSettings: Record<string, string> = {};
+      results.forEach((res: any, index) => {
+        const chhAmount = res[0];
+        const exists = res[1];
+        if (exists) {
+          currentSettings[ids[index].toString()] = formatUnits(chhAmount, 18);
+        }
       });
 
-      const currentSettings: Record<string, string> = {};
-      logs.forEach(log => {
-          const { treasureId, chhAmount } = log.args;
-          if (treasureId !== undefined && chhAmount !== undefined) {
-              currentSettings[treasureId.toString()] = formatUnits(chhAmount, 18);
-          }
-      });
       setRegisteredSettings(currentSettings);
       setStatusMsg('');
     } catch (error: any) {
