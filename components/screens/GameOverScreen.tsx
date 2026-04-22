@@ -43,8 +43,15 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
 
     try {
         const treasureIds = collectedTreasures.map(t => t.catalogId);
-        const requestId = crypto.randomUUID();
-
+        
+        // Fetch current nonce from contract
+        const nonce = await publicClient.readContract({
+            address: TREASURE_CONTRACT_ADDRESS,
+            abi: TREASURE_CONTRACT_ABI,
+            functionName: 'nonces',
+            args: [address]
+        }) as bigint;
+        
         const apiUrl = import.meta.env.VITE_SIGNATURE_API_URL || '/api/sign.php';
         
         const res = await fetch(apiUrl, {
@@ -53,7 +60,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
             body: JSON.stringify({
                 user: address,
                 treasureIds,
-                requestId
+                nonce: Number(nonce)
             })
         });
 
@@ -75,7 +82,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
             address: TREASURE_CONTRACT_ADDRESS,
             abi: TREASURE_CONTRACT_ABI,
             functionName: 'recordGameSession',
-            args: [treasureIds.map(id => BigInt(id)), signature as `0x${string}`, requestId]
+            args: [treasureIds.map(id => BigInt(id)), nonce, signature as `0x${string}`]
         });
 
         setClaimStatus(`承認待ち... (${hash.slice(0, 10)}...)`);

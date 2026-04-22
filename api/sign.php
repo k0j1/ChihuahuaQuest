@@ -36,11 +36,10 @@ loadEnv(__DIR__ . '/.env');
 use kornrunner\Keccak;
 use Elliptic\EC;
 
-// ==========================================
-// 【重要】署名用の秘密鍵（0xから始まらないHEX文字列）
-// 実際のサーバー環境では、環境変数から読み込むなどの安全な管理を行ってください。
-// ==========================================
+// ... (Keep header logic)
+
 $adminPrivateKey = getenv('ADMIN_PRIVATE_KEY') ?: 'YOUR_PRIVATE_KEY_HERE';
+$contractAddress = getenv('CONTRACT_ADDRESS') ?: '';
 
 $input = json_decode(file_get_contents('php://input'), true);
 if (!$input) {
@@ -51,80 +50,59 @@ if (!$input) {
 
 $user = $input['user'] ?? '';
 $treasureIds = $input['treasureIds'] ?? [];
-$requestId = $input['requestId'] ?? '';
+$nonce = $input['nonce'] ?? 0;
 
-if (!$user || !is_array($treasureIds) || !$requestId) {
+if (!$user || !is_array($treasureIds) || !isset($input['nonce']) || !$contractAddress) {
     http_response_code(400);
-    echo json_encode(['error' => 'Missing parameters']);
+    echo json_encode(['error' => 'Missing parameters or missing CONTRACT_ADDRESS']);
     exit;
 }
 
-function encodeAbiAddress($address) {
-    return str_pad(strtolower(str_replace('0x', '', $address)), 64, '0', STR_PAD_LEFT);
+// ABI packed encoding helpers
+function packAddress($address) {
+    return hex2bin(str_replace('0x', '', strtolower($address)));
 }
 
-function encodeAbiUint256($val) {
-    // Note: This simple implementation only supports integer values that fit within PHP's maximum integer limit.
-    return str_pad(dechex((int)$val), 64, '0', STR_PAD_LEFT);
-}
-
-function encodeAbiString($string) {
-    $len = strlen($string);
-    $lenHex = str_pad(dechex($len), 64, '0', STR_PAD_LEFT);
-    $dataHex = bin2hex($string);
-    $dataHex = str_pad($dataHex, ceil($len / 32) * 64, '0', STR_PAD_RIGHT);
-    return $lenHex . $dataHex;
+function packUint256($val) {
+    return hex2bin(str_pad(dechex((int)$val), 64, '0', STR_PAD_LEFT));
 }
 
 try {
-    // 1. Ethereum ABI Encoding ( abi.encode(address,uint256[],string) )
-    $addressHex = encodeAbiAddress($user);
-
-    // Offsets
-    // Variables: address (32), uint256[] (32, dynamic offset), string (32, dynamic offset) -> Total base size = 96 bytes (0x60)
-    $offsetArray = 96;
-    $offsetArrayHex = encodeAbiUint256($offsetArray);
-
-    // String offset = array offset + array size (32 bytes for length + 32 bytes for each element)
-    $offsetString = $offsetArray + 32 + (32 * count($treasureIds));
-    $offsetStringHex = encodeAbiUint256($offsetString);
-
-    // Array data
-    $arrayLenHex = encodeAbiUint256(count($treasureIds));
-    $elementsHex = '';
-    foreach ($treasureIds as $id) {
-        $elementsHex .= encodeAbiUint256($id);
-    }
-
-    // String data
-    $stringDataHex = encodeAbiString($requestId);
-
-    // Combine
-    $encodedHex = $addressHex . $offsetArrayHex . $offsetStringHex . $arrayLenHex . $elementsHex . $stringDataHex;
+    // 1. Ethereum ABI Packed Encoding ( abi.encodePacked(msg.sender, treasureIds, nonce, address(this)) )
     
-    // 2. エンコードしたデータのKeccak256ハッシュを取得 (messageHash)
-    $messageHash = Keccak::hash(hex2bin($encodedHex), 256);
+    // msg.sender (20 bytes)
+    $encoded = packAddress($user);
+    
+    // treasureIds (uint256[]) - packed as elements, 32 bytes each
+    foreach ($treasureIds as $id) {
+        $encoded .= packUint256($id);
+    }
+    
+    // nonce (32 bytes)
+    $encoded .= packUint256($nonce);
+    
+    // contract address (20 bytes)
+    $encoded .= packAddress($contractAddress);
+    
+    // 2. Keccak256ハッシュを取得 (messageHash)
+    $messageHash = Keccak::hash($encoded, 256);
 
-    // 3. EIP-191プレフィックスを付与してEthereum署名用ハッシュを生成 (ethSignedMessageHash)
+    // 3. EIP-191プレフィックスを付与 (ethSignedMessageHash)
     $prefix = "\x19Ethereum Signed Message:\n32";
     $ethSignedMessageHash = Keccak::hash($prefix . hex2bin($messageHash), 256);
 
-    // 4. secp256k1の秘密鍵で署名 (r, s, vを作成)
+    // 4. 署名
     $ec = new EC('secp256k1');
     $key = $ec->keyFromPrivate($adminPrivateKey);
     $signature = $key->sign($ethSignedMessageHash, ['canonical' => true]);
 
-    // r, s を64文字のHEX値に0埋め、vを計算 (recoveryParam + 27)
     $r = str_pad($signature->r->toString(16), 64, '0', STR_PAD_LEFT);
     $s = str_pad($signature->s->toString(16), 64, '0', STR_PAD_LEFT);
     $v = dechex($signature->recoveryParam + 27);
 
-    // 0x...というフォーマットに変換
-    $signatureHex = '0x' . $r . $s . $v;
-
     echo json_encode([
-        'signature' => $signatureHex,
-        'requestId' => $requestId,
+        'signature' => '0x' . $r . $s . $v,
+        'nonce' => $nonce,
         'messageHash' => '0x' . $messageHash
     ]);
 
