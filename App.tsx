@@ -121,7 +121,10 @@ const App: React.FC = () => {
     switch (gameState) {
         case GameState.TITLE:
         return (
-            <div className="h-[100dvh] flex flex-col">
+            <div className="h-[100dvh] flex flex-col relative">
+                <div className="absolute top-2 right-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
+                   Ver 0.2.5
+                </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
                         onStart={startGame} 
