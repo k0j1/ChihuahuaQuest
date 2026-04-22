@@ -223,7 +223,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         {/* Catalog */}
         <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-400 text-sm">財宝一覧 (値変更可)</h3>
+            <h3 className="text-gray-400 text-sm">財宝一覧 (編集可)</h3>
             <div className="flex gap-2">
                 <button 
                   onClick={fetchRegisteredSettings}
@@ -242,17 +242,25 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto bg-black/30 p-2 rounded">
+          <div className="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto bg-black/30 p-2 rounded">
             {totalTreasures.map((t) => (
-                <div key={t.catalogId} className="flex items-center gap-2 py-2 border-b border-gray-700 text-xs">
-                    <span className="w-12">ID: {t.catalogId}</span>
+                <div 
+                    key={t.catalogId} 
+                    className="flex items-center gap-3 py-2 px-2 border-b border-gray-700 text-xs hover:bg-gray-700 cursor-pointer rounded transition-colors"
+                    onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}
+                >
+                    <div className="text-2xl">{t.icon}</div>
+                    <div className="flex-1 min-w-0">
+                        <div className="font-bold truncate">{t.name}</div>
+                        <div className="text-gray-400 truncate">{t.description}</div>
+                    </div>
                     <input 
                         type="number"
                         value={editableAmounts[t.catalogId] || '0'}
                         onChange={(e) => updateAmount(t.catalogId, e.target.value)}
-                        className="flex-1 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
+                        className="w-20 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
                     />
-                    <span className="w-10">CHH</span>
+                    <span className="w-8">CHH</span>
                 </div>
             ))}
           </div>
