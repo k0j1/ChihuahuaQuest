@@ -112,19 +112,35 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   };
 
 
-  const registerBatch = async (startIndex: number) => {
+  const [editableAmounts, setEditableAmounts] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setEditableAmounts(registeredSettings);
+  }, [registeredSettings]);
+
+  const updateAmount = (id: string, value: string) => {
+    setEditableAmounts(prev => ({ ...prev, [id]: value }));
+  };
+
+  const saveRewards = async () => {
     if (!isConnected || !address) {
       setStatusMsg('ウォレットを接続してください');
       return;
     }
 
     setIsLoading(true);
-    setStatusMsg(`${startIndex + 1}〜${Math.min(startIndex + BATCH_SIZE, totalTreasures.length)}件目を登録中...`);
+    setStatusMsg('報酬データを保存中...');
 
     try {
-      const batch = totalTreasures.slice(startIndex, startIndex + BATCH_SIZE);
-      const ids = batch.map(t => BigInt(t.catalogId));
-      const amounts = batch.map(t => BigInt(t.value) * BigInt(10**18));
+      const ids: bigint[] = [];
+      const amounts: bigint[] = [];
+
+      totalTreasures.forEach(t => {
+        const id = t.catalogId;
+        const amount = editableAmounts[id] || '0';
+        ids.push(BigInt(id));
+        amounts.push(BigInt(Math.floor(parseFloat(amount) * 10**18)));
+      });
 
       // @ts-ignore
       const hash = await writeContractAsync({
@@ -135,25 +151,18 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
-      
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash });
       }
-      
-      setStatusMsg(`登録成功！`);
+      setStatusMsg(`保存成功！`);
       fetchRegisteredSettings();
     } catch (error: any) {
       console.error(error);
-      setStatusMsg(`エラー: ${error.message || '登録に失敗しました'}`);
+      setStatusMsg(`エラー: ${error.message || '保存に失敗しました'}`);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const batches = [];
-  for (let i = 0; i < totalTreasures.length; i += BATCH_SIZE) {
-    batches.push(i);
-  }
 
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden font-dotgothic">
@@ -211,50 +220,40 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           )}
         </div>
 
-        {/* Status */}
+        {/* Catalog */}
         <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-gray-400 text-sm">現在の登録状況</h3>
-            <button 
-              onClick={fetchRegisteredSettings}
-              disabled={isLoading}
-              className="p-1 bg-gray-700 hover:bg-gray-600 rounded disabled:opacity-50"
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-gray-400 text-sm">財宝一覧 (値変更可)</h3>
+            <div className="flex gap-2">
+                <button 
+                  onClick={fetchRegisteredSettings}
+                  disabled={isLoading}
+                  className="p-2 bg-gray-700 hover:bg-gray-600 rounded disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </button>
+                <button 
+                  onClick={saveRewards}
+                  disabled={isLoading || !isConnected}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded text-sm font-bold disabled:opacity-50"
+                >
+                  一括保存
+                </button>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-center py-2">
-            <span className={Object.keys(registeredSettings).length === totalTreasures.length ? 'text-green-400' : 'text-yellow-400'}>
-              {Object.keys(registeredSettings).length} <span className="text-lg text-gray-400">/ {totalTreasures.length}</span>
-            </span>
-          </p>
 
-          {/* List display */}
-          <div className="mt-4 max-h-40 overflow-y-auto bg-black/30 p-2 rounded text-xs font-mono">
-            {Object.entries(registeredSettings).map(([id, amount]) => (
-                <div key={id} className="flex justify-between py-1 border-b border-gray-700">
-                    <span>ID: {id}</span>
-                    <span className="text-yellow-400">{amount} CHH</span>
+          <div className="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto bg-black/30 p-2 rounded">
+            {totalTreasures.map((t) => (
+                <div key={t.catalogId} className="flex items-center gap-2 py-2 border-b border-gray-700 text-xs">
+                    <span className="w-12">ID: {t.catalogId}</span>
+                    <input 
+                        type="number"
+                        value={editableAmounts[t.catalogId] || '0'}
+                        onChange={(e) => updateAmount(t.catalogId, e.target.value)}
+                        className="flex-1 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
+                    />
+                    <span className="w-10">CHH</span>
                 </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700">
-          <h3 className="text-gray-400 text-sm mb-4">報酬データ登録 (一括 {BATCH_SIZE}件)</h3>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {batches.map((startIndex, idx) => (
-              <button
-                key={startIndex}
-                onClick={() => registerBatch(startIndex)}
-                disabled={isLoading || !isConnected}
-                className="flex items-center justify-between px-4 py-3 bg-purple-700 hover:bg-purple-600 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg font-bold transition-colors"
-              >
-                <span>バッチ {idx + 1} ({startIndex + 1}〜{Math.min(startIndex + BATCH_SIZE, totalTreasures.length)})</span>
-                <Upload className="w-4 h-4" />
-              </button>
             ))}
           </div>
         </div>
