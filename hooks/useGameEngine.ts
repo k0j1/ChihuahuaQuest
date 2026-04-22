@@ -36,7 +36,7 @@ export const useGameEngine = () => {
   const [isGeneratingTreasure, setIsGeneratingTreasure] = useState(false);
 
   // Persistent Treasure Book State
-  const [discoveredCatalogIds, setDiscoveredCatalogIds] = useState<number[]>([]);
+  // Removed DiscoveredCatalogIds logic as it's now handled by App.tsx/Contract
 
   // Debug State
   const [fps, setFps] = useState(0);
@@ -59,18 +59,6 @@ export const useGameEngine = () => {
   useEffect(() => {
     mapDataRef.current = mapData;
   }, [mapData]);
-
-  // Load Discovered Treasures from LocalStorage
-  useEffect(() => {
-    try {
-        const saved = localStorage.getItem('chihuahua_quest_book');
-        if (saved) {
-            setDiscoveredCatalogIds(JSON.parse(saved));
-        }
-    } catch (e) {
-        console.error("Failed to load treasure book", e);
-    }
-  }, []);
 
   // Spawn Enemy Helper with weighted random types
   const spawnEnemy = (count: number, currentTiles: TileType[][], playerP: Position): Enemy[] => {
@@ -248,16 +236,6 @@ export const useGameEngine = () => {
                 setCollectedTreasures(prev => [...prev, treasure]);
                 setGold(prev => prev + treasure.value);
 
-                // Update Discovery Book
-                setDiscoveredCatalogIds(prev => {
-                    if (!prev.includes(treasure.catalogId)) {
-                        const newIds = [...prev, treasure.catalogId];
-                        localStorage.setItem('chihuahua_quest_book', JSON.stringify(newIds));
-                        return newIds;
-                    }
-                    return prev;
-                });
-                
                 // Show result dialog
                 setGameState(GameState.TREASURE_FOUND);
             } catch (e) {
@@ -709,7 +687,6 @@ export const useGameEngine = () => {
     foundTreasure,
     isGeneratingTreasure,
     fps,
-    discoveredCatalogIds,
     isPendingDig,
     setGameState,
     startGame,

@@ -92,10 +92,41 @@ const App: React.FC = () => {
     currentPath // Added
   } = useGameEngine();
 
-  // Farcaster User Integration
+// Farcaster User Integration
   const { user } = useFarcasterUser();
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
   const isAdmin = user?.fid === 406233;
+  
+  // Blockchain-based Treasure Discovery
+  const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
+
+  useEffect(() => {
+      if (!publicClient || !address) return;
+
+      const fetchDiscovered = async () => {
+          try {
+              // Fetch Treasure events
+              const logs = await publicClient.getLogs({
+                  address: TREASURE_CONTRACT_ADDRESS,
+                  event: TREASURE_CONTRACT_ABI[0], // SessionCompleted
+                  args: { user: address },
+                  fromBlock: 0n
+              });
+              
+              const uniqueIds = new Set<number>();
+              logs.forEach(log => {
+                  const { treasureIds } = log.args;
+                  if (treasureIds) {
+                      treasureIds.forEach(id => uniqueIds.add(Number(id)));
+                  }
+              });
+              setDiscoveredIds(Array.from(uniqueIds));
+          } catch (error) {
+              console.error("図鑑取得エラー:", error);
+          }
+      };
+      fetchDiscovered();
+  }, [publicClient, address]);
 
   // Common UI Wrapper logic to include User Badge everywhere
   const renderUserLayer = () => {
@@ -123,7 +154,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.2.8
+                   Ver 0.2.9
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -146,9 +177,12 @@ const App: React.FC = () => {
         case GameState.TREASURE_BOOK:
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
+                <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
+                   Ver 0.2.9
+                </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
-                        discoveredIds={discoveredCatalogIds} 
+                        discoveredIds={discoveredIds} 
                         inventory={treasureInventory}
                         onBack={resetGame} 
                     />
