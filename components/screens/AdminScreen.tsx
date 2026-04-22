@@ -122,43 +122,33 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     setEditableAmounts(prev => ({ ...prev, [id]: value }));
   };
 
-  const saveRewards = async () => {
+  const updateIndividualReward = async (id: string, amount: string) => {
     if (!isConnected || !address) {
       setStatusMsg('ウォレットを接続してください');
       return;
     }
 
     setIsLoading(true);
-    setStatusMsg('報酬データを保存中...');
+    setStatusMsg(`ID ${id} を更新中...`);
 
     try {
-      const ids: bigint[] = [];
-      const amounts: bigint[] = [];
-
-      totalTreasures.forEach(t => {
-        const id = t.catalogId;
-        const amount = editableAmounts[id] || '0';
-        ids.push(BigInt(id));
-        amounts.push(BigInt(Math.floor(parseFloat(amount) * 10**18)));
-      });
-
       // @ts-ignore
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: ABI,
         functionName: 'setTreasureRewards',
-        args: [ids, amounts],
+        args: [[BigInt(id)], [BigInt(Math.floor(parseFloat(amount) * 10**18))]],
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash });
       }
-      setStatusMsg(`保存成功！`);
+      setStatusMsg(`ID ${id} 更新成功！`);
       fetchRegisteredSettings();
     } catch (error: any) {
       console.error(error);
-      setStatusMsg(`エラー: ${error.message || '保存に失敗しました'}`);
+      setStatusMsg(`エラー: ${error.message || '更新に失敗しました'}`);
     } finally {
       setIsLoading(false);
     }
@@ -232,13 +222,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                 >
                   <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 </button>
-                <button 
-                  onClick={saveRewards}
-                  disabled={isLoading || !isConnected}
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded text-sm font-bold disabled:opacity-50"
-                >
-                  一括保存
-                </button>
             </div>
           </div>
 
@@ -246,21 +229,26 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
             {totalTreasures.map((t) => (
                 <div 
                     key={t.catalogId} 
-                    className="flex items-center gap-3 py-2 px-2 border-b border-gray-700 text-xs hover:bg-gray-700 cursor-pointer rounded transition-colors"
-                    onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}
+                    className="flex items-center gap-2 py-2 px-2 border-b border-gray-700 text-xs hover:bg-gray-700 rounded transition-colors"
                 >
-                    <div className="text-2xl">{t.icon}</div>
-                    <div className="flex-1 min-w-0">
+                    <div className="text-2xl cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>{t.icon}</div>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
-                        <div className="text-gray-400 truncate">{t.description}</div>
                     </div>
                     <input 
                         type="number"
                         value={editableAmounts[t.catalogId] || '0'}
                         onChange={(e) => updateAmount(t.catalogId, e.target.value)}
-                        className="w-20 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
+                        className="w-16 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
                     />
                     <span className="w-8">CHH</span>
+                    <button
+                        onClick={() => updateIndividualReward(t.catalogId, editableAmounts[t.catalogId] || '0')}
+                        disabled={isLoading || !isConnected}
+                        className="px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded text-[10px] font-bold disabled:opacity-50"
+                    >
+                        更新
+                    </button>
                 </div>
             ))}
           </div>
