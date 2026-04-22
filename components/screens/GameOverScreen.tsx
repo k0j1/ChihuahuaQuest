@@ -36,11 +36,8 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         const treasureIds = collectedTreasures.map(t => t.catalogId);
         const requestId = crypto.randomUUID();
 
-        const apiUrl = import.meta.env.VITE_SIGNATURE_API_URL;
-        if (!apiUrl) {
-            throw new Error("署名用APIのURLが設定されていません(.envを確認してください)");
-        }
-
+        const apiUrl = import.meta.env.VITE_SIGNATURE_API_URL || '/api/sign.php';
+        
         const res = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
