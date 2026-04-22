@@ -62,7 +62,20 @@ export const SPRITE_CONFIG = {
   FRAME_RATE: 10, // Animation speed
 };
 
-// --- Rarity System ---
+export const TREASURE_CONTRACT_ADDRESS = '0x9006cFA4bf5893586eDa1095E441998e059c440d';
+
+export const TREASURE_CONTRACT_ABI = [
+  {
+    "type": "event",
+    "name": "SessionCompleted",
+    "inputs": [
+       { "indexed": true, "name": "user", "type": "address" },
+       { "indexed": false, "name": "treasureIds", "type": "uint256[]" },
+       { "indexed": false, "name": "timestamp", "type": "uint256" }
+    ]
+  }
+] as const;
+
 
 export interface RarityDef {
   stars: number;

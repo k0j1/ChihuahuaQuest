@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { usePublicClient, useAccount } from 'wagmi';
+import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from './constants';
 import { GameState } from './types';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useFarcasterUser } from './hooks/useFarcasterUser';
@@ -18,6 +20,45 @@ import UserInfoModal from './components/UserInfoModal';
 import AdminScreen from './components/screens/AdminScreen';
 
 const App: React.FC = () => {
+  const [treasureInventory, setTreasureInventory] = useState<Record<string, { count: number, lastFound: number }>>({});
+  const publicClient = usePublicClient();
+  const { address } = useAccount();
+
+  useEffect(() => {
+      if (!publicClient || !address) return;
+
+      const fetchInventory = async () => {
+          try {
+              const logs = await publicClient.getLogs({
+                  address: TREASURE_CONTRACT_ADDRESS,
+                  event: TREASURE_CONTRACT_ABI[0],
+                  args: { user: address },
+                  fromBlock: 0n
+              });
+
+              const inventory: Record<string, { count: number, lastFound: number }> = {};
+              logs.forEach(log => {
+                  const { treasureIds, timestamp } = log.args;
+                  if (!treasureIds || !timestamp) return;
+                  treasureIds.forEach(id => {
+                      const tId = id.toString();
+                      if (!inventory[tId]) {
+                          inventory[tId] = { count: 0, lastFound: 0 };
+                      }
+                      inventory[tId].count += 1;
+                      if (Number(timestamp) > inventory[tId].lastFound) {
+                          inventory[tId].lastFound = Number(timestamp);
+                      }
+                  });
+              });
+              setTreasureInventory(inventory);
+          } catch (error) {
+              console.error("財宝取得エラー:", error);
+          }
+      };
+      fetchInventory();
+  }, [publicClient, address]);
+
   const {
     gameState,
     timeLeft,
@@ -96,6 +137,7 @@ const App: React.FC = () => {
         return (
             <TreasureBookScreen 
                 discoveredIds={discoveredCatalogIds} 
+                inventory={treasureInventory}
                 onBack={resetGame} 
             />
         );

@@ -7,10 +7,11 @@ import { getRarity } from '../../constants';
 
 interface TreasureBookScreenProps {
   discoveredIds: number[];
+  inventory: Record<string, { count: number, lastFound: number }>;
   onBack: () => void;
 }
 
-const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, onBack }) => {
+const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, inventory, onBack }) => {
   const [selectedTreasure, setSelectedTreasure] = useState<Treasure | null>(null);
 
   // Calculate completion percentage
@@ -87,6 +88,10 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                                     </div>
                                     <div className="text-[10px] text-center text-white font-bold leading-tight w-full truncate px-1 z-10 drop-shadow-md">
                                         {treasure.name}
+                                    </div>
+                                    {/* Amount Found */}
+                                    <div className="absolute bottom-1 right-1 text-[8px] bg-black/50 px-1 rounded text-white font-mono z-10">
+                                        ×{inventory[treasure.catalogId]?.count || 0}
                                     </div>
                                     {/* Rarity Stars */}
                                     <div className="text-[8px] text-yellow-300 absolute top-1 right-1">
