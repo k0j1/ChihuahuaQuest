@@ -70,20 +70,32 @@ export const TREASURE_CONTRACT_ABI = [
     "name": "SessionCompleted",
     "inputs": [
        { "indexed": true, "name": "user", "type": "address" },
+       { "indexed": false, "name": "totalReward", "type": "uint256" },
        { "indexed": false, "name": "treasureIds", "type": "uint256[]" },
        { "indexed": false, "name": "timestamp", "type": "uint256" }
     ]
   },
   {
+    "type": "function",
+    "name": "recordGameSession",
     "inputs": [
       { "internalType": "uint256[]", "name": "treasureIds", "type": "uint256[]" },
-      { "internalType": "bytes", "name": "signature", "type": "bytes" },
-      { "internalType": "string", "name": "requestId", "type": "string" }
+      { "internalType": "uint256", "name": "nonce", "type": "uint256" },
+      { "internalType": "bytes", "name": "signature", "type": "bytes" }
     ],
-    "name": "recordGameSession",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "nonces",
+    "inputs": [
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "outputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "view"
   }
 ] as const;
 
