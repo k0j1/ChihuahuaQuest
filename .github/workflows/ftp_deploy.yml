@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: 🟢 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
       - name: 📦 Install dependencies
         # 依存関係のインストール漏れを防ぐ
         run: |
@@ -30,8 +36,13 @@ jobs:
         env:
            CI: false # 警告をエラーとして扱わないようにする
            VITE_ALCHEMY_API_KEY: ${{ secrets.VITE_ALCHEMY_API_KEY }}
-        run: npm run build
-        
+        run: |
+          npm run build
+          mkdir -p ./dist/api
+          cp -r ./api/* ./dist/api/
+          cd ./dist/api
+          composer install --no-dev --optimize-autoloader
+          
       - name: 🔍 Verify Build Output
         run: ls -la ./dist
 
