@@ -73,6 +73,17 @@ export const TREASURE_CONTRACT_ABI = [
        { "indexed": false, "name": "treasureIds", "type": "uint256[]" },
        { "indexed": false, "name": "timestamp", "type": "uint256" }
     ]
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256[]", "name": "treasureIds", "type": "uint256[]" },
+      { "internalType": "bytes", "name": "signature", "type": "bytes" },
+      { "internalType": "string", "name": "requestId", "type": "string" }
+    ],
+    "name": "recordGameSession",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ] as const;
 

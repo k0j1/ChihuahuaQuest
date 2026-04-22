@@ -1,6 +1,8 @@
-import React from 'react';
-import { Clock, Skull, Trophy, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, Skull, Trophy, Star, Loader2 } from 'lucide-react';
 import { GameState, Treasure } from '../../types';
+import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
+import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
 
 interface GameOverScreenProps {
   gameState: GameState;
@@ -11,6 +13,79 @@ interface GameOverScreenProps {
 
 const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collectedTreasures, onRestart }) => {
   const isTimeUp = gameState === GameState.TIME_UP;
+  const { address, isConnected } = useAccount();
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimStatus, setClaimStatus] = useState<string | null>(null);
+
+  const handleClaim = async () => {
+    if (!isConnected || !address) {
+       setClaimStatus("ウォレットが接続されていません");
+       return;
+    }
+    if (collectedTreasures.length === 0) {
+       setClaimStatus("獲得した財宝がありません");
+       return;
+    }
+
+    setIsClaiming(true);
+    setClaimStatus("署名を取得中...");
+
+    try {
+        const treasureIds = collectedTreasures.map(t => t.catalogId);
+        const requestId = crypto.randomUUID();
+
+        const apiUrl = import.meta.env.VITE_SIGNATURE_API_URL;
+        if (!apiUrl) {
+            throw new Error("署名用APIのURLが設定されていません(.envを確認してください)");
+        }
+
+        const res = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user: address,
+                treasureIds,
+                requestId
+            })
+        });
+
+        if (!res.ok) {
+            throw new Error(`署名の取得に失敗しました: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        const signature = data.signature;
+
+        if (!signature || !signature.startsWith('0x')) {
+            throw new Error("無効な署名データを受信しました");
+        }
+
+        setClaimStatus("トランザクション送信中...");
+
+        const hash = await writeContractAsync({
+            address: TREASURE_CONTRACT_ADDRESS,
+            abi: TREASURE_CONTRACT_ABI,
+            functionName: 'recordGameSession',
+            args: [treasureIds.map(id => BigInt(id)), signature as `0x${string}`, requestId]
+        });
+
+        setClaimStatus(`承認待ち... (${hash.slice(0, 10)}...)`);
+
+        if (publicClient) {
+            await publicClient.waitForTransactionReceipt({ hash });
+        }
+
+        setClaimStatus("報酬の獲得に成功しました！");
+
+    } catch (err: any) {
+        console.error(err);
+        setClaimStatus(`エラー: ${err.message || '不明なエラー'}`);
+    } finally {
+        setIsClaiming(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-[100dvh] w-screen bg-gradient-to-b from-sky-300 to-sky-600 text-gray-800 z-50 p-4 relative overflow-hidden">
@@ -55,7 +130,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         </div>
 
         {/* Treasure List */}
-        <div className="w-full flex-1 min-h-0 flex flex-col mb-6">
+        <div className="w-full flex-1 min-h-0 flex flex-col mb-4">
             <h3 className="text-center text-gray-500 text-xs font-bold mb-2 tracking-widest uppercase flex items-center justify-center gap-2">
                 <span>獲得したお宝</span>
                 <span className="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{collectedTreasures.length}</span>
@@ -66,7 +141,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
                     お宝ゼロ...次は頑張ろう！
                 </div>
             ) : (
-                <div className="bg-gray-50 rounded-lg p-2 overflow-y-auto max-h-[30vh] border-2 border-gray-200 space-y-2 scrollbar-hide">
+                <div className="bg-gray-50 rounded-lg p-2 overflow-y-auto max-h-[25vh] border-2 border-gray-200 space-y-2 scrollbar-hide">
                     {collectedTreasures.map((t) => (
                         <div key={t.id} className="flex items-center gap-3 bg-white p-2 rounded border border-gray-100 shadow-sm">
                             <div className="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-full">{t.icon}</div>
@@ -83,13 +158,32 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
             )}
         </div>
         
-        {/* Restart Button */}
-        <button 
-            onClick={onRestart}
-            className="w-full py-4 bg-red-500 text-white font-bold rounded hover:bg-red-600 pixel-corners active:scale-95 transition-transform shadow-red-200 shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1"
-          >
-            タイトルへ戻る
-        </button>
+        {/* Claim Status Message */}
+        {claimStatus && (
+            <div className={`w-full mb-4 p-2 text-xs font-bold text-center rounded border ${claimStatus.includes('エラー') ? 'bg-red-100 text-red-600 border-red-300' : claimStatus.includes('成功') ? 'bg-green-100 text-green-600 border-green-300' : 'bg-blue-100 text-blue-600 border-blue-300'}`}>
+                {claimStatus}
+            </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="w-full flex flex-col gap-3">
+            <button 
+                onClick={handleClaim}
+                disabled={isClaiming || collectedTreasures.length === 0 || claimStatus?.includes('成功')}
+                className="w-full py-3 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-500 pixel-corners disabled:bg-gray-300 disabled:text-gray-500 transition-transform active:scale-95 shadow-lg border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2"
+            >
+                {isClaiming ? <Loader2 className="animate-spin w-5 h-5" /> : null}
+                {claimStatus?.includes('成功') ? '獲得済み！' : '報酬を獲得する ($CHH)'}
+            </button>
+
+            <button 
+                onClick={onRestart}
+                className="w-full py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 pixel-corners active:scale-95 transition-transform shadow-red-200 shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1"
+            >
+                タイトルへ戻る
+            </button>
+        </div>
+
       </div>
 
       <style>{`
