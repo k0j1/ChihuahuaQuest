@@ -21,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Web3p\EthereumAbi\Abi;
 use kornrunner\Keccak;
 use Elliptic\EC;
 
@@ -48,18 +47,48 @@ if (!$user || !is_array($treasureIds) || !$requestId) {
     exit;
 }
 
+function encodeAbiAddress($address) {
+    return str_pad(strtolower(str_replace('0x', '', $address)), 64, '0', STR_PAD_LEFT);
+}
+
+function encodeAbiUint256($val) {
+    // Note: This simple implementation only supports integer values that fit within PHP's maximum integer limit.
+    return str_pad(dechex((int)$val), 64, '0', STR_PAD_LEFT);
+}
+
+function encodeAbiString($string) {
+    $len = strlen($string);
+    $lenHex = str_pad(dechex($len), 64, '0', STR_PAD_LEFT);
+    $dataHex = bin2hex($string);
+    $dataHex = str_pad($dataHex, ceil($len / 32) * 64, '0', STR_PAD_RIGHT);
+    return $lenHex . $dataHex;
+}
+
 try {
-    // 1. Ethereum ABI Encoding ( abi.encode(address,uint256[],string) と同様のエンコード )
-    $abi = new Abi();
-    // 数値の配列としてエンコードさせるための変換
-    $parsedTreasureIds = array_map(function($id) { return (string)$id; }, $treasureIds);
+    // 1. Ethereum ABI Encoding ( abi.encode(address,uint256[],string) )
+    $addressHex = encodeAbiAddress($user);
 
-    $encodedHex = $abi->encodeParameters(
-        ['address', 'uint256[]', 'string'],
-        [$user, $parsedTreasureIds, $requestId]
-    );
+    // Offsets
+    // Variables: address (32), uint256[] (32, dynamic offset), string (32, dynamic offset) -> Total base size = 96 bytes (0x60)
+    $offsetArray = 96;
+    $offsetArrayHex = encodeAbiUint256($offsetArray);
 
-    $encodedHex = ltrim($encodedHex, '0x');
+    // String offset = array offset + array size (32 bytes for length + 32 bytes for each element)
+    $offsetString = $offsetArray + 32 + (32 * count($treasureIds));
+    $offsetStringHex = encodeAbiUint256($offsetString);
+
+    // Array data
+    $arrayLenHex = encodeAbiUint256(count($treasureIds));
+    $elementsHex = '';
+    foreach ($treasureIds as $id) {
+        $elementsHex .= encodeAbiUint256($id);
+    }
+
+    // String data
+    $stringDataHex = encodeAbiString($requestId);
+
+    // Combine
+    $encodedHex = $addressHex . $offsetArrayHex . $offsetStringHex . $arrayLenHex . $elementsHex . $stringDataHex;
     
     // 2. エンコードしたデータのKeccak256ハッシュを取得 (messageHash)
     $messageHash = Keccak::hash(hex2bin($encodedHex), 256);

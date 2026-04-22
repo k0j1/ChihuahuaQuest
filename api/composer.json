@@ -3,7 +3,6 @@
     "description": "Signature generation backend for Chihuahua Quest",
     "require": {
         "simplito/elliptic-php": "^1.0",
-        "kornrunner/keccak": "^1.1",
-        "web3p/ethereum-abi": "^0.3.3"
+        "kornrunner/keccak": "^1.1"
     }
 }
