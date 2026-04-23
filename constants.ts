@@ -96,6 +96,17 @@ export const TREASURE_CONTRACT_ABI = [
       { "internalType": "uint256", "name": "", "type": "uint256" }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "canClaimToday",
+    "inputs": [
+      { "internalType": "address", "name": "user", "type": "address" }
+    ],
+    "outputs": [
+      { "internalType": "bool", "name": "", "type": "bool" }
+    ],
+    "stateMutability": "view"
   }
 ] as const;
 

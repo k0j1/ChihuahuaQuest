@@ -11,9 +11,10 @@ interface TitleScreenProps {
   onOpenLitepaper: () => void;
   onOpenAdmin?: () => void;
   isAdmin?: boolean;
+  canClaim: boolean;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, isAdmin }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, isAdmin, canClaim }) => {
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
       
@@ -135,11 +136,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
               {/* START BUTTON */}
               <button 
                 onClick={onStart}
-                className="group relative flex items-center justify-center w-full py-6 bg-gradient-to-b from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 text-white border-2 border-white/40 shadow-[0_6px_0_#7f1d1d,0_10px_10px_rgba(0,0,0,0.5)] active:shadow-[0_2px_0_#7f1d1d,0_4px_4px_rgba(0,0,0,0.5)] active:translate-y-1 transition-all rounded-xl"
+                disabled={!canClaim}
+                className={`group relative flex items-center justify-center w-full py-6 bg-gradient-to-b ${canClaim ? 'from-red-500 to-red-700 hover:from-red-400 hover:to-red-600' : 'from-gray-500 to-gray-700'} text-white border-2 border-white/40 shadow-[0_6px_0_#7f1d1d,0_10px_10px_rgba(0,0,0,0.5)] active:shadow-[0_2px_0_#7f1d1d,0_4px_4px_rgba(0,0,0,0.5)] active:translate-y-1 transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="absolute inset-0 rounded-xl border-4 border-white/10"></div>
                 <Play className="w-8 h-8 mr-3 fill-current group-hover:animate-pulse filter drop-shadow-md" />
-                <span className="text-3xl font-bold tracking-widest pixel-text-shadow">START</span>
+                <span className="text-3xl font-bold tracking-widest pixel-text-shadow">
+                  {canClaim ? 'START' : 'WAIT FOR RESET'}
+                </span>
               </button>
 
               {/* Sub Buttons */}

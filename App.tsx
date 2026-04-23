@@ -99,12 +99,22 @@ const App: React.FC = () => {
   
   // Blockchain-based Treasure Discovery
   const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
+  const [canClaim, setCanClaim] = useState(false);
 
   useEffect(() => {
       if (!publicClient || !address) return;
 
-      const fetchDiscovered = async () => {
+      const fetchData = async () => {
           try {
+              // Fetch canClaimToday
+              const claimable = await publicClient.readContract({
+                  address: TREASURE_CONTRACT_ADDRESS,
+                  abi: TREASURE_CONTRACT_ABI,
+                  functionName: 'canClaimToday',
+                  args: [address]
+              }) as boolean;
+              setCanClaim(claimable);
+
               // Fetch Treasure events
               const logs = await publicClient.getLogs({
                   address: TREASURE_CONTRACT_ADDRESS,
@@ -122,10 +132,10 @@ const App: React.FC = () => {
               });
               setDiscoveredIds(Array.from(uniqueIds));
           } catch (error) {
-              console.error("図鑑取得エラー:", error);
+              console.error("データ取得エラー:", error);
           }
       };
-      fetchDiscovered();
+      fetchData();
   }, [publicClient, address]);
 
   // Common UI Wrapper logic to include User Badge everywhere
@@ -163,6 +173,7 @@ const App: React.FC = () => {
                         onOpenLitepaper={openLitepaper}
                         onOpenAdmin={openAdmin}
                         isAdmin={isAdmin}
+                        canClaim={canClaim}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
