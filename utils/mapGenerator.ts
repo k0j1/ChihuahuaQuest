@@ -1,7 +1,7 @@
-import { TileType, Position, Enemy } from '../types';
+import { TileType, Position, Enemy, MapTheme } from '../types';
 import { GAME_CONFIG } from '../constants';
 
-export const generateMap = (width: number, height: number): { tiles: TileType[][], startPos: Position, treasureMap: boolean[][], enemies: Enemy[] } => {
+export const generateMap = (width: number, height: number, theme: MapTheme): { tiles: TileType[][], startPos: Position, treasureMap: boolean[][], enemies: Enemy[] } => {
   const tiles: TileType[][] = [];
   const treasureMap: boolean[][] = [];
   const enemies: Enemy[] = [];
@@ -30,9 +30,19 @@ export const generateMap = (width: number, height: number): { tiles: TileType[][
     if (tiles[currentY][currentX] === TileType.WATER) {
       // Determine land type based on noise/randomness
       const rand = Math.random();
-      if (rand > 0.8) tiles[currentY][currentX] = TileType.DIRT;
-      else if (rand > 0.95) tiles[currentY][currentX] = TileType.ROCK;
-      else tiles[currentY][currentX] = TileType.GRASS;
+      
+      if (theme === MapTheme.VOLCANO) {
+          if (rand > 0.6) tiles[currentY][currentX] = TileType.ROCK;
+          else if (rand > 0.9) tiles[currentY][currentX] = TileType.HOLE;
+          else tiles[currentY][currentX] = TileType.DIRT;
+      } else if (theme === MapTheme.GLACIER) {
+          if (rand > 0.7) tiles[currentY][currentX] = TileType.ROCK;
+          else tiles[currentY][currentX] = TileType.SAND; // Using sand as snow/ice
+      } else { // NORMAL
+          if (rand > 0.8) tiles[currentY][currentX] = TileType.DIRT;
+          else if (rand > 0.95) tiles[currentY][currentX] = TileType.ROCK;
+          else tiles[currentY][currentX] = TileType.GRASS;
+      }
     }
 
     // Move random direction
@@ -42,6 +52,11 @@ export const generateMap = (width: number, height: number): { tiles: TileType[][
     else if (dir === 2 && currentX > 1) currentX--;
     else if (dir === 3 && currentX < width - 2) currentX++;
   }
+  
+  // Ensure start pos is walkable based on theme
+  if (theme === MapTheme.VOLCANO) tiles[startPos.y][startPos.x] = TileType.DIRT;
+  else if (theme === MapTheme.GLACIER) tiles[startPos.y][startPos.x] = TileType.SAND;
+  else tiles[startPos.y][startPos.x] = TileType.GRASS;
 
   // Smooth out standalone water tiles (simple cellular automata pass)
   for (let y = 1; y < height - 1; y++) {
@@ -60,20 +75,17 @@ export const generateMap = (width: number, height: number): { tiles: TileType[][
     }
   }
 
-  // Place Treasures (Randomly in Dirt or Grass)
+  // Place Treasures (Randomly in walkable land)
   // About 5% of land tiles have treasure
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (tiles[y][x] === TileType.GRASS || tiles[y][x] === TileType.DIRT) {
+      if (tiles[y][x] !== TileType.WATER && tiles[y][x] !== TileType.HOLE) {
         if (Math.random() < 0.05) {
           treasureMap[y][x] = true;
         }
       }
     }
   }
-
-  // Ensure start pos is walkable
-  tiles[startPos.y][startPos.x] = TileType.GRASS;
 
   // Place Enemies
   let enemiesPlaced = 0;

@@ -11,7 +11,7 @@ export const useGameEngine = () => {
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.GAME_DURATION);
   
   // Map State
-  const [mapData, setMapData] = useState<{ tiles: TileType[][], treasureMap: boolean[][] } | null>(null);
+  const [mapData, setMapData] = useState<{ tiles: TileType[][], treasureMap: boolean[][], theme: MapTheme } | null>(null);
   
   // Entities State
   const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
@@ -98,8 +98,12 @@ export const useGameEngine = () => {
 
   // Initialize Game
   const startGame = useCallback(() => {
-    const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
-    const initialMapData = { tiles, treasureMap };
+    // Random theme selection
+    const themes = [MapTheme.NORMAL, MapTheme.VOLCANO, MapTheme.GLACIER];
+    const theme = themes[Math.floor(Math.random() * themes.length)];
+
+    const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT, theme);
+    const initialMapData = { tiles, treasureMap, theme };
     setMapData(initialMapData);
     mapDataRef.current = initialMapData; // Immediately sync ref
     

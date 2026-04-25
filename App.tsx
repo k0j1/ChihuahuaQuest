@@ -232,6 +232,7 @@ const App: React.FC = () => {
             {mapData && (
                 <GameMap 
                 tiles={mapData.tiles} 
+                theme={mapData.theme}
                 playerPos={playerPos} 
                 cameraPos={cameraPos}
                 direction={direction}

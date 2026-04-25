@@ -7,6 +7,7 @@ import { Shovel } from 'lucide-react';
 
 interface GameMapProps {
   tiles: TileType[][];
+  theme: MapTheme;
   playerPos: Position;
   cameraPos: Position;
   direction: Direction;
@@ -35,7 +36,7 @@ const getTileClass = (type: TileType) => {
 };
 
 // CanvasMap.tsx - Helper for GameMap
-const CanvasMap = memo(({ visibleTiles, tileSize }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number }) => {
+const CanvasMap = memo(({ visibleTiles, tileSize, theme }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number, theme: MapTheme }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -49,23 +50,34 @@ const CanvasMap = memo(({ visibleTiles, tileSize }: { visibleTiles: Array<{x: nu
 
         // Draw tiles
         visibleTiles.forEach(tile => {
-             // In a real optimized engine, this would be a sprite sheet lookup
-             // and drawImage call, not fillRect.
-             ctx.fillStyle = tile.type === TileType.GRASS ? '#22c55e' : 
-                             tile.type === TileType.DIRT ? '#a16207' : 
-                             tile.type === TileType.WATER ? '#3b82f6' : 
-                             tile.type === TileType.ROCK ? '#475569' : 
-                             tile.type === TileType.SAND ? '#eab308' : 
-                             tile.type === TileType.HOLE ? '#451a03' : '#fbbf24';
+             // Theme-based coloring
+             if (theme === MapTheme.VOLCANO) {
+                ctx.fillStyle = tile.type === TileType.WATER ? '#991b1b' : // Lava
+                                tile.type === TileType.ROCK ? '#7f1d1d' : 
+                                tile.type === TileType.DIRT ? '#450a0a' : 
+                                tile.type === TileType.SAND ? '#ea580c' : '#fbbf24'; // Using other colors
+             } else if (theme === MapTheme.GLACIER) {
+                ctx.fillStyle = tile.type === TileType.WATER ? '#bae6fd' : // Light blue (melt)
+                                tile.type === TileType.ROCK ? '#e0f2fe' : // White
+                                tile.type === TileType.DIRT ? '#94a3b8' : 
+                                tile.type === TileType.SAND ? '#f1f5f9' : '#fbbf24'; 
+             } else {
+                 ctx.fillStyle = tile.type === TileType.GRASS ? '#22c55e' : 
+                                 tile.type === TileType.DIRT ? '#a16207' : 
+                                 tile.type === TileType.WATER ? '#3b82f6' : 
+                                 tile.type === TileType.ROCK ? '#475569' : 
+                                 tile.type === TileType.SAND ? '#eab308' : 
+                                 tile.type === TileType.HOLE ? '#451a03' : '#fbbf24';
+             }
              ctx.fillRect(tile.x * tileSize, tile.y * tileSize, tileSize, tileSize);
              
-             // Simple styling for grass
-             if (tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0)) {
+             // Simple styling for grass/snow
+             if (tile.type === TileType.GRASS && theme === MapTheme.NORMAL && ((tile.x + tile.y) % 11 === 0)) {
                  ctx.fillStyle = 'rgba(187, 247, 208, 0.4)';
                  ctx.fillRect(tile.x * tileSize + tileSize - tileSize/4, tile.y * tileSize + tileSize - tileSize/4, tileSize/4, tileSize/4);
              }
         });
-    }, [visibleTiles, tileSize]);
+    }, [visibleTiles, tileSize, theme]);
 
     return (
         <canvas 
@@ -261,7 +273,7 @@ const GameMap: React.FC<GameMapProps> = ({
         className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        <CanvasMap visibleTiles={visibleTiles} tileSize={tileSize} />
+        <CanvasMap visibleTiles={visibleTiles} tileSize={tileSize} theme={theme} />
 
         {displayTarget && (
              <div 
