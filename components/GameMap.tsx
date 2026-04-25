@@ -34,28 +34,47 @@ const getTileClass = (type: TileType) => {
   }
 };
 
-// Memoized TileGrid prevents re-rendering hundreds of DOM nodes every frame
-const TileGrid = memo(({ visibleTiles, tileSize }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number }) => {
+// CanvasMap.tsx - Helper for GameMap
+const CanvasMap = memo(({ visibleTiles, tileSize }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Clear
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw tiles
+        visibleTiles.forEach(tile => {
+             // In a real optimized engine, this would be a sprite sheet lookup
+             // and drawImage call, not fillRect.
+             ctx.fillStyle = tile.type === TileType.GRASS ? '#22c55e' : 
+                             tile.type === TileType.DIRT ? '#a16207' : 
+                             tile.type === TileType.WATER ? '#3b82f6' : 
+                             tile.type === TileType.ROCK ? '#475569' : 
+                             tile.type === TileType.SAND ? '#eab308' : 
+                             tile.type === TileType.HOLE ? '#451a03' : '#fbbf24';
+             ctx.fillRect(tile.x * tileSize, tile.y * tileSize, tileSize, tileSize);
+             
+             // Simple styling for grass
+             if (tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0)) {
+                 ctx.fillStyle = 'rgba(187, 247, 208, 0.4)';
+                 ctx.fillRect(tile.x * tileSize + tileSize - tileSize/4, tile.y * tileSize + tileSize - tileSize/4, tileSize/4, tileSize/4);
+             }
+        });
+    }, [visibleTiles, tileSize]);
+
     return (
-        <>
-            {visibleTiles.map((tile) => (
-                <div
-                    key={`${tile.x}-${tile.y}`}
-                    className={`absolute ${getTileClass(tile.type)}`}
-                    style={{
-                        width: tileSize,
-                        height: tileSize,
-                        left: tile.x * tileSize,
-                        top: tile.y * tileSize,
-                        willChange: 'transform',
-                    }}
-                >
-                    {tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0) && (
-                        <div className="absolute bottom-1 right-1 w-1 h-1 bg-green-200 opacity-40"></div>
-                    )}
-                </div>
-            ))}
-        </>
+        <canvas 
+            ref={canvasRef}
+            width={window.innerWidth + tileSize * 4}
+            height={window.innerHeight + tileSize * 4}
+            className="absolute top-0 left-0"
+            style={{ width: '100%', height: '100%' }}
+        />
     );
 });
 
@@ -242,7 +261,7 @@ const GameMap: React.FC<GameMapProps> = ({
         className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        <TileGrid visibleTiles={visibleTiles} tileSize={tileSize} />
+        <CanvasMap visibleTiles={visibleTiles} tileSize={tileSize} />
 
         {displayTarget && (
              <div 
