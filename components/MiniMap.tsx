@@ -10,7 +10,8 @@ interface MiniMapProps {
 }
 
 const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
+  const fgCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Configuration
   const CELL_SIZE = 4; // Size of one tile in pixels on the mini-map
@@ -30,18 +31,17 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
     [TileType.TREASURE_MARK]: '#fbbf24', // Gold
   };
 
+  // 1. Draw static background (only when tiles change)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+    const bgCanvas = bgCanvasRef.current;
+    if (!bgCanvas) return;
+    const ctx = bgCanvas.getContext('2d');
     if (!ctx) return;
 
     // Clear with dark radar background
     ctx.fillStyle = '#050505';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // 1. Draw Terrain
     for (let y = 0; y < MAP_HEIGHT; y++) {
       for (let x = 0; x < MAP_WIDTH; x++) {
         const tile = tiles[y][x];
@@ -68,6 +68,17 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
         }
       }
     }
+  }, [tiles, CANVAS_WIDTH, CANVAS_HEIGHT, MAP_WIDTH, MAP_HEIGHT]); // TILE_COLORS is constant conceptually
+
+  // 2. Draw dynamic foreground (player, enemies, viewport. cleared every frame)
+  useEffect(() => {
+    const fgCanvas = fgCanvasRef.current;
+    if (!fgCanvas) return;
+    const ctx = fgCanvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear foreground
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // 2. Draw Enemies
     ctx.fillStyle = '#ef4444'; // Red blips
@@ -99,7 +110,7 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
       vpH
     );
 
-  }, [tiles, playerPos, enemies, CANVAS_WIDTH, CANVAS_HEIGHT, MAP_WIDTH, MAP_HEIGHT]);
+  }, [playerPos, enemies, CANVAS_WIDTH, CANVAS_HEIGHT]);
 
   return (
     <div className="absolute bottom-24 left-4 md:bottom-6 md:left-6 z-[55] flex flex-col items-center pointer-events-none animate-fade-in">
@@ -111,17 +122,32 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
       
       {/* Map Container */}
       <div className="p-1 bg-gray-900/90 border-2 border-gray-600 rounded-b rounded-tr shadow-2xl backdrop-blur-md pixel-corners relative">
-        <canvas 
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          className="block"
-          style={{ 
-            width: CANVAS_WIDTH, 
-            height: CANVAS_HEIGHT,
-            imageRendering: 'pixelated' 
-          }}
-        />
+        <div style={{ position: 'relative', width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
+          {/* Background Layer (Static) */}
+          <canvas 
+            ref={bgCanvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            className="absolute top-0 left-0"
+            style={{ 
+              width: CANVAS_WIDTH, 
+              height: CANVAS_HEIGHT,
+              imageRendering: 'pixelated' 
+            }}
+          />
+          {/* Foreground Layer (Dynamic) */}
+          <canvas 
+            ref={fgCanvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            className="absolute top-0 left-0"
+            style={{ 
+              width: CANVAS_WIDTH, 
+              height: CANVAS_HEIGHT,
+              imageRendering: 'pixelated' 
+            }}
+          />
+        </div>
         
         {/* Radar Scan Line Animation */}
         <div className="absolute inset-1 overflow-hidden pointer-events-none opacity-20">
@@ -142,4 +168,4 @@ const MiniMap: React.FC<MiniMapProps> = ({ tiles, playerPos, enemies }) => {
   );
 };
 
-export default MiniMap;
+export default React.memo(MiniMap);

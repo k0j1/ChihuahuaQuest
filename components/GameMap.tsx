@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import { TileType, Position, Direction, Enemy as EnemyType } from '../types';
 import { GAME_CONFIG } from '../constants';
 import Chihuahua from './Chihuahua';
@@ -15,11 +15,49 @@ interface GameMapProps {
   enemies: EnemyType[];
   onInteract: (clientX: number, clientY: number) => void;
   targetPos: Position | null;
-  currentPath?: Position[]; // Added
+  currentPath?: Position[];
   panCamera: (dx: number, dy: number) => void;
   isPendingDig?: boolean;
   isDefeated?: boolean;
 }
+
+const getTileClass = (type: TileType) => {
+  switch(type) {
+    case TileType.GRASS: return 'tile-grass';
+    case TileType.DIRT: return 'tile-dirt';
+    case TileType.WATER: return 'tile-water';
+    case TileType.ROCK: return 'tile-rock';
+    case TileType.SAND: return 'tile-sand';
+    case TileType.HOLE: return 'tile-hole';
+    case TileType.TREASURE_MARK: return 'tile-treasure-mark';
+    default: return '';
+  }
+};
+
+// Memoized TileGrid prevents re-rendering hundreds of DOM nodes every frame
+const TileGrid = memo(({ visibleTiles, tileSize }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number }) => {
+    return (
+        <>
+            {visibleTiles.map((tile) => (
+                <div
+                    key={`${tile.x}-${tile.y}`}
+                    className={`absolute ${getTileClass(tile.type)}`}
+                    style={{
+                        width: tileSize,
+                        height: tileSize,
+                        left: tile.x * tileSize,
+                        top: tile.y * tileSize,
+                        willChange: 'transform',
+                    }}
+                >
+                    {tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0) && (
+                        <div className="absolute bottom-1 right-1 w-1 h-1 bg-green-200 opacity-40"></div>
+                    )}
+                </div>
+            ))}
+        </>
+    );
+});
 
 const GameMap: React.FC<GameMapProps> = ({ 
     tiles, 
@@ -88,19 +126,6 @@ const GameMap: React.FC<GameMapProps> = ({
       ${-cameraPos.y * tileSize + centerY - tileSize / 2}px, 
       0
     )`,
-  };
-
-  const getTileClass = (type: TileType) => {
-    switch(type) {
-      case TileType.GRASS: return 'tile-grass';
-      case TileType.DIRT: return 'tile-dirt';
-      case TileType.WATER: return 'tile-water';
-      case TileType.ROCK: return 'tile-rock';
-      case TileType.SAND: return 'tile-sand';
-      case TileType.HOLE: return 'tile-hole';
-      case TileType.TREASURE_MARK: return 'tile-treasure-mark';
-      default: return '';
-    }
   };
 
   // --- Event Handling Implementation ---
@@ -214,25 +239,10 @@ const GameMap: React.FC<GameMapProps> = ({
     >
       {/* Map Container */}
       <div 
-        className="absolute top-0 left-0 map-container"
+        className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        {visibleTiles.map((tile) => (
-          <div
-            key={`${tile.x}-${tile.y}`}
-            className={`absolute ${getTileClass(tile.type)}`}
-            style={{
-              width: tileSize,
-              height: tileSize,
-              left: tile.x * tileSize,
-              top: tile.y * tileSize,
-            }}
-          >
-            {tile.type === TileType.GRASS && ((tile.x + tile.y) % 11 === 0) && (
-                <div className="absolute bottom-1 right-1 w-1 h-1 bg-green-200 opacity-40"></div>
-            )}
-          </div>
-        ))}
+        <TileGrid visibleTiles={visibleTiles} tileSize={tileSize} />
 
         {displayTarget && (
              <div 
