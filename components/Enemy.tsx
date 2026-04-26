@@ -3,10 +3,20 @@ import { Enemy as EnemyType } from '../types';
 
 interface EnemyProps {
   enemy: EnemyType;
+  isTrapped?: boolean;
 }
 
-const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
+const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
   // Render different sprites based on enemy type
+  
+  if (isTrapped) {
+      return (
+          <div className="relative w-full h-full flex items-center justify-center animate-spin opacity-50 scale-75">
+              {/* Trap/Death effect - simple X or ghost fading */}
+              <div className="text-2xl text-red-600 font-bold">X</div>
+          </div>
+      );
+  }
   
   if (enemy.type === 'SNAKE') {
     return (
@@ -20,7 +30,16 @@ const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
           .animate-wiggle {
             animation: wiggle 0.5s infinite ease-in-out;
           }
+          @keyframes aura-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+          }
+          .animate-aura {
+            animation: aura-pulse 2s infinite ease-in-out;
+          }
         `}</style>
+        {/* Poison Aura */}
+        <div className="absolute w-12 h-12 bg-green-500 rounded-full animate-aura"></div>
         {/* Snake Sprite */}
         <div className="w-10 h-8 relative mt-2">
              {/* Body Segments */}
@@ -83,16 +102,25 @@ const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
         .animate-bounce-slow {
           animation: bounce-slow 1.5s infinite ease-in-out;
         }
+        @keyframes shimmer {
+          0% { background-position: -100% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .animate-shimmer {
+            background: linear-gradient(90deg, rgba(96,165,250,1) 0%, rgba(255,255,255,0.8) 50%, rgba(96,165,250,1) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+        }
       `}</style>
       
       {/* Slime Sprite */}
       <div className="w-10 h-10 relative flex items-end justify-center pb-2">
         
         {/* Tip (The little point on top) */}
-        <div className="absolute top-1 w-2 h-2 bg-blue-400 rounded-full"></div>
+        <div className="absolute top-1 w-2 h-2 bg-blue-400 rounded-full animate-shimmer"></div>
 
         {/* Body */}
-        <div className="w-8 h-6 bg-blue-400 rounded-t-[1rem] rounded-b-xl pixel-corners shadow-sm relative z-10">
+        <div className="w-8 h-6 bg-blue-400 rounded-t-[1rem] rounded-b-xl pixel-corners shadow-sm relative z-10 animate-shimmer">
             
             {/* Shine/Highlight */}
             <div className="absolute top-1 left-1.5 w-2 h-1 bg-white opacity-40 rounded-full rotate-[-20deg]"></div>

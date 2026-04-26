@@ -298,6 +298,7 @@ const GameMap: React.FC<GameMapProps> = ({
           if (enemy.x < startX || enemy.x > endX || enemy.y < startY || enemy.y > endY) {
             return null;
           }
+          const isTrapped = tiles[enemy.y][enemy.x] === TileType.HOLE;
           return (
             <div
               key={enemy.id}
@@ -308,7 +309,7 @@ const GameMap: React.FC<GameMapProps> = ({
                 transform: `translate3d(${enemy.x * tileSize}px, ${enemy.y * tileSize}px, 0)`
               }}
             >
-              <Enemy enemy={enemy} />
+              <Enemy enemy={enemy} isTrapped={isTrapped} />
             </div>
           );
         })}
@@ -322,6 +323,25 @@ const GameMap: React.FC<GameMapProps> = ({
           }}
         >
           <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} isDefeated={isDefeated} />
+          {/* DIGGING PARTICLE EFFECT */}
+          {isDigging && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                  {[...Array(6)].map((_, i) => (
+                      <div key={i} className="absolute w-2 h-2 bg-yellow-700 rounded-full animate-particle" style={{
+                           animationDelay: `${i * 0.15}s`,
+                      }}></div>
+                  ))}
+                  <style>{`
+                    @keyframes particle {
+                        0% { transform: scale(1) translateY(0); opacity: 1; }
+                        100% { transform: scale(0) translateY(-30px); opacity: 0; }
+                    }
+                    .animate-particle {
+                        animation: particle 0.6s linear infinite;
+                    }
+                  `}</style>
+              </div>
+          )}
         </div>
 
       </div>
