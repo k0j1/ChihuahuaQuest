@@ -42,13 +42,15 @@ export interface Position {
   y: number;
 }
 
-export type EnemyTypeStr = 'SLIME' | 'SNAKE' | 'GHOST';
+export type EnemyTypeStr = 'SLIME' | 'SNAKE' | 'GHOST' | 'SNAKE_VENOMOUS' | 'SLIME_SPLITTING';
 
 export interface Enemy {
   id: string;
   x: number;
   y: number;
   type: EnemyTypeStr;
+  state?: 'moving' | 'attacking' | 'defeated';
+  defeatedAt?: number;
 }
 
 export interface Treasure {

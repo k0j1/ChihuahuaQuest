@@ -3,24 +3,27 @@ import { Enemy as EnemyType } from '../types';
 
 interface EnemyProps {
   enemy: EnemyType;
-  isTrapped?: boolean;
 }
 
-const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
-  // Render different sprites based on enemy type
-  
-  if (isTrapped) {
-      return (
-          <div className="relative w-full h-full flex items-center justify-center animate-spin opacity-50 scale-75">
-              {/* Trap/Death effect - simple X or ghost fading */}
-              <div className="text-2xl text-red-600 font-bold">X</div>
-          </div>
-      );
-  }
-  
-  if (enemy.type === 'SNAKE') {
+const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
+  const isDefeated = enemy.state === 'defeated';
+  const isAttacking = enemy.state === 'attacking';
+
+  const baseStyle = isDefeated ? "scale-0 opacity-0 transition-all duration-500" : "transition-transform duration-200";
+  const attackStyle = isAttacking ? "scale-125 saturate-150" : "";
+
+  // Common styles
+  const wrapperClass = `relative w-full h-full flex items-center justify-center ${baseStyle} ${attackStyle}`;
+
+  if (enemy.type === 'SNAKE' || enemy.type === 'SNAKE_VENOMOUS') {
+    const isVenomous = enemy.type === 'SNAKE_VENOMOUS';
+    const bodyColor = isVenomous ? 'bg-purple-600' : 'bg-green-600';
+    const bodyColor2 = isVenomous ? 'bg-purple-500' : 'bg-green-500';
+    const headColor = isVenomous ? 'bg-purple-400' : 'bg-green-400';
+    const borderColor = isVenomous ? 'border-purple-700' : 'border-green-700';
+
     return (
-      <div className="relative w-full h-full flex items-center justify-center animate-wiggle">
+      <div className={`${wrapperClass} animate-wiggle`}>
         <style>{`
           @keyframes wiggle {
             0%, 100% { transform: translateX(0); }
@@ -30,24 +33,33 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
           .animate-wiggle {
             animation: wiggle 0.5s infinite ease-in-out;
           }
-          @keyframes aura-pulse {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.1); }
+          @keyframes poison-splash {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
           }
-          .animate-aura {
-            animation: aura-pulse 2s infinite ease-in-out;
+          .animate-poison {
+            animation: poison-splash 0.5s ease-out forwards;
           }
         `}</style>
-        {/* Poison Aura */}
-        <div className="absolute w-12 h-12 bg-green-500 rounded-full animate-aura"></div>
+        
+        {isDefeated && isVenomous && (
+            <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-purple-500 mix-blend-screen animate-poison"></div>
+            </div>
+        )}
+        
+        {isAttacking && isVenomous && (
+          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-purple-300 rounded-full blur-sm opacity-80 animate-pulse"></div>
+        )}
+
         {/* Snake Sprite */}
         <div className="w-10 h-8 relative mt-2">
              {/* Body Segments */}
-             <div className="absolute bottom-0 left-0 w-8 h-3 bg-green-600 rounded-full pixel-corners"></div>
-             <div className="absolute bottom-2 left-1 w-6 h-3 bg-green-500 rounded-full"></div>
+             <div className={`absolute bottom-0 left-0 w-8 h-3 ${bodyColor} rounded-full pixel-corners`}></div>
+             <div className={`absolute bottom-2 left-1 w-6 h-3 ${bodyColor2} rounded-full`}></div>
              
              {/* Head */}
-             <div className="absolute bottom-3 left-4 w-4 h-4 bg-green-400 rounded-full border-2 border-green-700"></div>
+             <div className={`absolute bottom-3 left-4 w-4 h-4 ${headColor} rounded-full border-2 ${borderColor}`}></div>
              
              {/* Eyes */}
              <div className="absolute bottom-5 left-4.5 w-1 h-1 bg-yellow-300"></div>
@@ -62,7 +74,7 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
 
   if (enemy.type === 'GHOST') {
     return (
-        <div className="relative w-full h-full flex items-center justify-center animate-float opacity-80">
+        <div className={`${wrapperClass} animate-float opacity-80`}>
           <style>{`
             @keyframes float {
               0%, 100% { transform: translateY(0); }
@@ -71,7 +83,17 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
             .animate-float {
               animation: float 2s infinite ease-in-out;
             }
+            @keyframes ghost-die {
+              0% { transform: scale(1); opacity: 0.8; }
+              100% { transform: scale(2); opacity: 0; }
+            }
+            .animate-ghost-die { animation: ghost-die 0.5s forwards; }
           `}</style>
+          
+          {isDefeated && (
+            <div className="absolute w-12 h-12 rounded-full border-4 border-blue-300 animate-ghost-die"></div>
+          )}
+
           {/* Ghost Sprite */}
           <div className="w-8 h-8 relative">
                {/* Body */}
@@ -91,9 +113,13 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
       );
   }
 
-  // Default: SLIME (Cute Blue Version)
+  // SLIME or SLIME_SPLITTING
+  const isSplitting = enemy.type === 'SLIME_SPLITTING';
+  const slimeColor = isSplitting ? 'bg-teal-400' : 'bg-blue-400';
+  const highlightColor = isSplitting ? 'bg-teal-200' : 'bg-blue-200';
+
   return (
-    <div className="relative w-full h-full flex items-center justify-center animate-bounce-slow">
+    <div className={`${wrapperClass} animate-bounce-slow`}>
       <style>{`
         @keyframes bounce-slow {
           0%, 100% { transform: scale(1, 1) translateY(0); }
@@ -102,25 +128,43 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
         .animate-bounce-slow {
           animation: bounce-slow 1.5s infinite ease-in-out;
         }
-        @keyframes shimmer {
-          0% { background-position: -100% 0; }
-          100% { background-position: 200% 0; }
+        @keyframes split-left {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(-20px, -10px) scale(0.5); opacity: 0; }
         }
-        .animate-shimmer {
-            background: linear-gradient(90deg, rgba(96,165,250,1) 0%, rgba(255,255,255,0.8) 50%, rgba(96,165,250,1) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 3s infinite linear;
+        @keyframes split-right {
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(20px, -10px) scale(0.5); opacity: 0; }
         }
+        .animate-split-left { animation: split-left 0.5s ease-out forwards; }
+        .animate-split-right { animation: split-right 0.5s ease-out forwards; }
+        @keyframes slime-die {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-slime-die { animation: slime-die 0.5s ease-out forwards; }
       `}</style>
       
+      {isDefeated && isSplitting ? (
+          // Split animation rendering
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className={`w-6 h-4 ${slimeColor} rounded-full shadow-sm animate-split-left`}></div>
+             <div className={`w-6 h-4 ${slimeColor} rounded-full shadow-sm animate-split-right`}></div>
+          </div>
+      ) : isDefeated ? (
+             <div className="absolute w-10 h-10 rounded-full bg-blue-300 animate-slime-die"></div>
+      ) : (
+          null
+      )}
+
       {/* Slime Sprite */}
-      <div className="w-10 h-10 relative flex items-end justify-center pb-2">
+      <div className={`w-10 h-10 relative flex items-end justify-center pb-2 transition-opacity duration-200 ${isDefeated ? 'opacity-0' : 'opacity-100'}`}>
         
         {/* Tip (The little point on top) */}
-        <div className="absolute top-1 w-2 h-2 bg-blue-400 rounded-full animate-shimmer"></div>
+        <div className={`absolute top-1 w-2 h-2 ${slimeColor} rounded-full`}></div>
 
         {/* Body */}
-        <div className="w-8 h-6 bg-blue-400 rounded-t-[1rem] rounded-b-xl pixel-corners shadow-sm relative z-10 animate-shimmer">
+        <div className={`w-8 h-6 ${slimeColor} rounded-t-[1rem] rounded-b-xl pixel-corners shadow-sm relative z-10`}>
             
             {/* Shine/Highlight */}
             <div className="absolute top-1 left-1.5 w-2 h-1 bg-white opacity-40 rounded-full rotate-[-20deg]"></div>
@@ -128,13 +172,21 @@ const Enemy: React.FC<EnemyProps> = ({ enemy, isTrapped }) => {
             {/* Face Container */}
             <div className="absolute top-2 left-0 w-full h-full">
                 {/* Eyes */}
-                <div className="absolute top-0.5 left-1.5 w-1.5 h-1.5 bg-slate-800 rounded-full">
-                    {/* Eye highlight */}
-                    <div className="absolute top-0 right-0.5 w-0.5 h-0.5 bg-white rounded-full"></div>
-                </div>
-                <div className="absolute top-0.5 right-1.5 w-1.5 h-1.5 bg-slate-800 rounded-full">
-                     <div className="absolute top-0 right-0.5 w-0.5 h-0.5 bg-white rounded-full"></div>
-                </div>
+                {isAttacking ? (
+                    <>
+                        <div className="absolute top-0.5 left-1 w-2 h-0.5 bg-red-600 rotate-45"></div>
+                        <div className="absolute top-0.5 right-1 w-2 h-0.5 bg-red-600 -rotate-45"></div>
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute top-0.5 left-1.5 w-1.5 h-1.5 bg-slate-800 rounded-full">
+                            <div className="absolute top-0 right-0.5 w-0.5 h-0.5 bg-white rounded-full"></div>
+                        </div>
+                        <div className="absolute top-0.5 right-1.5 w-1.5 h-1.5 bg-slate-800 rounded-full">
+                             <div className="absolute top-0 right-0.5 w-0.5 h-0.5 bg-white rounded-full"></div>
+                        </div>
+                    </>
+                )}
 
                 {/* Cheeks */}
                 <div className="absolute top-2 left-0.5 w-1.5 h-1 bg-pink-300 opacity-60 rounded-full"></div>

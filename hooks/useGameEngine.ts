@@ -11,7 +11,7 @@ export const useGameEngine = () => {
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.GAME_DURATION);
   
   // Map State
-  const [mapData, setMapData] = useState<{ tiles: TileType[][], treasureMap: boolean[][], theme: MapTheme } | null>(null);
+  const [mapData, setMapData] = useState<{ tiles: TileType[][], treasureMap: boolean[][] } | null>(null);
   
   // Entities State
   const [playerPos, setPlayerPos] = useState<Position>({ x: 0, y: 0 });
@@ -80,14 +80,17 @@ export const useGameEngine = () => {
             if (tile !== TileType.WATER && tile !== TileType.ROCK && dist > 8) {
                 const rand = Math.random();
                 let type: EnemyTypeStr = 'SLIME';
-                if (rand > 0.85) type = 'GHOST'; 
-                else if (rand > 0.65) type = 'SNAKE'; 
+                if (rand > 0.9) type = 'GHOST'; 
+                else if (rand > 0.75) type = 'SNAKE_VENOMOUS';
+                else if (rand > 0.6) type = 'SLIME_SPLITTING';
+                else if (rand > 0.4) type = 'SNAKE'; 
                 
                 newEnemies.push({
                     id: crypto.randomUUID(),
                     x: ex,
                     y: ey,
-                    type: type
+                    type: type,
+                    state: 'moving'
                 });
                 placed = true;
             }
@@ -98,12 +101,8 @@ export const useGameEngine = () => {
 
   // Initialize Game
   const startGame = useCallback(() => {
-    // Random theme selection
-    const themes = [MapTheme.NORMAL, MapTheme.VOLCANO, MapTheme.GLACIER];
-    const theme = themes[Math.floor(Math.random() * themes.length)];
-
-    const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT, theme);
-    const initialMapData = { tiles, treasureMap, theme };
+    const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
+    const initialMapData = { tiles, treasureMap };
     setMapData(initialMapData);
     mapDataRef.current = initialMapData; // Immediately sync ref
     
@@ -544,6 +543,14 @@ export const useGameEngine = () => {
         currentEnemies = currentEnemies.filter(enemy => {
             const stats = ENEMY_STATS[enemy.type];
 
+            // Defeated check
+            if (enemy.state === 'defeated') {
+                if (enemy.defeatedAt && time - enemy.defeatedAt > 500) {
+                    return false; // Remove after 500ms for animation
+                }
+                return true;
+            }
+
             // 1. Trap Check
             const tx = Math.round(enemy.x);
             const ty = Math.round(enemy.y);
@@ -590,7 +597,9 @@ export const useGameEngine = () => {
                     }
                     // -------------------------------
 
-                    return false; // Remove old enemy
+                    enemy.state = 'defeated';
+                    enemy.defeatedAt = time;
+                    return true;
                 }
             }
 
@@ -623,9 +632,11 @@ export const useGameEngine = () => {
             let moveY = 0;
 
             if (dist < stats.range) {
+                enemy.state = 'attacking';
                 moveX = (dx / dist) * stats.speed;
                 moveY = (dy / dist) * stats.speed;
             } else {
+                enemy.state = 'moving';
                 if (Math.random() < 0.05) {
                    moveX = (Math.random() - 0.5) * stats.speed * 3;
                    moveY = (Math.random() - 0.5) * stats.speed * 3;

@@ -53,28 +53,48 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, i
         }
         
         @keyframes throw-left {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(-20px, -10px) scale(0); opacity: 0; }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-25px, -15px) scale(0.5) rotate(-180deg); opacity: 0; }
         }
         .animate-throw-left {
             animation: throw-left 0.4s infinite ease-out;
         }
 
         @keyframes throw-right {
-            0% { transform: translate(0, 0) scale(1); opacity: 1; }
-            100% { transform: translate(20px, -10px) scale(0); opacity: 0; }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(25px, -15px) scale(0.5) rotate(180deg); opacity: 0; }
         }
         .animate-throw-right {
             animation: throw-right 0.4s infinite ease-out 0.2s; /* Delayed for staggered effect */
         }
+
+        @keyframes shovel-dig {
+             0% { transform: rotate(15deg) translateY(0) translateX(2px); }
+             50% { transform: rotate(-25deg) translateY(8px) translateX(-4px); }
+             100% { transform: rotate(15deg) translateY(0) translateX(2px); }
+        }
+        .animate-shovel {
+            animation: shovel-dig 0.4s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
       `}</style>
       
-      {/* Dirt Particles (Visible only when digging) */}
+      {/* Dirt Particles & Shovel (Visible only when digging) */}
       {isDigging && (
         <>
-            <div className="absolute bottom-1 left-2 w-2 h-2 bg-yellow-900 rounded-sm animate-throw-left z-0"></div>
-            <div className="absolute bottom-1 right-2 w-2 h-2 bg-yellow-900 rounded-sm animate-throw-right z-0"></div>
+            <div className="absolute bottom-1 left-0 w-2.5 h-2.5 bg-yellow-900 rounded-sm animate-throw-left z-20"></div>
+            <div className="absolute bottom-1 right-0 w-2 h-2 bg-amber-800 rounded-sm animate-throw-right z-20"></div>
             <div className="absolute bottom-2 left-4 w-1.5 h-1.5 bg-yellow-800 rounded-sm animate-throw-left" style={{ animationDelay: '0.1s' }}></div>
+            <div className="absolute bottom-3 right-4 w-2 h-2 bg-amber-900 rounded-sm animate-throw-right" style={{ animationDelay: '0.15s' }}></div>
+
+            {/* Shovel */}
+            <div className="absolute top-0 -right-2 w-4 h-8 animate-shovel z-30">
+               {/* Shovel Handle */}
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-5 bg-[#8b4513] rounded-sm"></div>
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3 h-1 bg-[#8b4513] rounded-sm"></div>
+               {/* Shovel Head */}
+               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-3 bg-slate-300 rounded-b-md shadow-sm border border-slate-400"></div>
+            </div>
         </>
       )}
 

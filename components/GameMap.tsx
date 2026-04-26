@@ -7,7 +7,6 @@ import { Shovel } from 'lucide-react';
 
 interface GameMapProps {
   tiles: TileType[][];
-  theme: MapTheme;
   playerPos: Position;
   cameraPos: Position;
   direction: Direction;
@@ -35,60 +34,6 @@ const getTileClass = (type: TileType) => {
   }
 };
 
-// CanvasMap.tsx - Helper for GameMap
-const CanvasMap = memo(({ visibleTiles, tileSize, theme }: { visibleTiles: Array<{x: number, y: number, type: TileType}>, tileSize: number, theme: MapTheme }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Clear
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Draw tiles
-        visibleTiles.forEach(tile => {
-             // Theme-based coloring
-             if (theme === MapTheme.VOLCANO) {
-                ctx.fillStyle = tile.type === TileType.WATER ? '#991b1b' : // Lava
-                                tile.type === TileType.ROCK ? '#7f1d1d' : 
-                                tile.type === TileType.DIRT ? '#450a0a' : 
-                                tile.type === TileType.SAND ? '#ea580c' : '#fbbf24'; // Using other colors
-             } else if (theme === MapTheme.GLACIER) {
-                ctx.fillStyle = tile.type === TileType.WATER ? '#bae6fd' : // Light blue (melt)
-                                tile.type === TileType.ROCK ? '#e0f2fe' : // White
-                                tile.type === TileType.DIRT ? '#94a3b8' : 
-                                tile.type === TileType.SAND ? '#f1f5f9' : '#fbbf24'; 
-             } else {
-                 ctx.fillStyle = tile.type === TileType.GRASS ? '#22c55e' : 
-                                 tile.type === TileType.DIRT ? '#a16207' : 
-                                 tile.type === TileType.WATER ? '#3b82f6' : 
-                                 tile.type === TileType.ROCK ? '#475569' : 
-                                 tile.type === TileType.SAND ? '#eab308' : 
-                                 tile.type === TileType.HOLE ? '#451a03' : '#fbbf24';
-             }
-             ctx.fillRect(tile.x * tileSize, tile.y * tileSize, tileSize, tileSize);
-             
-             // Simple styling for grass/snow
-             if (tile.type === TileType.GRASS && theme === MapTheme.NORMAL && ((tile.x + tile.y) % 11 === 0)) {
-                 ctx.fillStyle = 'rgba(187, 247, 208, 0.4)';
-                 ctx.fillRect(tile.x * tileSize + tileSize - tileSize/4, tile.y * tileSize + tileSize - tileSize/4, tileSize/4, tileSize/4);
-             }
-        });
-    }, [visibleTiles, tileSize, theme]);
-
-    return (
-        <canvas 
-            ref={canvasRef}
-            width={window.innerWidth + tileSize * 4}
-            height={window.innerHeight + tileSize * 4}
-            className="absolute top-0 left-0"
-            style={{ width: '100%', height: '100%' }}
-        />
-    );
-});
 
 const GameMap: React.FC<GameMapProps> = ({ 
     tiles, 
@@ -273,7 +218,23 @@ const GameMap: React.FC<GameMapProps> = ({
         className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        <CanvasMap visibleTiles={visibleTiles} tileSize={tileSize} theme={theme} />
+        {visibleTiles.map(tile => (
+          <div
+            key={`${tile.x}-${tile.y}`}
+            className={`absolute ${getTileClass(tile.type)}`}
+            style={{
+              width: tileSize,
+              height: tileSize,
+              transform: `translate3d(${tile.x * tileSize}px, ${tile.y * tileSize}px, 0)`,
+            }}
+          >
+            {tile.type === TileType.TREASURE_MARK && (
+              <span className="absolute inset-0 flex items-center justify-center text-xl font-bold rounded-full border-2 border-red-500 text-red-500 animate-pulse">
+                X
+              </span>
+            )}
+           </div>
+        ))}
 
         {displayTarget && (
              <div 
@@ -298,7 +259,6 @@ const GameMap: React.FC<GameMapProps> = ({
           if (enemy.x < startX || enemy.x > endX || enemy.y < startY || enemy.y > endY) {
             return null;
           }
-          const isTrapped = tiles[enemy.y][enemy.x] === TileType.HOLE;
           return (
             <div
               key={enemy.id}
@@ -309,7 +269,7 @@ const GameMap: React.FC<GameMapProps> = ({
                 transform: `translate3d(${enemy.x * tileSize}px, ${enemy.y * tileSize}px, 0)`
               }}
             >
-              <Enemy enemy={enemy} isTrapped={isTrapped} />
+              <Enemy enemy={enemy} />
             </div>
           );
         })}
@@ -323,25 +283,6 @@ const GameMap: React.FC<GameMapProps> = ({
           }}
         >
           <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} isDefeated={isDefeated} />
-          {/* DIGGING PARTICLE EFFECT */}
-          {isDigging && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                  {[...Array(6)].map((_, i) => (
-                      <div key={i} className="absolute w-2 h-2 bg-yellow-700 rounded-full animate-particle" style={{
-                           animationDelay: `${i * 0.15}s`,
-                      }}></div>
-                  ))}
-                  <style>{`
-                    @keyframes particle {
-                        0% { transform: scale(1) translateY(0); opacity: 1; }
-                        100% { transform: scale(0) translateY(-30px); opacity: 0; }
-                    }
-                    .animate-particle {
-                        animation: particle 0.6s linear infinite;
-                    }
-                  `}</style>
-              </div>
-          )}
         </div>
 
       </div>

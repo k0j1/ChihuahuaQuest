@@ -25,41 +25,6 @@ const App: React.FC = () => {
   const publicClient = usePublicClient();
   const { address } = useAccount();
 
-  useEffect(() => {
-      if (!publicClient || !address) return;
-
-      const fetchInventory = async () => {
-          try {
-              const logs = await publicClient.getLogs({
-                  address: TREASURE_CONTRACT_ADDRESS,
-                  event: TREASURE_CONTRACT_ABI[0],
-                  args: { user: address },
-                  fromBlock: 0n
-              });
-
-              const inventory: Record<string, { count: number, lastFound: number }> = {};
-              logs.forEach(log => {
-                  const { treasureIds, timestamp } = log.args;
-                  if (!treasureIds || !timestamp) return;
-                  treasureIds.forEach(id => {
-                      const tId = id.toString();
-                      if (!inventory[tId]) {
-                          inventory[tId] = { count: 0, lastFound: 0 };
-                      }
-                      inventory[tId].count += 1;
-                      if (Number(timestamp) > inventory[tId].lastFound) {
-                          inventory[tId].lastFound = Number(timestamp);
-                      }
-                  });
-              });
-              setTreasureInventory(inventory);
-          } catch (error) {
-              console.error("財宝取得エラー:", error);
-          }
-      };
-      fetchInventory();
-  }, [publicClient, address]);
-
   const {
     gameState,
     timeLeft,
@@ -99,9 +64,26 @@ const App: React.FC = () => {
   
   // Blockchain-based Treasure Discovery
   const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
-  const [canClaim, setCanClaim] = useState(false);
+  const [canClaim, setCanClaim] = useState(true); // Default to true for preview/fallback
 
   useEffect(() => {
+      // Load local inventory fallback
+      const localInvStr = localStorage.getItem('treasureInventory');
+      const localIdsStr = localStorage.getItem('discoveredIds');
+      
+      let localInv = {};
+      let localIds: number[] = [];
+      
+      try {
+          if (localInvStr) localInv = JSON.parse(localInvStr);
+          if (localIdsStr) localIds = JSON.parse(localIdsStr);
+      } catch (e) {
+          console.error("Local storage parse error", e);
+      }
+      
+      setTreasureInventory(localInv);
+      setDiscoveredIds(localIds);
+
       if (!publicClient || !address) return;
 
       const fetchData = async () => {
@@ -123,20 +105,71 @@ const App: React.FC = () => {
                   fromBlock: 0n
               });
               
-              const uniqueIds = new Set<number>();
+              const uniqueIds = new Set<number>(localIds);
+              const inventory: Record<string, { count: number, lastFound: number }> = { ...localInv };
+
               logs.forEach(log => {
-                  const { treasureIds } = log.args;
-                  if (treasureIds) {
-                      treasureIds.forEach(id => uniqueIds.add(Number(id)));
+                  const { treasureIds, timestamp } = log.args;
+                  if (treasureIds && timestamp) {
+                      treasureIds.forEach(id => {
+                          uniqueIds.add(Number(id));
+                          const tId = id.toString();
+                          if (!inventory[tId]) {
+                              inventory[tId] = { count: 0, lastFound: 0 };
+                          }
+                          inventory[tId].count += 1;
+                          if (Number(timestamp) > inventory[tId].lastFound) {
+                              inventory[tId].lastFound = Number(timestamp);
+                          }
+                      });
                   }
               });
+              
               setDiscoveredIds(Array.from(uniqueIds));
+              setTreasureInventory(inventory);
+
           } catch (error) {
               console.error("データ取得エラー:", error);
           }
       };
+      
       fetchData();
   }, [publicClient, address]);
+
+  // Save to local storage on game end
+  useEffect(() => {
+    if (gameState === GameState.GAME_OVER || gameState === GameState.TIME_UP) {
+        if (collectedTreasures.length > 0) {
+            const newIds = new Set(discoveredIds);
+            const newInv = { ...treasureInventory };
+            const now = Math.floor(Date.now() / 1000);
+            
+            let changed = false;
+            collectedTreasures.forEach(t => {
+                const numId = t.catalogId;
+                const strId = numId.toString();
+                if (!newIds.has(numId)) {
+                    newIds.add(numId);
+                    changed = true;
+                }
+                if (!newInv[strId]) {
+                    newInv[strId] = { count: 0, lastFound: 0 };
+                }
+                newInv[strId].count += 1;
+                newInv[strId].lastFound = now;
+                changed = true;
+            });
+
+            if (changed) {
+                const finalIds = Array.from(newIds);
+                setDiscoveredIds(finalIds);
+                setTreasureInventory(newInv);
+                localStorage.setItem('discoveredIds', JSON.stringify(finalIds));
+                localStorage.setItem('treasureInventory', JSON.stringify(newInv));
+            }
+        }
+    }
+  }, [gameState]);
 
   // Common UI Wrapper logic to include User Badge everywhere
   const renderUserLayer = () => {
@@ -164,7 +197,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.0
+                   Ver 0.3.6
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -189,7 +222,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.0
+                   Ver 0.3.6
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
@@ -232,7 +265,6 @@ const App: React.FC = () => {
             {mapData && (
                 <GameMap 
                 tiles={mapData.tiles} 
-                theme={mapData.theme}
                 playerPos={playerPos} 
                 cameraPos={cameraPos}
                 direction={direction}

@@ -44,10 +44,22 @@ export const ENEMY_STATS = {
     flying: false,
     ghost: false,
   },
+  SLIME_SPLITTING: {
+    speed: 0.02,
+    range: 15,
+    flying: false,
+    ghost: false,
+  },
   SNAKE: {
     speed: 0.035, // Medium speed
     range: 12, 
     flying: false, // Falls in holes
+    ghost: false,
+  },
+  SNAKE_VENOMOUS: {
+    speed: 0.04,
+    range: 15,
+    flying: false,
     ghost: false,
   },
   GHOST: {
