@@ -35,6 +35,88 @@ const getTileClass = (type: TileType) => {
 };
 
 
+const StaticCanvasMap = memo(({ tiles, tileSize }: { tiles: TileType[][], tileSize: number }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let y = 0; y < GAME_CONFIG.MAP_HEIGHT; y++) {
+            for (let x = 0; x < GAME_CONFIG.MAP_WIDTH; x++) {
+                const type = tiles[y]?.[x];
+                if (type === undefined) continue;
+                
+                // Draw manual pixel art to match CSS
+                if (type === TileType.WATER) {
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                } else if (type === TileType.GRASS) {
+                    ctx.fillStyle = '#4ade80';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    // checkerboard
+                    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize/2, tileSize/2);
+                    ctx.fillRect(x*tileSize + tileSize/2, y*tileSize + tileSize/2, tileSize/2, tileSize/2);
+                } else if (type === TileType.DIRT) {
+                    ctx.fillStyle = '#a16207';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    // dirt marks
+                    ctx.fillStyle = '#713f12';
+                    ctx.fillRect(x*tileSize + 6, y*tileSize + 6, 4, 4);
+                    ctx.fillRect(x*tileSize + 18, y*tileSize + 20, 6, 6);
+                    ctx.fillRect(x*tileSize + 30, y*tileSize + 8, 4, 4);
+                } else if (type === TileType.ROCK) {
+                    ctx.fillStyle = '#4b5563';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    ctx.strokeStyle = '#374151';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    ctx.beginPath();
+                    ctx.moveTo(x*tileSize, y*tileSize);
+                    ctx.lineTo(x*tileSize + tileSize, y*tileSize);
+                    ctx.lineTo(x*tileSize, y*tileSize + tileSize);
+                    ctx.fill();
+                } else if (type === TileType.SAND) {
+                    ctx.fillStyle = '#fde047';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    ctx.fillStyle = '#d97706';
+                    ctx.fillRect(x*tileSize + 8, y*tileSize + 8, 3, 3);
+                    ctx.fillRect(x*tileSize + 24, y*tileSize + 30, 3, 3);
+                    ctx.fillRect(x*tileSize + 36, y*tileSize + 16, 3, 3);
+                } else if (type === TileType.HOLE) {
+                    ctx.fillStyle = '#291d15';
+                    ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                    ctx.fillRect(x*tileSize + 4, y*tileSize + 4, tileSize - 8, tileSize - 8);
+                } else if (type === TileType.TREASURE_MARK) {
+                     // Draw dirt floor under treasure mark
+                     ctx.fillStyle = '#b45309';
+                     ctx.fillRect(x*tileSize, y*tileSize, tileSize, tileSize);
+                     ctx.strokeStyle = '#fcd34d';
+                     ctx.lineWidth = 2;
+                     ctx.strokeRect(x*tileSize+1, y*tileSize+1, tileSize-2, tileSize-2);
+                }
+            }
+        }
+    }, [tiles, tileSize]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            width={GAME_CONFIG.MAP_WIDTH * tileSize}
+            height={GAME_CONFIG.MAP_HEIGHT * tileSize}
+            className="absolute top-0 left-0"
+        />
+    )
+});
+
 const GameMap: React.FC<GameMapProps> = ({ 
     tiles, 
     playerPos, 
@@ -78,35 +160,31 @@ const GameMap: React.FC<GameMapProps> = ({
   const startY = Math.max(0, Math.floor(cameraPos.y - viewportHeightTiles / 2) - buffer);
   const endY = Math.min(GAME_CONFIG.MAP_HEIGHT, Math.ceil(cameraPos.y + viewportHeightTiles / 2) + buffer);
 
-  const visibleTiles = useMemo(() => {
-    const renderedTiles = [];
+  const treasureMarkers = useMemo(() => {
+    const markers = [];
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
-        renderedTiles.push({ x, y, type: tiles[y][x] });
+        if (tiles[y]?.[x] === TileType.TREASURE_MARK) {
+            markers.push(
+               <div
+                key={`mark-${x}-${y}`}
+                className="absolute"
+                style={{
+                  width: tileSize,
+                  height: tileSize,
+                  transform: `translate3d(${x * tileSize}px, ${y * tileSize}px, 0)`,
+                }}
+              >
+                  <span className="absolute inset-0 flex items-center justify-center text-xl font-bold rounded-full border-2 border-red-500 text-red-500 animate-pulse">
+                    X
+                  </span>
+               </div>
+            );
+        }
       }
     }
-    return renderedTiles;
-  }, [tiles, startX, endX, startY, endY]);
-
-  const renderedBackgroundTiles = useMemo(() => {
-    return visibleTiles.map(tile => (
-      <div
-        key={`${tile.x}-${tile.y}`}
-        className={`absolute ${getTileClass(tile.type)}`}
-        style={{
-          width: tileSize,
-          height: tileSize,
-          transform: `translate3d(${tile.x * tileSize}px, ${tile.y * tileSize}px, 0)`,
-        }}
-      >
-        {tile.type === TileType.TREASURE_MARK && (
-          <span className="absolute inset-0 flex items-center justify-center text-xl font-bold rounded-full border-2 border-red-500 text-red-500 animate-pulse">
-            X
-          </span>
-        )}
-       </div>
-    ));
-  }, [visibleTiles, tileSize]);
+    return markers;
+  }, [tiles, startX, endX, startY, endY, tileSize]);
 
 
   // Determine display target (final destination)
@@ -239,7 +317,8 @@ const GameMap: React.FC<GameMapProps> = ({
         className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        {renderedBackgroundTiles}
+        <StaticCanvasMap tiles={tiles} tileSize={tileSize} />
+        {treasureMarkers}
 
         {displayTarget && (
              <div 
