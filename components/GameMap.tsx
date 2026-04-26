@@ -88,6 +88,27 @@ const GameMap: React.FC<GameMapProps> = ({
     return renderedTiles;
   }, [tiles, startX, endX, startY, endY]);
 
+  const renderedBackgroundTiles = useMemo(() => {
+    return visibleTiles.map(tile => (
+      <div
+        key={`${tile.x}-${tile.y}`}
+        className={`absolute ${getTileClass(tile.type)}`}
+        style={{
+          width: tileSize,
+          height: tileSize,
+          transform: `translate3d(${tile.x * tileSize}px, ${tile.y * tileSize}px, 0)`,
+        }}
+      >
+        {tile.type === TileType.TREASURE_MARK && (
+          <span className="absolute inset-0 flex items-center justify-center text-xl font-bold rounded-full border-2 border-red-500 text-red-500 animate-pulse">
+            X
+          </span>
+        )}
+       </div>
+    ));
+  }, [visibleTiles, tileSize]);
+
+
   // Determine display target (final destination)
   const displayTarget = useMemo(() => {
       if (currentPath && currentPath.length > 0) {
@@ -218,23 +239,7 @@ const GameMap: React.FC<GameMapProps> = ({
         className="absolute top-0 left-0 map-container will-change-transform"
         style={mapContainerStyle}
       >
-        {visibleTiles.map(tile => (
-          <div
-            key={`${tile.x}-${tile.y}`}
-            className={`absolute ${getTileClass(tile.type)}`}
-            style={{
-              width: tileSize,
-              height: tileSize,
-              transform: `translate3d(${tile.x * tileSize}px, ${tile.y * tileSize}px, 0)`,
-            }}
-          >
-            {tile.type === TileType.TREASURE_MARK && (
-              <span className="absolute inset-0 flex items-center justify-center text-xl font-bold rounded-full border-2 border-red-500 text-red-500 animate-pulse">
-                X
-              </span>
-            )}
-           </div>
-        ))}
+        {renderedBackgroundTiles}
 
         {displayTarget && (
              <div 

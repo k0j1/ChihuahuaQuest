@@ -529,14 +529,13 @@ export const useGameEngine = () => {
         setCameraPos({ x: newCamX, y: newCamY });
     }
 
-
     // --- Enemy Logic ---
     if (mapDataRef.current && !isGeneratingTreasure) {
         let currentEnemies = [...enemiesRef.current];
         let tilesChanged = false;
         // Use Ref for source of truth to avoid stale state
         const currentTilesOriginal = mapDataRef.current.tiles;
-        const newTiles = currentTilesOriginal.map(row => [...row]);
+        let newTiles: TileType[][] | null = null;
 
         const spawnedEnemies: Enemy[] = [];
 
@@ -557,7 +556,9 @@ export const useGameEngine = () => {
             
             if (tx >= 0 && tx < GAME_CONFIG.MAP_WIDTH && ty >= 0 && ty < GAME_CONFIG.MAP_HEIGHT) {
                 // Check against newTiles in case multiple enemies fall in same frame (rare but possible)
-                if (newTiles[ty][tx] === TileType.HOLE && !stats.flying) {
+                const tileToCheck = newTiles ? newTiles[ty][tx] : currentTilesOriginal[ty][tx];
+                if (tileToCheck === TileType.HOLE && !stats.flying) {
+                    if (!newTiles) newTiles = currentTilesOriginal.map(row => [...row]);
                     // Turn HOLE into ROCK
                     newTiles[ty][tx] = TileType.ROCK;
                     tilesChanged = true;
@@ -581,7 +582,7 @@ export const useGameEngine = () => {
                         // Find first safe neighbor
                         const safeSpot = neighbors.find(n => {
                             if (n.x < 0 || n.x >= GAME_CONFIG.MAP_WIDTH || n.y < 0 || n.y >= GAME_CONFIG.MAP_HEIGHT) return false;
-                            const t = newTiles[n.y][n.x];
+                            const t = newTiles![n.y][n.x];
                             return t !== TileType.ROCK && t !== TileType.WATER;
                         });
 
@@ -652,7 +653,8 @@ export const useGameEngine = () => {
                  if (tX < 0 || tX >= GAME_CONFIG.MAP_WIDTH || tY < 0 || tY >= GAME_CONFIG.MAP_HEIGHT) return true;
                  if (stats.ghost) return false;
                  // Use newTiles for wall checking to reflect immediate changes
-                 const tile = newTiles[tY][tX];
+                 const activeTiles = newTiles || currentTilesOriginal;
+                 const tile = activeTiles[tY][tX];
                  if (stats.flying) return tile === TileType.ROCK;
                  return tile === TileType.ROCK || tile === TileType.WATER;
             };
