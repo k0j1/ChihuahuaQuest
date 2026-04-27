@@ -50,6 +50,7 @@ export const useGameEngine = () => {
   const enemiesRef = useRef<Enemy[]>([]); 
   const frameCountRef = useRef<number>(0);
   const lastFpsTimeRef = useRef<number>(0);
+  const lastFrameTimeRef = useRef<number>(0);
   const animationFrameRef = useRef<number>(0);
   
   // Dig Pending Ref (Move then Dig) - Logic sync
@@ -355,15 +356,20 @@ export const useGameEngine = () => {
 
   // Game Loop
   const update = useCallback((time: number) => {
+    animationFrameRef.current = requestAnimationFrame(update);
+
+    // Limit to 60 FPS (approx 16.66ms per frame)
+    if (time - lastFrameTimeRef.current < 16.6) {
+        return;
+    }
+    lastFrameTimeRef.current = time;
+
     // If we are DYING, just render loop (camera updates etc if needed), but skip physics
     if (gameState === GameState.DYING) {
-        // Just in case we want to render animations, we request frame but do no logic
-        animationFrameRef.current = requestAnimationFrame(update);
         return;
     }
 
     if (gameState !== GameState.PLAYING) {
-      animationFrameRef.current = requestAnimationFrame(update);
       return;
     }
 
@@ -676,8 +682,6 @@ export const useGameEngine = () => {
             setMapData({ ...mapDataRef.current, tiles: newTiles });
         }
     }
-
-    animationFrameRef.current = requestAnimationFrame(update);
   }, [gameState, isDigging, isGeneratingTreasure]); // removed mapData from dependency
 
   useEffect(() => {
