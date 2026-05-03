@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePublicClient, useAccount } from 'wagmi';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from './constants';
+import { TREASURE_REGISTRY } from './services/geminiService';
 import { GameState } from './types';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useFarcasterUser } from './hooks/useFarcasterUser';
@@ -66,67 +67,99 @@ const App: React.FC = () => {
   const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
   const [canClaim, setCanClaim] = useState(true); // Default to true for preview/fallback
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [rewardsLoaded, setRewardsLoaded] = useState(false);
 
   useEffect(() => {
-      // Load local inventory fallback
-      const localInvStr = localStorage.getItem('treasureInventory');
-      const localIdsStr = localStorage.getItem('discoveredIds');
-      
-      let localInv = {};
-      let localIds: number[] = [];
-      
-      try {
-          if (localInvStr) localInv = JSON.parse(localInvStr);
-          if (localIdsStr) localIds = JSON.parse(localIdsStr);
-      } catch (e) {
-          console.error("Local storage parse error", e);
-      }
-      
-      setTreasureInventory(localInv);
-      setDiscoveredIds(localIds);
+        // Load local inventory fallback
+        const localInvStr = localStorage.getItem('treasureInventory');
+        const localIdsStr = localStorage.getItem('discoveredIds');
+        
+        let localInv = {};
+        let localIds: number[] = [];
+        
+        try {
+            if (localInvStr) localInv = JSON.parse(localInvStr);
+            if (localIdsStr) localIds = JSON.parse(localIdsStr);
+        } catch (e) {
+            console.error("Local storage parse error", e);
+        }
+        
+        setTreasureInventory(localInv);
+        setDiscoveredIds(localIds);
 
-      if (!publicClient || !address) return;
+        if (!publicClient || !address) return;
 
-      const fetchData = async () => {
-          try {
-              // Fetch canClaimToday
-              const claimable = await publicClient.readContract({
-                  address: TREASURE_CONTRACT_ADDRESS,
-                  abi: TREASURE_CONTRACT_ABI,
-                  functionName: 'canClaimToday',
-                  args: [address]
-              }) as boolean;
-              setCanClaim(claimable);
+        const fetchData = async () => {
+            try {
+                // Fetch canClaimToday
+                const claimable = await publicClient.readContract({
+                    address: TREASURE_CONTRACT_ADDRESS,
+                    abi: TREASURE_CONTRACT_ABI,
+                    functionName: 'canClaimToday',
+                    args: [address]
+                }) as boolean;
+                setCanClaim(claimable);
 
-              // Fetch getPlayerInventory
-              const [ids, counts] = (await publicClient.readContract({
-                  address: TREASURE_CONTRACT_ADDRESS,
-                  abi: TREASURE_CONTRACT_ABI,
-                  functionName: 'getPlayerInventory',
-                  args: [address as `0x${string}`]
-              })) as [readonly bigint[], readonly bigint[]];
-              
-              const uniqueIds = new Set<number>();
-              const inventory: Record<string, { count: number, lastFound: number }> = {};
+                // Fetch getPlayerInventory
+                const [ids, counts] = (await publicClient.readContract({
+                    address: TREASURE_CONTRACT_ADDRESS,
+                    abi: TREASURE_CONTRACT_ABI,
+                    functionName: 'getPlayerInventory',
+                    args: [address as `0x${string}`]
+                })) as [readonly bigint[], readonly bigint[]];
+                
+                const uniqueIds = new Set<number>();
+                const inventory: Record<string, { count: number, lastFound: number }> = {};
 
-              ids.forEach((id: bigint, index: number) => {
-                  const numId = Number(id);
-                  const count = Number(counts[index]);
-                  uniqueIds.add(numId);
-                  const strId = numId.toString();
-                  inventory[strId] = { count: count, lastFound: 0 };
-              });
-              
-              setDiscoveredIds(Array.from(uniqueIds));
-              setTreasureInventory(inventory);
+                ids.forEach((id: bigint, index: number) => {
+                    const numId = Number(id);
+                    const count = Number(counts[index]);
+                    uniqueIds.add(numId);
+                    const strId = numId.toString();
+                    inventory[strId] = { count: count, lastFound: 0 };
+                });
+                
+                setDiscoveredIds(Array.from(uniqueIds));
+                setTreasureInventory(inventory);
 
-          } catch (error) {
-              console.error("データ取得エラー:", error);
-          }
-      };
-      
-      fetchData();
-  }, [publicClient, address, refreshTrigger]);
+            } catch (error) {
+                console.error("データ取得エラー:", error);
+            }
+        };
+
+        const fetchRewards = async () => {
+            try {
+                const maxId = 500;
+                const tokenIds = Array.from({ length: maxId }, (_, i) => i + 1);
+                
+                const results = await Promise.all(
+                    tokenIds.map(id => 
+                        publicClient.readContract({
+                            address: TREASURE_CONTRACT_ADDRESS,
+                            abi: TREASURE_CONTRACT_ABI,
+                            functionName: 'treasureRewards',
+                            // @ts-ignore
+                            args: [BigInt(id)]
+                        }).catch(() => [0n, false])
+                    )
+                );
+
+                results.forEach((res: any, index) => {
+                    const chhAmount = res[0] as bigint;
+                    const exists = res[1] as boolean;
+                    if (exists && TREASURE_REGISTRY[index]) {
+                         TREASURE_REGISTRY[index].value = Number(chhAmount / 10n**18n);
+                    }
+                });
+                setRewardsLoaded(true);
+            } catch (error) {
+                console.error("報酬取得エラー:", error);
+            }
+        };
+        
+        fetchData();
+        fetchRewards();
+    }, [publicClient, address, refreshTrigger]);
 
   // Ensure refresh when returning to TITLE
   useEffect(() => {
@@ -196,7 +229,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.15
+                   Ver 0.3.16
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -222,7 +255,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.15
+                   Ver 0.3.16
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
