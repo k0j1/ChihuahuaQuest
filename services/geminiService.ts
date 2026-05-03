@@ -117,7 +117,14 @@ const UNIQUE_TREASURES = [
   { name: "カボチャのランタン", description: "ハロウィンの残り。", value: 40, icon: "🎃" },
   { name: "お年玉袋", description: "中身が入っている！！", value: 500, icon: "🧧" },
   { name: "こいのぼり", description: "屋根より低い。", value: 60, icon: "🎏" },
-  { name: "雪だるま", description: "なぜ溶けていないのか不思議だ。", value: 0, icon: "⛄" }
+  { name: "雪だるま", description: "なぜ溶けていないのか不思議だ。", value: 0, icon: "⛄" },
+  
+  // --- 新規追加 (Added based on user request) ---
+  { name: "金の延べ棒", description: "重くて運ぶのが大変だ。", value: 1200, icon: "🧱" },
+  { name: "おもちゃの兵隊", description: "誰かが遊んでいたようだ。", value: 40, icon: "💂" },
+  { name: "古びたコイン袋", description: "中身は空っぽだった。", value: 20, icon: "💰" },
+  { name: "地球儀", description: "世界は広い。", value: 150, icon: "🌍" },
+  { name: "宝箱", description: "中からさらに骨が出てきた。", value: 800, icon: "🧰" }
 ];
 
 // --- 自動生成用の設定 ---

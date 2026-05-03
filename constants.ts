@@ -74,7 +74,7 @@ export const SPRITE_CONFIG = {
   FRAME_RATE: 10, // Animation speed
 };
 
-export const TREASURE_CONTRACT_ADDRESS = '0x9006cFA4bf5893586eDa1095E441998e059c440d';
+export const TREASURE_CONTRACT_ADDRESS = '0xD3260f77CD0E38a3A4e55b6666C28257714C7101';
 
 export const TREASURE_CONTRACT_ABI = [
   {
@@ -119,6 +119,64 @@ export const TREASURE_CONTRACT_ABI = [
       { "internalType": "bool", "name": "", "type": "bool" }
     ],
     "stateMutability": "view"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" }
+    ],
+    "name": "treasureRewards",
+    "outputs": [
+      { "internalType": "uint256", "name": "chhAmount", "type": "uint256" },
+      { "internalType": "bool", "name": "exists", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "type": "function",
+    "name": "getPlayerInventory",
+    "inputs": [
+      { "internalType": "address", "name": "player", "type": "address" }
+    ],
+    "outputs": [
+      { "internalType": "uint256[]", "name": "ids", "type": "uint256[]" },
+      { "internalType": "uint256[]", "name": "counts", "type": "uint256[]" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setTreasureRewardsBatch",
+    "inputs": [
+      { "internalType": "uint256[]", "name": "treasureIds", "type": "uint256[]" },
+      { "internalType": "uint256[]", "name": "chhAmountsInEther", "type": "uint256[]" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setPaymentConfig",
+    "inputs": [
+      { "internalType": "address", "name": "_tokenAddress", "type": "address" },
+      { "internalType": "uint256", "name": "_fee", "type": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdrawPaymentTokens",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resetClaimCooldown",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   }
 ] as const;
 

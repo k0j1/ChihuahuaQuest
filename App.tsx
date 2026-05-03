@@ -97,31 +97,27 @@ const App: React.FC = () => {
               }) as boolean;
               setCanClaim(claimable);
 
-              // Fetch Treasure events
-              const logs = await publicClient.getLogs({
+              // Fetch getPlayerInventory
+              const [ids, counts] = (await publicClient.readContract({
                   address: TREASURE_CONTRACT_ADDRESS,
-                  event: TREASURE_CONTRACT_ABI[0], // SessionCompleted
-                  args: { user: address },
-                  fromBlock: 0n
-              });
+                  abi: TREASURE_CONTRACT_ABI,
+                  functionName: 'getPlayerInventory',
+                  args: [address as `0x${string}`]
+              })) as [readonly bigint[], readonly bigint[]];
               
               const uniqueIds = new Set<number>(localIds);
               const inventory: Record<string, { count: number, lastFound: number }> = { ...localInv };
 
-              logs.forEach(log => {
-                  const { treasureIds, timestamp } = log.args;
-                  if (treasureIds && timestamp) {
-                      treasureIds.forEach(id => {
-                          uniqueIds.add(Number(id));
-                          const tId = id.toString();
-                          if (!inventory[tId]) {
-                              inventory[tId] = { count: 0, lastFound: 0 };
-                          }
-                          inventory[tId].count += 1;
-                          if (Number(timestamp) > inventory[tId].lastFound) {
-                              inventory[tId].lastFound = Number(timestamp);
-                          }
-                      });
+              ids.forEach((id: bigint, index: number) => {
+                  const numId = Number(id);
+                  const count = Number(counts[index]);
+                  uniqueIds.add(numId);
+                  const strId = numId.toString();
+                  if (!inventory[strId]) {
+                      inventory[strId] = { count: count, lastFound: 0 };
+                  } else {
+                      // Validate from chain, prioritizing on-chain count
+                      inventory[strId].count = count > inventory[strId].count ? count : inventory[strId].count;
                   }
               });
               
@@ -197,7 +193,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.11
+                   Ver 0.3.13
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -222,7 +218,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.11
+                   Ver 0.3.13
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
