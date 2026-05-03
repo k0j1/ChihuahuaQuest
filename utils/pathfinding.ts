@@ -14,7 +14,7 @@ const heuristic = (a: Position, b: Position): number => {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 };
 
-const isWalkable = (tile: TileType): boolean => {
+export const isWalkable = (tile: TileType): boolean => {
   return tile !== TileType.WATER && tile !== TileType.ROCK;
 };
 

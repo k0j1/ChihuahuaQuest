@@ -3,7 +3,7 @@ import { GameState, TileType, Position, Direction, Treasure, Enemy, EnemyTypeStr
 import { GAME_CONFIG, ENEMY_STATS } from '../constants';
 import { generateMap } from '../utils/mapGenerator';
 import { generateTreasure } from '../services/geminiService';
-import { findPath } from '../utils/pathfinding'; // Import pathfinding
+import { findPath, isWalkable } from '../utils/pathfinding'; // Import pathfinding and isWalkable
 
 export const useGameEngine = () => {
   // Game State
@@ -347,8 +347,26 @@ export const useGameEngine = () => {
             setIsPendingDig(true);
         } else {
              // Cannot move there
-             setSysMessage("そこには行けないワン...");
-             setTimeout(() => setSysMessage(null), 1000);
+             // Check if it's an unreachable walkable tile (island)
+             const targetTile = mapDataRef.current.tiles[endNode.y][endNode.x];
+             if (isWalkable(targetTile)) {
+                 // Boat travel
+                 setPlayerPos({ x: endNode.x, y: endNode.y });
+                 playerPosRef.current = { x: endNode.x, y: endNode.y };
+                 
+                 // Clear any pending movement
+                 setTargetPos(null);
+                 targetPosRef.current = null;
+                 setCurrentPath([]);
+                 currentPathRef.current = [];
+                 setIsMoving(false);
+                 
+                 setSysMessage("船で移動したワン！");
+                 setTimeout(() => setSysMessage(null), 1500);
+             } else {
+                 setSysMessage("そこには行けないワン...");
+                 setTimeout(() => setSysMessage(null), 1000);
+             }
         }
     }
 
