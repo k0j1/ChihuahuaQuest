@@ -52,7 +52,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
             args: [address]
         }) as bigint;
         
-        const apiUrl = import.meta.env.VITE_SIGNATURE_API_URL || '/api/sign.php';
+        const apiUrl = '/api/sign';
         
         const res = await fetch(apiUrl, {
             method: 'POST',
