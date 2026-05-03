@@ -4,17 +4,19 @@ import { GAME_CONFIG } from '../../constants';
 import Chihuahua from '../Chihuahua';
 import Enemy from '../Enemy';
 import { Direction } from '../../types';
+import ResetCooldownButton from '../ResetCooldownButton';
 
 interface TitleScreenProps {
   onStart: () => void;
   onOpenBook: () => void;
   onOpenLitepaper: () => void;
   onOpenAdmin?: () => void;
+  onResetSuccess: () => void;
   isAdmin?: boolean;
   canClaim: boolean;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, isAdmin, canClaim }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim }) => {
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
       
@@ -149,6 +151,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
               {/* Sub Buttons */}
               <div className="flex gap-4 w-full">
               </div>
+
+              {!canClaim && (
+                 <ResetCooldownButton onSuccess={onResetSuccess} />
+              )}
 
               {isAdmin && (
                   <button 

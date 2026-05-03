@@ -65,6 +65,7 @@ const App: React.FC = () => {
   // Blockchain-based Treasure Discovery
   const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
   const [canClaim, setCanClaim] = useState(true); // Default to true for preview/fallback
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
       // Load local inventory fallback
@@ -105,20 +106,15 @@ const App: React.FC = () => {
                   args: [address as `0x${string}`]
               })) as [readonly bigint[], readonly bigint[]];
               
-              const uniqueIds = new Set<number>(localIds);
-              const inventory: Record<string, { count: number, lastFound: number }> = { ...localInv };
+              const uniqueIds = new Set<number>();
+              const inventory: Record<string, { count: number, lastFound: number }> = {};
 
               ids.forEach((id: bigint, index: number) => {
                   const numId = Number(id);
                   const count = Number(counts[index]);
                   uniqueIds.add(numId);
                   const strId = numId.toString();
-                  if (!inventory[strId]) {
-                      inventory[strId] = { count: count, lastFound: 0 };
-                  } else {
-                      // Validate from chain, prioritizing on-chain count
-                      inventory[strId].count = count > inventory[strId].count ? count : inventory[strId].count;
-                  }
+                  inventory[strId] = { count: count, lastFound: 0 };
               });
               
               setDiscoveredIds(Array.from(uniqueIds));
@@ -130,7 +126,14 @@ const App: React.FC = () => {
       };
       
       fetchData();
-  }, [publicClient, address]);
+  }, [publicClient, address, refreshTrigger]);
+
+  // Ensure refresh when returning to TITLE
+  useEffect(() => {
+      if (gameState === GameState.TITLE) {
+          setRefreshTrigger(prev => prev + 1);
+      }
+  }, [gameState]);
 
   // Save to local storage on game end
   useEffect(() => {
@@ -193,7 +196,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.13
+                   Ver 0.3.15
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -201,6 +204,7 @@ const App: React.FC = () => {
                         onOpenBook={openTreasureBook}
                         onOpenLitepaper={openLitepaper}
                         onOpenAdmin={openAdmin}
+                        onResetSuccess={() => setRefreshTrigger(prev => prev + 1)}
                         isAdmin={isAdmin}
                         canClaim={canClaim}
                     />
@@ -218,7 +222,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.13
+                   Ver 0.3.15
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
