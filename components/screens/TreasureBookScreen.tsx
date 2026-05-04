@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
 import { Treasure } from '../../types';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Star, Sparkles, Trophy } from 'lucide-react';
 import TreasureDialog from '../TreasureDialog';
 import { getRarity } from '../../constants';
 
@@ -11,13 +11,69 @@ interface TreasureBookScreenProps {
   onBack: () => void;
 }
 
+const getLuxuryRarityStyle = (stars: number) => {
+    switch (stars) {
+        case 5:
+            return {
+                bg: 'bg-gradient-to-br from-[#4a0000] via-[#2a0000] to-[#110000]',
+                border: 'border-[#ff4444]',
+                shadow: 'shadow-[0_0_15px_rgba(255,68,68,0.6)] hover:shadow-[0_0_25px_rgba(255,68,68,0.8)]',
+                innerBorder: 'border-[#ff8888] mix-blend-overlay',
+                text: 'text-[#ffcccc]',
+                badgeBg: 'bg-[#4a0000]',
+            };
+        case 4:
+            return {
+                bg: 'bg-gradient-to-br from-[#2a004a] via-[#15002a] to-[#0a0011]',
+                border: 'border-[#a855f7]',
+                shadow: 'shadow-[0_0_12px_rgba(168,85,247,0.5)] hover:shadow-[0_0_20px_rgba(168,85,247,0.7)]',
+                innerBorder: 'border-[#d8b4fe] mix-blend-overlay',
+                text: 'text-[#f3e8ff]',
+                badgeBg: 'bg-[#2a004a]',
+            };
+        case 3:
+            return {
+                bg: 'bg-gradient-to-br from-[#4a3500] via-[#2a1d00] to-[#110c00]',
+                border: 'border-[#eab308]',
+                shadow: 'shadow-[0_0_10px_rgba(234,179,8,0.4)] hover:shadow-[0_0_18px_rgba(234,179,8,0.6)]',
+                innerBorder: 'border-[#fef08a] mix-blend-overlay',
+                text: 'text-[#fefce8]',
+                badgeBg: 'bg-[#4a3500]',
+            };
+        case 2:
+            return {
+                bg: 'bg-gradient-to-br from-[#001f3f] via-[#001122] to-[#00050a]',
+                border: 'border-[#60a5fa]',
+                shadow: 'shadow-[0_0_8px_rgba(96,165,250,0.3)] hover:shadow-[0_0_15px_rgba(96,165,250,0.5)]',
+                innerBorder: 'border-[#bfdbfe] mix-blend-overlay',
+                text: 'text-[#eff6ff]',
+                badgeBg: 'bg-[#001f3f]',
+            };
+        case 1:
+        default:
+            return {
+                bg: 'bg-gradient-to-br from-[#222222] via-[#111111] to-[#000000]',
+                border: 'border-[#8b6508]',
+                shadow: 'shadow-lg hover:shadow-[0_0_12px_rgba(139,101,8,0.4)]',
+                innerBorder: 'border-[#a37e2c] mix-blend-overlay',
+                text: 'text-[#e5e5e5]',
+                badgeBg: 'bg-[#222222]',
+            };
+    }
+};
+
 const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, inventory, onBack }) => {
   const [selectedTreasure, setSelectedTreasure] = useState<Treasure | null>(null);
 
   // Calculate completion percentage
   const total = TREASURE_REGISTRY.length;
   const discoveredCount = discoveredIds.length;
-  const percentage = Math.round((discoveredCount / total) * 100);
+  const percentage = total > 0 ? ((discoveredCount / total) * 100).toFixed(1) : '0.0';
+  
+  // Total acquired count
+  const totalAcquired = useMemo(() => {
+    return Object.values(inventory).reduce((acc, item) => acc + item.count, 0);
+  }, [inventory]);
 
   const handleTreasureClick = (treasure: typeof TREASURE_REGISTRY[0]) => {
       // Only show dialog if discovered
@@ -31,76 +87,143 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] w-screen bg-[#1c0f0a] text-[#f4ecd8] relative overflow-hidden font-serif">
+        {/* Decorative Leather Texture Overlay */}
+        <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '6px 6px' }}></div>
+        
+        {/* Heavy Gold Border Container */}
+        <div className="absolute inset-1.5 border-[6px] border-[#8b6508] shadow-[inset_0_0_20px_rgba(0,0,0,1)] pointer-events-none rounded-lg z-0"></div>
+        <div className="absolute inset-3 border-2 border-[#daa520] opacity-40 pointer-events-none rounded z-0"></div>
+
         {/* Header */}
-        <div className="flex-none p-4 bg-gray-800 border-b-4 border-yellow-600 shadow-md z-20 flex justify-between items-center">
+        <div className="flex-none pt-10 pb-6 px-6 relative z-20 flex flex-col items-center bg-gradient-to-b from-[#2c1810] via-[#1a0f0a] to-transparent border-b-2 border-[#8b6508] shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 10px)' }}></div>
+            
             <button 
                 onClick={onBack}
-                className="p-2 bg-gray-700 rounded hover:bg-gray-600 active:scale-95 pixel-corners"
+                className="absolute left-6 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
             >
-                <ArrowLeft />
+                <ArrowLeft className="w-7 h-7 drop-shadow-md" />
             </button>
             
-            <h2 className="text-xl font-bold text-yellow-400 pixel-text-shadow tracking-widest">
-                お宝図鑑
-            </h2>
+            <div className="flex items-center gap-4 mb-4 relative">
+                <Sparkles className="text-[#ffd700] w-6 h-6 animate-pulse" />
+                <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-[#fffacd] via-[#ffd700] to-[#b8860b] tracking-widest drop-shadow-[0_4px_4px_rgba(0,0,0,1)] filter">
+                    財宝図鑑
+                </h2>
+                <Sparkles className="text-[#ffd700] w-6 h-6 animate-pulse" />
+            </div>
             
-            <div className="text-sm font-mono text-gray-300">
-                {discoveredCount}/{total}
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mt-2 bg-black/60 py-3 px-8 rounded-full border border-[#8b6508] shadow-[inset_0_0_15px_rgba(0,0,0,0.8),0_4px_10px_rgba(0,0,0,0.5)] backdrop-blur-sm relative z-20">
+                <div className="flex flex-col items-center">
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">DISCOVERED</span>
+                    <span className="font-mono font-bold text-xl md:text-2xl text-white drop-shadow-md">
+                        {discoveredCount}<span className="text-[#8b6508] text-sm md:text-base">/{total}</span>
+                    </span>
+                </div>
+                
+                <div className="w-[2px] h-10 bg-gradient-to-b from-transparent via-[#8b6508] to-transparent"></div>
+                
+                <div className="flex flex-col items-center">
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">TOTAL ACQUIRED</span>
+                    <div className="flex items-center gap-1.5">
+                        <Trophy className="w-4 h-4 text-[#ffd700]" />
+                        <span className="font-mono font-bold text-xl md:text-2xl text-white drop-shadow-md">
+                            {totalAcquired}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="w-[2px] h-10 bg-gradient-to-b from-transparent via-[#8b6508] to-transparent hidden md:block"></div>
+                
+                <div className="flex flex-col items-center hidden md:flex">
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">COMPLETION</span>
+                    <span className="font-mono font-bold text-xl md:text-2xl text-[#ffd700] drop-shadow-[0_2px_2px_rgba(184,134,11,0.8)]">
+                        {percentage}%
+                    </span>
+                </div>
+            </div>
+            
+            {/* Mobile Complete Rate */}
+            <div className="flex md:hidden items-center justify-center gap-2 mt-3 text-sm">
+                <span className="text-[#daa520] font-bold">COMPLETION:</span>
+                <span className="font-mono font-bold text-[#ffd700] drop-shadow-md pb-0.5">{percentage}%</span>
             </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full h-4 bg-gray-700">
+        {/* Fancy Progress Bar */}
+        <div className="w-full h-2 bg-[#0a0502] relative z-20 shadow-[inset_0_2px_4px_rgba(0,0,0,1)] border-b border-[#302010]">
             <div 
-                className="h-full bg-green-500 transition-all duration-500"
+                className="h-full bg-gradient-to-r from-[#8b6508] via-[#ffd700] to-[#fffacd] transition-all duration-1000 ease-out shadow-[0_0_15px_#ffd700]"
                 style={{ width: `${percentage}%` }}
-            ></div>
+            >
+                <div className="w-full h-full opacity-50" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5) 50%, transparent)' }}></div>
+            </div>
         </div>
 
-        {/* Grid Content */}
-        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 pb-8">
+        {/* Grid Content - The "Pages" */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide relative z-10 custom-scrollbar">
+            {/* Page texture */}
+            <div className="absolute inset-0 bg-[#fbf5e6] opacity-[0.03] pointer-events-none mix-blend-overlay"></div>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-5 pb-16 relative z-10 w-full max-w-6xl mx-auto">
                 {TREASURE_REGISTRY.map((treasure) => {
                     const isDiscovered = discoveredIds.includes(treasure.catalogId);
                     const rarity = getRarity(treasure.value);
+                    const itemCount = inventory[treasure.catalogId]?.count || 0;
+                    const style = getLuxuryRarityStyle(rarity.stars);
                     
                     return (
                         <div 
                             key={treasure.catalogId}
                             onClick={() => handleTreasureClick(treasure)}
                             className={`
-                                relative aspect-square rounded-lg pixel-corners flex flex-col items-center justify-center p-1 transition-all
+                                relative aspect-square rounded-lg overflow-hidden flex flex-col items-center justify-center p-2 transition-all duration-300
                                 ${isDiscovered 
-                                    ? `${rarity.bgClass} border-2 ${rarity.borderClass} cursor-pointer hover:brightness-110 active:scale-95` 
-                                    : 'bg-gray-900 border-2 border-gray-700 opacity-60'
+                                    ? `cursor-pointer transform hover:-translate-y-1 ${style.bg} border ${style.border} ${style.shadow}` 
+                                    : 'bg-[#150a06] border border-[#301a10] opacity-80 shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]'
                                 }
                             `}
                         >
-                            <div className="absolute top-1 left-1 text-[10px] text-white/50 font-mono z-10">
-                                {treasure.catalogId.toString().padStart(3, '0')}
+                            {/* Inner border for discovered items */}
+                            {isDiscovered && (
+                                <div className={`absolute inset-0 border-[1.5px] ${style.innerBorder} opacity-60 m-1 rounded-[4px] pointer-events-none`}></div>
+                            )}
+
+                            {/* ID Badge */}
+                            <div className={`absolute top-1 left-1.5 text-[9px] md:text-[10px] font-mono z-10 font-bold ${isDiscovered ? 'text-white/60' : 'text-[#503020]'}`}>
+                                No.{treasure.catalogId.toString().padStart(3, '0')}
                             </div>
 
                             {isDiscovered ? (
                                 <>
-                                    <div className="text-3xl mb-1 filter drop-shadow-md animate-bounce-in z-10">
+                                    {/* Icon */}
+                                    <div className="text-4xl md:text-5xl mb-3 filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] animate-bounce-in z-10 mt-1">
                                         {treasure.icon}
                                     </div>
-                                    <div className="text-[10px] text-center text-white font-bold leading-tight w-full truncate px-1 z-10 drop-shadow-md">
-                                        {treasure.name}
+                                    
+                                    {/* Name Plaque */}
+                                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-6 pb-1.5 px-1.5 z-10">
+                                        <div className={`text-[10px] md:text-[11px] text-center font-bold leading-tight w-full truncate drop-shadow-[0_1px_2px_rgba(0,0,0,1)] ${style.text}`}>
+                                            {treasure.name}
+                                        </div>
                                     </div>
-                                    {/* Amount Found */}
-                                    <div className="absolute bottom-1 right-1 text-[8px] bg-black/50 px-1 rounded text-white font-mono z-10">
-                                        ×{inventory[treasure.catalogId]?.count || 0}
+
+                                    {/* Amount Badge */}
+                                    <div className={`absolute top-1.5 right-1.5 flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 ${style.badgeBg} border ${style.border} rounded-full text-[9px] font-mono font-extrabold text-white shadow-[0_2px_4px_rgba(0,0,0,0.6)] z-20`}>
+                                        x{itemCount}
                                     </div>
+
                                     {/* Rarity Stars */}
-                                    <div className="text-[8px] text-yellow-300 absolute top-1 right-1">
-                                        {"★".repeat(rarity.stars)}
+                                    <div className="absolute bottom-5 inset-x-0 flex justify-center z-10 opacity-90 mb-0.5">
+                                        <div className={`text-[8px] md:text-[9px] tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,1)] ${rarity.stars === 5 ? 'text-[#ffb6c1]' : rarity.stars === 4 ? 'text-[#e9d5ff]' : rarity.stars === 3 ? 'text-[#fef08a]' : rarity.stars === 2 ? 'text-[#bfdbfe]' : 'text-gray-300'}`}>
+                                            {"★".repeat(rarity.stars)}
+                                        </div>
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-2xl text-gray-600 font-bold">
-                                    ?
+                                <div className="text-3xl md:text-4xl font-serif text-[#301a10] font-bold flex flex-col items-center gap-2">
+                                    <span className="drop-shadow-sm">?</span>
                                 </div>
                             )}
                         </div>
@@ -114,26 +237,39 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             <TreasureDialog 
                 treasure={selectedTreasure} 
                 onClose={() => setSelectedTreasure(null)}
-                buttonLabel="閉じる"
+                buttonLabel="CLOSE"
             />
         )}
         
         <style>{`
-          /* Custom scrollbar hiding */
-          .scrollbar-hide::-webkit-scrollbar {
-              display: none;
+          .custom-scrollbar::-webkit-scrollbar {
+              width: 8px;
           }
-          .scrollbar-hide {
-              -ms-overflow-style: none;
-              scrollbar-width: none;
+          .custom-scrollbar::-webkit-scrollbar-track {
+              background: rgba(10, 5, 2, 0.8); 
+              border-left: 1px solid rgba(139, 101, 8, 0.3);
           }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: linear-gradient(180deg, #8b6508, #daa520, #8b6508);
+              border-radius: 4px;
+              border: 1px solid #1a0f0a;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: linear-gradient(180deg, #daa520, #ffd700, #daa520);
+          }
+          
+          .custom-scrollbar {
+              scrollbar-width: thin;
+              scrollbar-color: #daa520 rgba(10, 5, 2, 0.8);
+          }
+          
           @keyframes bounce-in {
-            0% { transform: scale(0); }
-            60% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+            0% { transform: scale(0.5); opacity: 0; filter: blur(4px); }
+            60% { transform: scale(1.15); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0px); }
           }
           .animate-bounce-in {
-            animation: bounce-in 0.4s ease-out;
+            animation: bounce-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
           }
         `}</style>
     </div>
