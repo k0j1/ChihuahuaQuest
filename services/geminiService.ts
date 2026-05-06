@@ -62,17 +62,17 @@ const UNIQUE_TREASURES = [
   { name: "カブトムシ", description: "まだ生きている！", value: 50, icon: "🪲" },
   { name: "バラの花", description: "情熱的な愛の証。", value: 30, icon: "🌹" },
 
-  // --- 食べ物系 (Food) ---
-  { name: "ハンバーガー", description: "少し砂がついているが気にしない。", value: 80, icon: "🍔" },
-  { name: "ピザ", description: "チーズたっぷりの1ピース。", value: 70, icon: "🍕" },
-  { name: "ドーナツ", description: "穴の開いた甘い誘惑。", value: 60, icon: "🍩" },
-  { name: "おにぎり", description: "誰かのピクニックの忘れ物。", value: 40, icon: "🍙" },
-  { name: "高級寿司", description: "なぜこんなところにトロが？", value: 300, icon: "🍣" },
-  { name: "ソフトクリーム", description: "溶けていない、奇跡だ。", value: 50, icon: "🍦" },
-  { name: "バースデーケーキ", description: "誰かの誕生日を祝おう。", value: 200, icon: "🎂" },
-  { name: "いちご", description: "甘酸っぱい初恋の味。", value: 20, icon: "🍓" },
-  { name: "メロン", description: "高級フルーツ。", value: 400, icon: "🍈" },
-  { name: "エビフライ", description: "しっぽまで食べる派。", value: 90, icon: "🍤" },
+  // --- 魔法・神秘系 (Mystic/Magic) ---
+  { name: "魔導書の切れ端", description: "失われた魔法が記されている。", value: 150, icon: "📜" },
+  { name: "占いの水晶玉", description: "未来が見えるかもしれない。", value: 250, icon: "🔮" },
+  { name: "妖精の粉", description: "キラキラと淡い光を放っている。", value: 300, icon: "✨" },
+  { name: "エルフの弓", description: "精巧な装飾が施されている。", value: 450, icon: "🏹" },
+  { name: "精霊のランプ", description: "ほのかに温かい。", value: 400, icon: "🪔" },
+  { name: "魔法の薬瓶", description: "怪しげな液体が入っている。", value: 120, icon: "🧪" },
+  { name: "天使の羽根", description: "とても軽く、純白の羽根。", value: 500, icon: "🪽" },
+  { name: "龍のウロコ", description: "鉄よりも硬いと言われている。", value: 800, icon: "🐉" },
+  { name: "星の砂", description: "夜空のように瞬く不思議な砂。", value: 350, icon: "🌌" },
+  { name: "古代ルーン石", description: "謎の文字が刻まれた石板。", value: 200, icon: "🪨" },
 
   // --- 変なもの・ユニーク (Funny/Unique) ---
   { name: "モアイ像", description: "なぜこんなところにミニモアイが？", value: 500, icon: "🗿" },
@@ -188,11 +188,11 @@ const BASE_ITEMS = [
     { name: "ロケット", icon: "🚀", baseVal: 1000, desc: "宇宙へ。" },
     { name: "花", icon: "🌼", baseVal: 20, desc: "植物。" },
     { name: "キノコ", icon: "🍄", baseVal: 15, desc: "菌類。" },
-    { name: "リンゴ", icon: "🍎", baseVal: 30, desc: "果物。" },
-    { name: "バナナ", icon: "🍌", baseVal: 25, desc: "黄色い果物。" },
-    { name: "バーガー", icon: "🍔", baseVal: 60, desc: "ジャンクフード。" },
-    { name: "ケーキ", icon: "🍰", baseVal: 80, desc: "スイーツ。" },
-    { name: "アイス", icon: "🍦", baseVal: 50, desc: "冷たいお菓子。" }
+    { name: "壺", icon: "🏺", baseVal: 50, desc: "年代物の器。" },
+    { name: "仮面", icon: "🎭", baseVal: 70, desc: "ミステリアスな顔当て。" },
+    { name: "羅針盤", icon: "🧭", baseVal: 90, desc: "方角を示す道具。" },
+    { name: "望遠鏡", icon: "🔭", baseVal: 120, desc: "遠くを見る道具。" },
+    { name: "アンティーク鍵", icon: "🗝️", baseVal: 60, desc: "古い扉の鍵。" }
 ];
 
 // 生成リストの作成 (50アイテム * 8プレフィックス = 400種)

@@ -13,6 +13,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const [registeredSettings, setRegisteredSettings] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
+  const [contractBalances, setContractBalances] = useState({ chh: '0', usdc: '0' });
   
   // Payment Config State
   const [paymentToken, setPaymentToken] = useState('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'); // USDC on Base
@@ -27,8 +28,65 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const BATCH_SIZE = 100;
   const totalTreasures = TREASURE_REGISTRY.slice(0, 500);
 
+  const fetchBalances = async () => {
+    if (!publicClient) return;
+    try {
+      const ethBal = await publicClient.getBalance({ address: TREASURE_CONTRACT_ADDRESS as `0x${string}` });
+      
+      const pToken = await publicClient.readContract({
+        address: TREASURE_CONTRACT_ADDRESS as `0x${string}`,
+        abi: TREASURE_CONTRACT_ABI,
+        functionName: 'paymentToken',
+      }).catch(() => null) as `0x${string}` | null;
+
+      const erc20Abi = [
+        {
+          "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
+          "name": "balanceOf",
+          "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "decimals",
+          "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ] as const;
+
+      let usdcFormatted = '0';
+      if (pToken) {
+        const usdcBal = await publicClient.readContract({
+          address: pToken,
+          abi: erc20Abi,
+          functionName: 'balanceOf',
+          args: [TREASURE_CONTRACT_ADDRESS as `0x${string}`],
+        }).catch(() => 0n);
+        
+        const decimals = await publicClient.readContract({
+          address: pToken,
+          abi: erc20Abi,
+          functionName: 'decimals',
+        }).catch(() => 6);
+        
+        usdcFormatted = formatUnits(usdcBal as bigint, decimals as number);
+      }
+
+      setContractBalances({
+        chh: formatUnits(ethBal, 18),
+        usdc: usdcFormatted
+      });
+
+    } catch (e) {
+      console.error("Failed to fetch contract balances", e);
+    }
+  };
+
   useEffect(() => {
     fetchRegisteredSettings();
+    fetchBalances();
   }, [publicClient]);
 
   const connectWallet = () => {
@@ -259,10 +317,37 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           </div>
         )}
 
+        {/* Contract Balances */}
+        <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700 flex justify-between items-center">
+          <div>
+            <h3 className="text-gray-400 text-sm mb-1 flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              コントラクト残高
+            </h3>
+            <div className="flex gap-4 mt-2">
+              <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded">
+                <span className="font-mono font-bold text-yellow-400 text-lg">{Number(contractBalances.chh).toLocaleString(undefined, { maximumFractionDigits: 4 })}</span>
+                <span className="text-xs text-gray-400">CHH</span>
+              </div>
+              <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded">
+                <span className="font-mono font-bold text-blue-400 text-lg">{Number(contractBalances.usdc).toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                <span className="text-xs text-gray-400">USDC</span>
+              </div>
+            </div>
+          </div>
+          <button 
+            onClick={fetchBalances}
+            className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            title="残高を更新"
+          >
+            <RefreshCw className="w-5 h-5 text-gray-300" />
+          </button>
+        </div>
+
         {/* Contract Info */}
         <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700">
           <h3 className="text-gray-400 text-sm mb-1 flex items-center gap-2">
-            <Database className="w-4 h-4" />
+            <Key className="w-4 h-4" />
             コントラクトアドレス
           </h3>
           <p className="font-mono text-xs break-all text-yellow-400 bg-black/50 p-2 rounded">
