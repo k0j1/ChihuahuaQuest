@@ -10,6 +10,7 @@ interface TreasureBookScreenProps {
   discoveredIds: number[];
   inventory: Record<string, { count: number, lastFound: number }>;
   onBack: () => void;
+  isAdmin?: boolean;
 }
 
 const getLuxuryRarityStyle = (stars: number) => {
@@ -63,8 +64,9 @@ const getLuxuryRarityStyle = (stars: number) => {
     }
 };
 
-const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, inventory, onBack }) => {
+const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, inventory, onBack, isAdmin }) => {
   const [selectedTreasure, setSelectedTreasure] = useState<Treasure | null>(null);
+  const [showAllAsAdmin, setShowAllAsAdmin] = useState(false);
 
   // Calculate completion percentage
   const total = TREASURE_REGISTRY.length;
@@ -77,8 +79,8 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
   }, [inventory]);
 
   const handleTreasureClick = (treasure: typeof TREASURE_REGISTRY[0]) => {
-      // Only show dialog if discovered
-      if (discoveredIds.includes(treasure.catalogId)) {
+      // Show dialog if discovered OR admin mode enabled
+      if (discoveredIds.includes(treasure.catalogId) || (isAdmin && showAllAsAdmin)) {
           // Construct a full Treasure object (id is dummy here as it's just for display)
           setSelectedTreasure({
               ...treasure,
@@ -114,6 +116,15 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                 </h2>
                 <Sparkles className="text-[#ffd700] w-6 h-6 animate-pulse" />
             </div>
+            
+            {isAdmin && (
+                <button 
+                  onClick={() => setShowAllAsAdmin(!showAllAsAdmin)}
+                  className={`mt-2 px-4 py-1 rounded text-sm font-bold border ${showAllAsAdmin ? 'bg-red-900 border-red-500 text-white' : 'bg-green-900 border-green-500 text-white'}`}
+                >
+                  Admin Mode: {showAllAsAdmin ? 'ON' : 'OFF'}
+                </button>
+            )}
             
             <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mt-2 bg-black/60 py-3 px-8 rounded-full border border-[#8b6508] shadow-[inset_0_0_15px_rgba(0,0,0,0.8),0_4px_10px_rgba(0,0,0,0.5)] backdrop-blur-sm relative z-20">
                 <div className="flex flex-col items-center">
@@ -169,7 +180,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-5 pb-16 relative z-10 w-full max-w-6xl mx-auto">
                 {TREASURE_REGISTRY.map((treasure) => {
-                    const isDiscovered = discoveredIds.includes(treasure.catalogId);
+                    const isDiscovered = discoveredIds.includes(treasure.catalogId) || (isAdmin && showAllAsAdmin);
                     const rarity = getRarity(treasure.value);
                     const itemCount = inventory[treasure.catalogId]?.count || 0;
                     const style = getLuxuryRarityStyle(rarity.stars);
