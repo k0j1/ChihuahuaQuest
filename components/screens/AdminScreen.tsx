@@ -291,6 +291,64 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       setStatusMsg("デフォルトの報酬額をセットしました。バッチ更新してください。");
   };
 
+  const resetToDefaults = async () => {
+    if (!isConnected || !address) {
+      setStatusMsg('ウォレットを接続してください');
+      return;
+    }
+
+    const idsToUpdate: bigint[] = [];
+    const amountsToUpdate: bigint[] = [];
+
+    totalTreasures.forEach(t => {
+      const idStr = t.catalogId.toString();
+      const defaultVal = t.value.toString();
+      const registeredVal = registeredSettings[idStr];
+      
+      const currentValStr = registeredVal !== undefined ? registeredVal : "-1"; 
+      
+      if (currentValStr !== defaultVal) {
+          idsToUpdate.push(BigInt(t.catalogId));
+          amountsToUpdate.push(BigInt(defaultVal));
+      }
+    });
+
+    if (idsToUpdate.length === 0) {
+        setStatusMsg('デフォルト値と異なる財宝はありませんでした。');
+        return;
+    }
+
+    setIsLoading(true);
+    try {
+      const BATCH_SIZE = 100;
+      for (let i = 0; i < idsToUpdate.length; i += BATCH_SIZE) {
+        const chunkIds = idsToUpdate.slice(i, i + BATCH_SIZE);
+        const chunkAmounts = amountsToUpdate.slice(i, i + BATCH_SIZE);
+
+        setStatusMsg(`リセット更新中... (${i + 1} - ${i + chunkIds.length} / ${idsToUpdate.length})`);
+        
+        const hash = await writeContractAsync({
+          address: TREASURE_CONTRACT_ADDRESS,
+          abi: TREASURE_CONTRACT_ABI,
+          functionName: 'setTreasureRewardsBatch',
+          args: [chunkIds, chunkAmounts],
+        });
+
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash });
+        }
+      }
+
+      setStatusMsg(`${idsToUpdate.length}件の財宝をデフォルト値にリセットしました！`);
+      fetchRegisteredSettings();
+    } catch (error: any) {
+      console.error(error);
+      setStatusMsg(`リセットエラー: ${error.message || '更新に失敗しました'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden font-dotgothic">
       {/* Header */}
@@ -421,6 +479,14 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-gray-400 text-sm">財宝一覧設定</h3>
             <div className="flex gap-2">
+                <button 
+                  onClick={resetToDefaults}
+                  disabled={isLoading || !isConnected}
+                  className="px-3 py-1 bg-red-800 hover:bg-red-700 rounded text-xs font-bold disabled:opacity-50"
+                  title="サーバー側のデータがデフォルト値と異なるもの全てをデフォルト値でバッチ更新します"
+                >
+                  差分リセット
+                </button>
                 <button 
                   onClick={autofillDefaults}
                   disabled={isLoading}
