@@ -64,7 +64,7 @@ const getLuxuryRarityStyle = (stars: number) => {
     }
 };
 
-const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, inventory, onBack, isAdmin }) => {
+const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja' }> = ({ discoveredIds, inventory, onBack, isAdmin, lang }) => {
   const [selectedTreasure, setSelectedTreasure] = useState<Treasure | null>(null);
   const [showAllAsAdmin, setShowAllAsAdmin] = useState(false);
 
@@ -85,6 +85,8 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
           setSelectedTreasure({
               ...treasure,
               id: 'book-display',
+              name: lang === 'en' ? (treasure.nameEn || treasure.name) : treasure.name,
+              description: lang === 'en' ? (treasure.descriptionEn || treasure.description) : treasure.description,
           });
       }
   };
@@ -112,7 +114,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             <div className="flex items-center gap-4 mb-4 relative">
                 <Sparkles className="text-[#ffd700] w-6 h-6 animate-pulse" />
                 <h2 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-[#fffacd] via-[#ffd700] to-[#b8860b] tracking-widest drop-shadow-[0_4px_4px_rgba(0,0,0,1)] filter">
-                    財宝図鑑
+                    {lang === 'en' ? 'TREASURES' : '財宝図鑑'}
                 </h2>
                 <Sparkles className="text-[#ffd700] w-6 h-6 animate-pulse" />
             </div>
@@ -128,7 +130,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             
             <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 mt-2 bg-black/60 py-3 px-8 rounded-full border border-[#8b6508] shadow-[inset_0_0_15px_rgba(0,0,0,0.8),0_4px_10px_rgba(0,0,0,0.5)] backdrop-blur-sm relative z-20">
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">DISCOVERED</span>
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">{lang === 'en' ? 'DISCOVERED' : '発見数'}</span>
                     <span className="font-mono font-bold text-xl md:text-2xl text-white drop-shadow-md">
                         {discoveredCount}<span className="text-[#8b6508] text-sm md:text-base">/{total}</span>
                     </span>
@@ -137,7 +139,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                 <div className="w-[2px] h-10 bg-gradient-to-b from-transparent via-[#8b6508] to-transparent"></div>
                 
                 <div className="flex flex-col items-center">
-                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">TOTAL ACQUIRED</span>
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">{lang === 'en' ? 'TOTAL ACQUIRED' : '累計獲得数'}</span>
                     <div className="flex items-center gap-1.5">
                         <Trophy className="w-4 h-4 text-[#ffd700]" />
                         <span className="font-mono font-bold text-xl md:text-2xl text-white drop-shadow-md">
@@ -149,7 +151,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                 <div className="w-[2px] h-10 bg-gradient-to-b from-transparent via-[#8b6508] to-transparent hidden md:block"></div>
                 
                 <div className="flex flex-col items-center hidden md:flex">
-                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">COMPLETION</span>
+                    <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">{lang === 'en' ? 'COMPLETION' : 'コンプリート率'}</span>
                     <span className="font-mono font-bold text-xl md:text-2xl text-[#ffd700] drop-shadow-[0_2px_2px_rgba(184,134,11,0.8)]">
                         {percentage}%
                     </span>
@@ -158,7 +160,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             
             {/* Mobile Complete Rate */}
             <div className="flex md:hidden items-center justify-center gap-2 mt-3 text-sm">
-                <span className="text-[#daa520] font-bold">COMPLETION:</span>
+                <span className="text-[#daa520] font-bold">{lang === 'en' ? 'COMPLETION:' : 'コンプリート率:'}</span>
                 <span className="font-mono font-bold text-[#ffd700] drop-shadow-md pb-0.5">{percentage}%</span>
             </div>
         </div>
@@ -217,7 +219,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                                     {/* Name Plaque */}
                                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-6 pb-1.5 px-1.5 z-10">
                                         <div className={`text-[10px] md:text-[11px] text-center font-bold leading-tight w-full truncate drop-shadow-[0_1px_2px_rgba(0,0,0,1)] ${style.text}`}>
-                                            {treasure.name}
+                                            {lang === 'en' ? (treasure.nameEn || treasure.name) : treasure.name}
                                         </div>
                                     </div>
 
@@ -249,7 +251,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
             <TreasureDialog 
                 treasure={selectedTreasure} 
                 onClose={() => setSelectedTreasure(null)}
-                buttonLabel="CLOSE"
+                buttonLabel={lang === 'en' ? 'CLOSE' : '閉じる'}
             />
         )}
         

@@ -9,9 +9,11 @@ interface UserInfoModalProps {
   user: FarcasterUser;
   onClose: () => void;
   gold: number;
+  lang: 'en' | 'ja';
+  setLang: (l: 'en' | 'ja') => void;
 }
 
-const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) => {
+const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang, setLang }) => {
   const { address, isConnected } = useAccount();
 
   // Aggregate all addresses to check
@@ -108,6 +110,15 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold }) =>
             </div>
 
             {/* Action Buttons */}
+            <div className="mb-4">
+                <button 
+                  onClick={() => setLang(lang === 'en' ? 'ja' : 'en')}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-xs font-bold transition-all"
+                >
+                    Language: {lang === 'en' ? 'English' : '日本語'}
+                </button>
+            </div>
+
             <a 
                 href={`https://warpcast.com/${user.username}`} 
                 target="_blank" 

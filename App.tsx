@@ -22,6 +22,7 @@ import AdminScreen from './components/screens/AdminScreen';
 import BottomNav from './components/BottomNav';
 
 const App: React.FC = () => {
+  const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [treasureInventory, setTreasureInventory] = useState<Record<string, { count: number, lastFound: number }>>({});
   const publicClient = usePublicClient();
   const { address } = useAccount();
@@ -216,6 +217,8 @@ const App: React.FC = () => {
               user={user} 
               gold={gold} 
               onClose={() => setIsUserInfoOpen(false)} 
+              lang={lang}
+              setLang={setLang}
           />
         )}
       </>
@@ -229,7 +232,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.28
+                   Ver 0.3.29
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -255,7 +258,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.28
+                   Ver 0.3.29
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
@@ -263,6 +266,7 @@ const App: React.FC = () => {
                         inventory={treasureInventory}
                         onBack={resetGame}
                         isAdmin={isAdmin}
+                        lang={lang}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
@@ -273,7 +277,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="flex-1 overflow-hidden">
-                    <LitepaperScreen onBack={resetGame} />
+                    <LitepaperScreen onBack={resetGame} lang={lang} />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
             </div>

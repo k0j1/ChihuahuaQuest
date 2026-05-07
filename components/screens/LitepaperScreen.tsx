@@ -6,10 +6,8 @@ interface LitepaperScreenProps {
   onBack: () => void;
 }
 
-const LitepaperScreen: React.FC<LitepaperScreenProps> = ({ onBack }) => {
-  const [isEnglish, setIsEnglish] = useState(true);
-
-  const toggleLanguage = () => setIsEnglish(!isEnglish);
+const LitepaperScreen: React.FC<LitepaperScreenProps & { lang: 'en' | 'ja' }> = ({ onBack, lang }) => {
+  const isEnglish = lang === 'en';
 
   return (
     <div className="flex flex-col h-[100dvh] w-screen bg-gray-900 text-white relative overflow-hidden">
@@ -27,13 +25,6 @@ const LitepaperScreen: React.FC<LitepaperScreenProps> = ({ onBack }) => {
           {isEnglish ? 'LITEPAPER' : '冒険の書'}
         </h2>
         
-        <button 
-          onClick={toggleLanguage}
-          className="p-2 bg-blue-700 rounded hover:bg-blue-600 active:scale-95 pixel-corners flex items-center gap-1 text-xs font-bold"
-        >
-          <Globe size={16} />
-          {isEnglish ? 'JP' : 'EN'}
-        </button>
       </div>
 
       {/* Content */}

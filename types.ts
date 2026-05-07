@@ -57,7 +57,9 @@ export interface Treasure {
   id: string; // Instance ID (UUID)
   catalogId: number; // Book ID (1-100)
   name: string;
+  nameEn?: string;
   description: string;
+  descriptionEn?: string;
   value: number; // Gold value
   icon: string; // Emoji or icon name
 }
