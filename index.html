@@ -134,6 +134,24 @@
         pointer-events: none;
         z-index: 20;
       }
+      /* Custom Animations for TreasureIcons */
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10%); }
+      }
+      @keyframes float-slow {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5%); }
+      }
+      @keyframes shimmer {
+        100% { transform: translateX(100%); }
+      }
+      @keyframes spin-slow {
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes spin-slow-reverse {
+        100% { transform: rotate(-360deg); }
+      }
     </style>
   <script type="importmap">
 {
