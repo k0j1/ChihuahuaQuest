@@ -205,7 +205,7 @@ export interface RarityDef {
 }
 
 export const getRarity = (value: number): RarityDef => {
-  if (value >= 1000) {
+  if (value >= 15000) {
     return { 
       stars: 5, 
       label: "LEGENDARY", 
@@ -214,7 +214,7 @@ export const getRarity = (value: number): RarityDef => {
       borderClass: "border-yellow-300",
       shadowClass: "shadow-yellow-500/50"
     };
-  } else if (value >= 300) {
+  } else if (value >= 5000) {
     return { 
       stars: 4, 
       label: "EPIC", 
@@ -223,7 +223,7 @@ export const getRarity = (value: number): RarityDef => {
       borderClass: "border-purple-300",
       shadowClass: "shadow-purple-500/50"
     };
-  } else if (value >= 100) {
+  } else if (value >= 1000) {
     return { 
       stars: 3, 
       label: "RARE", 
@@ -232,7 +232,7 @@ export const getRarity = (value: number): RarityDef => {
       borderClass: "border-blue-300",
       shadowClass: "shadow-blue-500/50"
     };
-  } else if (value >= 50) {
+  } else if (value >= 100) {
     return { 
       stars: 2, 
       label: "UNCOMMON", 

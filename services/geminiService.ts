@@ -185,7 +185,7 @@ BASE_ITEMS.forEach(item => {
             nameEn: `${prefix.nameEn}${item.nameEn}`,
             description: `${prefix.desc}${item.desc}`,
             descriptionEn: `${prefix.descEn}${item.descEn}`,
-            value: Math.floor(item.baseVal * prefix.valueMod),
+            value: Math.max(1, Math.min(100000, Math.floor((item.baseVal || 1) * prefix.valueMod))),
             icon: item.icon
         });
     });
