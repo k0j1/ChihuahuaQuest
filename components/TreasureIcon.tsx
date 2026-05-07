@@ -1,27 +1,10 @@
 import React from 'react';
-import { 
-  Sword, Shield, Book, FlaskConical, Gem, Coins, Crown, Scroll, Key,
-  Star, Moon, Sun, Anchor, Shell, Crosshair, Hexagon, Sparkles, Feather,
-  Skull, Compass, Medal, Clover, Telescope, Wand2, Hammer, Droplets, 
-  Leaf, Snowflake, Box, Asterisk, Flame, Zap, Droplet, 
-  Eye, Bone, BoxSelect, Castle, CircleDot, Mountain, Tent, 
-  TreePine, Wind, Ban, Diamond, Wrench, Settings, Search, PackageOpen, Target, Cross,
-  Circle, Square, Triangle, Hexagon as Hex, Dices, Sprout
-} from 'lucide-react';
+import { Star, Sparkles } from 'lucide-react';
+import * as GiIcons from 'react-icons/gi';
 import { getRarity } from '../constants';
 
 export const TreasureIcon = ({ name, className = "w-8 h-8", value = 0 }: { name: string; className?: string; value?: number }) => {
-  const IconMap: Record<string, React.ElementType> = {
-    Sword, Shield, Book, FlaskConical, Gem, Coins, Crown, Scroll, Key,
-    Star, Moon, Sun, Anchor, Shell, Crosshair, Hexagon, Sparkles, Feather,
-    Skull, Compass, Medal, Clover, Telescope, Wand2, Hammer, Droplets, 
-    Leaf, Snowflake, Box, Asterisk, Flame, Zap, Droplet, 
-    Eye, Bone, BoxSelect, Castle, CircleDot, Mountain, Tent, 
-    TreePine, Wind, Ban, Diamond, Wrench, Settings, Search, PackageOpen, Target, Cross,
-    Circle, Square, Triangle, Hex, Dices, Sprout
-  };
-
-  const IconComponent = IconMap[name] || Sparkles;
+  const IconComponent = (GiIcons as any)[name] || GiIcons.GiSparkles;
 
   if (!value) {
     return <IconComponent className={className} />;
