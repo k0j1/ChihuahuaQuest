@@ -1,201 +1,182 @@
 import { Treasure } from "../types";
 
-// --- 既存のユニークお宝リスト (100種) ---
 const UNIQUE_TREASURES = [
-  // --- 骨・おやつ系 (Common) ---
-  { name: "ただの骨", description: "何の変哲もない骨。カルシウムたっぷり。", value: 10, icon: "🦴" },
-  { name: "干からびたジャーキー", description: "いつ埋めたか覚えていない熟成肉。", value: 15, icon: "🥩" },
-  { name: "謎の魚の骨", description: "猫が埋めたのかもしれない。", value: 12, icon: "🐟" },
-  { name: "チキンレッグの骨", description: "昨日の夕食の残りらしい。", value: 20, icon: "🍗" },
-  { name: "ドッグビスケット", description: "少し湿気ているが、まだ食べられそうだ。", value: 25, icon: "🍪" },
-  { name: "巨大な大腿骨", description: "これは恐竜の骨かもしれない…！", value: 300, icon: "🦕" },
-  { name: "銀の骨", description: "ピカピカに磨かれた金属製の骨。", value: 150, icon: "🥈" },
-  { name: "黄金の骨", description: "王様が愛犬に与えたとされる伝説の骨。", value: 800, icon: "🥇" },
-  { name: "骨付きマンモス肉", description: "氷河期から保存されていた奇跡の肉。", value: 500, icon: "🍖" },
-  { name: "食べかけのパン", description: "誰かが落とした朝食。", value: 5, icon: "🍞" },
-
-  // --- おもちゃ系 (Common - Uncommon) ---
-  { name: "テニスボール", description: "噛み心地が最高な黄色のボール。", value: 30, icon: "🎾" },
-  { name: "穴あきフリスビー", description: "歴戦の猛者が噛み砕いた跡がある。", value: 40, icon: "🥏" },
-  { name: "ゴムのアヒル", description: "押すと「ガー」と鳴く。", value: 45, icon: "🐤" },
-  { name: "ねずみのおもちゃ", description: "猫用だが、チワワも意外と好き。", value: 35, icon: "🐁" },
-  { name: "古びたぬいぐるみ", description: "片目が取れているクマ。", value: 50, icon: "🧸" },
-  { name: "サッカーボール", description: "チワワには少し大きすぎる。", value: 60, icon: "⚽" },
-  { name: "鳴るおもちゃ", description: "噛むと高音が出るホットドッグ型のおもちゃ。", value: 55, icon: "🌭" },
-  { name: "ロープ", description: "引っ張り合いっこに最適。", value: 25, icon: "➰" },
-  { name: "風船の残骸", description: "かつては空を飛んでいた。", value: 5, icon: "🎈" },
-  { name: "木の棒", description: "公園で拾った、いい感じの棒。", value: 0, icon: "🪵" },
-
-  // --- 日用品・ガラクタ (Junk) ---
-  { name: "片方の靴下", description: "もう片方はどこへ行ったのだろう。", value: 10, icon: "🧦" },
-  { name: "長靴", description: "雨の日に誰かが埋めたらしい。", value: 20, icon: "👢" },
-  { name: "空き缶", description: "リサイクルに出すべきだ。", value: 5, icon: "🥫" },
-  { name: "スニーカー", description: "紐がほどけている。", value: 30, icon: "👟" },
-  { name: "壊れたメガネ", description: "レンズが割れている。", value: 15, icon: "👓" },
-  { name: "新聞紙", description: "日付は10年前のものだ。", value: 5, icon: "📰" },
-  { name: "リモコン", description: "チャンネルを変える権限。", value: 40, icon: "📺" },
-  { name: "トイレットペーパー", description: "芯だけではない、まだ使える！", value: 20, icon: "🧻" },
-  { name: "空のペットボトル", description: "噛むとペコペコ音が鳴る。", value: 8, icon: "🧴" },
-  { name: "鍵", description: "どこの鍵かは不明。", value: 50, icon: "🗝️" },
-
-  // --- 貴重品・アクセサリー (Rare) ---
-  { name: "真珠のネックレス", description: "泥にまみれているが本物だ。", value: 400, icon: "📿" },
-  { name: "ダイヤの指輪", description: "プロポーズに失敗した誰かが埋めた？", value: 1000, icon: "💍" },
-  { name: "金の王冠", description: "チワワキングがかぶっていたもの。", value: 1500, icon: "👑" },
-  { name: "ルビー", description: "情熱的な赤色の宝石。", value: 600, icon: "💎" },
-  { name: "懐中時計", description: "針は止まっている。", value: 250, icon: "🕰️" },
-  { name: "金の杯", description: "水を飲むには豪華すぎる。", value: 500, icon: "🏆" },
-  { name: "古代のコイン", description: "博物館級の価値があるかもしれない。", value: 350, icon: "🪙" },
-  { name: "ガラスの靴", description: "サイズが合うのはシンデレラだけ。", value: 300, icon: "👠" },
-  { name: "スマートフォン", description: "画面がバキバキに割れている。", value: 100, icon: "📱" },
-  { name: "財布", description: "中身はポイントカードだけだった。", value: 80, icon: "👛" },
-
-  // --- 自然物・鉱石 (Nature/Ores) ---
-  { name: "プラチナ貨", description: "かつての王国の通貨。", value: 300, icon: "🪙" },
-  { name: "綺麗な貝殻", description: "海の音が聞こえる。", value: 40, icon: "🐚" },
-  { name: "古代の土偶", description: "奇妙な形をした土器。", value: 150, icon: "🏺" },
-  { name: "謎の石版", description: "解読不可能な古代文字が刻まれている。", value: 250, icon: "🪨" },
-  { name: "化石", description: "アンモナイトのようだ。", value: 200, icon: "🐌" },
-  { name: "錬金術師の石", description: "妖しく赤く光る未知の鉱石。", value: 660, icon: "💎" },
-  { name: "隕石の欠片", description: "宇宙からの贈り物。", value: 800, icon: "☄️" },
-  { name: "琥珀（虫入り）", description: "太古の虫が閉じ込められた宝石。", value: 320, icon: "🦟" },
-  { name: "黄金のスカラベ", description: "古代エジプトの装飾品。", value: 550, icon: "🪲" },
-  { name: "サファイアのブローチ", description: "深い青色が美しい装飾品。", value: 480, icon: "🪢" },
-
-  // --- 魔法・神秘系 (Mystic/Magic) ---
-  { name: "魔導書の切れ端", description: "失われた魔法が記されている。", value: 150, icon: "📜" },
-  { name: "占いの水晶玉", description: "未来が見えるかもしれない。", value: 250, icon: "🔮" },
-  { name: "妖精の粉", description: "キラキラと淡い光を放っている。", value: 300, icon: "✨" },
-  { name: "エルフの弓", description: "精巧な装飾が施されている。", value: 450, icon: "🏹" },
-  { name: "精霊のランプ", description: "ほのかに温かい。", value: 400, icon: "🪔" },
-  { name: "魔法の薬瓶", description: "怪しげな液体が入っている。", value: 120, icon: "🧪" },
-  { name: "天使の羽根", description: "とても軽く、純白の羽根。", value: 500, icon: "🪽" },
-  { name: "龍のウロコ", description: "鉄よりも硬いと言われている。", value: 800, icon: "🐉" },
-  { name: "星の砂", description: "夜空のように瞬く不思議な砂。", value: 350, icon: "🌌" },
-  { name: "古代ルーン石", description: "謎の文字が刻まれた石板。", value: 200, icon: "🪨" },
-
-  // --- 変なもの・ユニーク (Funny/Unique) ---
-  { name: "モアイ像", description: "なぜこんなところにミニモアイが？", value: 500, icon: "🗿" },
-  { name: "宇宙人の仮面", description: "我々は来ました。", value: 150, icon: "👽" },
-  { name: "ラブレター", description: "読まずに埋めたようだ。", value: 0, icon: "💌" },
-  { name: "テストの答案", description: "0点だったので隠蔽された。", value: 5, icon: "📝" },
-  { name: "誰かの入れ歯", description: "おじいちゃんが探している。", value: 100, icon: "🦷" },
-  { name: "魔法のランプ", description: "こすっても魔人は出てこない。", value: 600, icon: "🧞" },
-  { name: "ビデオテープ", description: "再生デッキがない。", value: 30, icon: "📼" },
-  { name: "フロッピーディスク", description: "保存アイコンの実物。", value: 50, icon: "💾" },
-  { name: "ゲームコントローラー", description: "上上下下左右左右BA。", value: 120, icon: "🎮" },
-  { name: "招き猫", description: "ここ掘れニャンニャン。", value: 300, icon: "🐱" },
-
-  // --- 装備品っぽいもの (Gear) ---
-  { name: "勇者の剣", description: "錆びているおもちゃの剣。", value: 80, icon: "🗡️" },
-  { name: "木の盾", description: "鍋の蓋かもしれない。", value: 40, icon: "🛡️" },
-  { name: "魔法の杖", description: "ただの枯れ枝にしか見えない。", value: 50, icon: "🪄" },
-  { name: "ヘルメット", description: "安全第一。", value: 60, icon: "⛑️" },
-  { name: "サングラス", description: "クールなチワワになれる。", value: 70, icon: "🕶️" },
-  { name: "赤いリボン", description: "可愛さがアップする。", value: 30, icon: "🎀" },
-  { name: "ネクタイ", description: "ビジネスチワワ。", value: 40, icon: "👔" },
-  { name: "リュック", description: "おやつがたくさん入る。", value: 90, icon: "🎒" },
-  { name: "マント", description: "スーパーチワワ参上。", value: 100, icon: "🧛" },
-  { name: "ボクシンググローブ", description: "最強を目指して。", value: 110, icon: "🥊" },
-
-  // --- 楽器 (Music) ---
-  { name: "トランペット", description: "肺活量が足りない。", value: 150, icon: "🎺" },
-  { name: "ギター", description: "ロックな魂。", value: 180, icon: "🎸" },
-  { name: "バイオリン", description: "優雅な音色がしそう。", value: 250, icon: "🎻" },
-  { name: "マイク", description: "遠吠え用。", value: 60, icon: "🎤" },
-  { name: "太鼓", description: "ドンドン叩こう。", value: 70, icon: "🥁" },
-
-  // --- 乗り物 (Vehicles) ---
-  { name: "ミニカー", description: "赤いスポーツカー。", value: 50, icon: "🏎️" },
-  { name: "三輪車", description: "ペダルに足が届かない。", value: 80, icon: "🚲" },
-  { name: "ロケットのおもちゃ", description: "月まで行けそう。", value: 120, icon: "🚀" },
-  { name: "ＵＦＯ", description: "未確認飛行物体。", value: 999, icon: "🛸" },
-  { name: "スケートボード", description: "バランス感覚が必要。", value: 60, icon: "🛹" },
-
-  // --- 季節もの (Seasonal) ---
-  { name: "クリスマスツリー", description: "季節外れの飾り。", value: 100, icon: "🎄" },
-  { name: "カボチャのランタン", description: "ハロウィンの残り。", value: 40, icon: "🎃" },
-  { name: "お年玉袋", description: "中身が入っている！！", value: 500, icon: "🧧" },
-  { name: "こいのぼり", description: "屋根より低い。", value: 60, icon: "🎏" },
-  { name: "雪だるま", description: "なぜ溶けていないのか不思議だ。", value: 0, icon: "⛄" },
-  
-  // --- 新規追加 (Added based on user request) ---
-  { name: "金の延べ棒", description: "重くて運ぶのが大変だ。", value: 1200, icon: "🧱" },
-  { name: "おもちゃの兵隊", description: "誰かが遊んでいたようだ。", value: 40, icon: "💂" },
-  { name: "古びたコイン袋", description: "中身は空っぽだった。", value: 20, icon: "💰" },
-  { name: "地球儀", description: "世界は広い。", value: 150, icon: "🌍" },
-  { name: "宝箱", description: "中からさらに骨が出てきた。", value: 800, icon: "🧰" }
+  // --- ガラクタ・日用品 (Junk / Common) ---
+  { name: "欠けたルーン石", description: "力が失われた石。", value: 10, icon: "Hex" },
+  { name: "古びた鍵", description: "どこの扉を開けるのだろう。", value: 15, icon: "Key" },
+  { name: "サビたナイフ", description: "もはや使えない。", value: 12, icon: "Sword" },
+  { name: "ただの木の実", description: "食べられない木の実。", value: 5, icon: "Sprout" },
+  { name: "泥だらけの靴", description: "誰かの長靴。", value: 8, icon: "Box" },
+  { name: "ボロボロの鎖", description: "何かに繋がれていた。", value: 10, icon: "Circle" },
+  { name: "謎の歯車", description: "古代機械の部品。", value: 20, icon: "Settings" },
+  { name: "割れた杯", description: "かつては綺麗だった杯。", value: 12, icon: "Droplet" },
+  { name: "すすけたガラス玉", description: "ほんのり光っている気がする。", value: 15, icon: "Circle" },
+  { name: "古い地図の切れ端", description: "一部だけでは意味がない。", value: 25, icon: "Scroll" },
+  // 11-20  
+  { name: "ただの石ころ", description: "どこにでもある石。", value: 2, icon: "Hex" },
+  { name: "奇妙な根っこ", description: "魔法薬の材料になるかも。", value: 8, icon: "Sprout" },
+  { name: "かすかな光の粉", description: "妖精の粉の搾りカス。", value: 18, icon: "Sparkles" },
+  { name: "真鍮の指輪", description: "安っぽい指輪。", value: 30, icon: "Circle" },
+  { name: "曲がった釘", description: "建築に使われていた。", value: 5, icon: "Zap" },
+  { name: "枯れた薬草", description: "効果はなさそう。", value: 4, icon: "Leaf" },
+  { name: "魔導書の破れ紙", description: "解読できない文字。", value: 20, icon: "Scroll" },
+  { name: "壊れた方位磁針", description: "北を指さない。", value: 25, icon: "Compass" },
+  { name: "鉄くず", description: "溶かせば何かに使える。", value: 10, icon: "Square" },
+  { name: "ひび割れた瓶", description: "何も入れられない。", value: 8, icon: "FlaskConical" },
+  // 21-30
+  { name: "動物の骨", description: "何か獣の骨らしい。", value: 15, icon: "Bone" },
+  { name: "銅貨", description: "見慣れない国の硬貨。", value: 40, icon: "Coins" },
+  { name: "銀貨", description: "少し価値のある銀貨。", value: 100, icon: "Coins" },
+  { name: "金貨", description: "輝きを失っていない金貨。", value: 500, icon: "Coins" },
+  { name: "黒い羽", description: "カラスとは違う不気味な羽。", value: 25, icon: "Feather" },
+  { name: "トロールの角", description: "意外と高く売れる。", value: 120, icon: "Triangle" },
+  { name: "オークの牙", description: "装飾品になる。", value: 80, icon: "Bone" },
+  { name: "ゴブリンの耳", description: "討伐の証。", value: 60, icon: "Target" },
+  { name: "スライムの水滴", description: "ひんやりしている。", value: 45, icon: "Droplet" },
+  { name: "コウモリの翼", description: "錬金術に使える。", value: 50, icon: "Feather" },
+  // 31-40
+  { name: "小さな水晶", description: "わずかに魔力を帯びている。", value: 150, icon: "Gem" },
+  { name: "魔獣の皮", description: "丈夫な革。", value: 90, icon: "Square" },
+  { name: "大きなアメジスト", description: "美しい紫の宝石。", value: 300, icon: "Gem" },
+  { name: "トパーズ", description: "黄色く輝く宝石。", value: 250, icon: "Gem" },
+  { name: "サファイア", description: "深い青の宝石。", value: 500, icon: "Diamond" },
+  { name: "エメラルド", description: "美しい緑の宝石。", value: 550, icon: "Diamond" },
+  { name: "ルビー", description: "情熱的な赤の宝石。", value: 600, icon: "Diamond" },
+  { name: "ダイヤモンド", description: "最高級の輝き。", value: 1500, icon: "Diamond" },
+  { name: "黒曜石", description: "鋭い断面を持つ火山ガラス。", value: 180, icon: "Hex" },
+  { name: "ミスリル鉱石", description: "軽くて丈夫な幻の金属。", value: 800, icon: "Square" },
+  // 41-50
+  { name: "オリハルコン鉱石", description: "最も硬いとされる伝説の金属。", value: 1200, icon: "Hex" },
+  { name: "アダマンタイト", description: "神々が創り出したと言われる鉱石。", value: 1500, icon: "Triangle" },
+  { name: "銀の延べ棒", description: "ずっしりと重い銀。", value: 600, icon: "Box" },
+  { name: "金の延べ棒", description: "まばゆい光を放つ黄金。", value: 1500, icon: "Box" },
+  { name: "プラチナ貨", description: "かつての王国の高額通貨。", value: 800, icon: "Coins" },
+  { name: "古代の金貨袋", description: "ずっしりと重い袋。", value: 1000, icon: "PackageOpen" },
+  { name: "精霊のランプ", description: "ほのかに温かい。", value: 450, icon: "Flame" },
+  { name: "魔法の薬瓶", description: "怪しげな液体が入っている。", value: 220, icon: "FlaskConical" },
+  { name: "天使の羽根", description: "とても軽く、純白の羽根。", value: 500, icon: "Feather" },
+  { name: "龍のウロコ", description: "鉄よりも硬いと言われている。", value: 800, icon: "Shield" },
+  // 51-60
+  { name: "星の砂", description: "夜空のように瞬く不思議な砂。", value: 350, icon: "Sparkles" },
+  { name: "古代ルーン石", description: "謎の文字が刻まれた石板。", value: 600, icon: "Scroll" },
+  { name: "綺麗な貝殻", description: "海の音が聞こえる。", value: 80, icon: "Shell" },
+  { name: "古代の土偶", description: "奇妙な形をした土器。", value: 250, icon: "Circle" },
+  { name: "謎の石版", description: "解読不可能な古代文字が刻まれている。", value: 400, icon: "Scroll" },
+  { name: "アンモナイトの化石", description: "太古のロマン。", value: 300, icon: "Circle" },
+  { name: "錬金術師の石", description: "妖しく赤く光る未知の鉱石。", value: 900, icon: "Gem" },
+  { name: "隕石の欠片", description: "宇宙からの贈り物。", value: 1000, icon: "Star" },
+  { name: "琥珀（虫入り）", description: "太古の秘密が閉じ込められた宝石。", value: 450, icon: "Hex" },
+  { name: "黄金のスカラベ", description: "古代エジプトの装飾品。", value: 850, icon: "Circle" },
+  // 61-70
+  { name: "サファイアのブローチ", description: "深い青色が美しい装飾品。", value: 700, icon: "Diamond" },
+  { name: "真珠のネックレス", description: "泥にまみれているが本物だ。", value: 650, icon: "Circle" },
+  { name: "ダイヤの指輪", description: "とても美しい輝き。", value: 1200, icon: "Diamond" },
+  { name: "金の王冠", description: "失われた王国の証。", value: 2000, icon: "Crown" },
+  { name: "懐中時計", description: "針は止まっている。", value: 500, icon: "Compass" },
+  { name: "金の杯", description: "水を飲むには豪華すぎる。", value: 800, icon: "Droplet" },
+  { name: "ガラスの靴", description: "透き通った靴。", value: 500, icon: "Star" },
+  { name: "エルフの弓", description: "精巧な装飾が施されている。", value: 600, icon: "Crosshair" },
+  { name: "モアイ像", description: "なぜこんなところにミニモアイが？", value: 500, icon: "Box" },
+  { name: "魔法のランプ", description: "こすっても魔人は出てこない。", value: 700, icon: "Flame" },
+  // 71-80
+  { name: "招き猫", description: "ご利益がありそうだ。", value: 400, icon: "Circle" },
+  { name: "太陽の紋章", description: "熱を帯びている。", value: 550, icon: "Sun" },
+  { name: "月の首飾り", description: "暗闇で光る。", value: 550, icon: "Moon" },
+  { name: "海賊の宝箱", description: "開けるのに鍵が必要だ。", value: 1500, icon: "PackageOpen" },
+  { name: "勇者の剣", description: "かつて魔王を討ったとされる。", value: 1200, icon: "Sword" },
+  { name: "聖騎士の盾", description: "あらゆる邪気を弾く。", value: 1000, icon: "Shield" },
+  { name: "大魔導士の杖", description: "強大な魔力を秘める。", value: 1100, icon: "Wand2" },
+  { name: "フェニックスの尾", description: "命を呼び覚ます。", value: 1500, icon: "Feather" },
+  { name: "賢者の石", description: "あらゆる物質を黄金に変える。", value: 5000, icon: "Gem" },
+  { name: "星の羅針盤", description: "運命の向かう先を示す。", value: 950, icon: "Compass" },
+  // 81-90
+  { name: "白銀のティアラ", description: "王女の忘れ物。", value: 1000, icon: "Crown" },
+  { name: "死霊術士の頭骨", description: "不吉なオーラを放つ。", value: 800, icon: "Skull" },
+  { name: "妖魔の笛", description: "吹くと魔物を呼び寄せる。", value: 400, icon: "Cross" },
+  { name: "大地のクリスタル", description: "自然の力が満ちている。", value: 1800, icon: "Diamond" },
+  { name: "火炎のルビー", description: "触れると火傷しそうだ。", value: 1200, icon: "Flame" },
+  { name: "氷結のサファイア", description: "周囲の気温を下げる。", value: 1200, icon: "Snowflake" },
+  { name: "迅雷のトパーズ", description: "微小な雷を発している。", value: 1200, icon: "Zap" },
+  { name: "神聖なる聖杯", description: "どんな傷も癒やす水を湧き出す。", value: 3000, icon: "Droplet" },
+  { name: "次元の鍵", description: "別の世界への扉を開く。", value: 2500, icon: "Key" },
+  { name: "世界樹の葉", description: "奇跡の治癒力を持つ。", value: 1500, icon: "Leaf" },
+  // 91-100
+  { name: "ユニコーンの角", description: "あらゆる毒を浄化する。", value: 1200, icon: "Wand2" },
+  { name: "ドラゴンの卵", description: "少し温かい。", value: 4000, icon: "Circle" },
+  { name: "王家の印章", description: "絶大な権力を示す。", value: 1500, icon: "Hex" },
+  { name: "空飛ぶ絨毯", description: "今はただの古い絨毯。", value: 800, icon: "Square" },
+  { name: "禁断の魔導書", description: "開いてはならない。", value: 2000, icon: "Book" },
+  { name: "光の剣", description: "暗闇を切り裂く。", value: 2500, icon: "Sword" },
+  { name: "闇の盾", description: "光を飲み込む。", value: 2200, icon: "Shield" },
+  { name: "伝説のメダル", description: "選ばれし勇者の証。", value: 1000, icon: "Medal" },
+  { name: "聖龍の涙", description: "究極の宝石。", value: 8000, icon: "Droplet" },
+  { name: "女神の指輪", description: "すべてのステータスが上がる。", value: 5000, icon: "Diamond" },
 ];
 
-// --- 自動生成用の設定 ---
-
-// 接頭辞（状態やランク）
 const PREFIXES = [
   { name: "ボロボロの", valueMod: 0.5, desc: "かなり使い込まれた" },
+  { name: "サビついた", valueMod: 0.6, desc: "長い年月経過した" },
   { name: "普通の", valueMod: 1.0, desc: "どこにでもありそうな" },
-  { name: "少し良い", valueMod: 1.2, desc: "ちょっと高級な" },
-  { name: "硬い", valueMod: 1.5, desc: "噛みごたえのある" },
-  { name: "大きな", valueMod: 2.0, desc: "存在感のある" },
-  { name: "銀の", valueMod: 5.0, desc: "銀色に輝く" },
-  { name: "金の", valueMod: 10.0, desc: "黄金に輝く" },
-  { name: "伝説の", valueMod: 50.0, desc: "歴史に名を残す" },
+  { name: "上質な", valueMod: 1.2, desc: "ちょっと高級な" },
+  { name: "魔法の", valueMod: 1.5, desc: "魔力を帯びた" },
+  { name: "呪われた", valueMod: 0.8, desc: "不吉なオーラを放つ" },
+  { name: "ミスリル製", valueMod: 5.0, desc: "銀色に輝く" },
+  { name: "伝説の", valueMod: 20.0, desc: "神話に名高い" },
 ];
 
-// ベースアイテム（50種）
 const BASE_ITEMS = [
-    { name: "ホネ", icon: "🦴", baseVal: 10, desc: "骨。" },
-    { name: "空き缶", icon: "🥫", baseVal: 15, desc: "サビついている。" },
-    { name: "ガラクタ", icon: "🪛", baseVal: 12, desc: "使い道がわからない部品。" },
-    { name: "歯車", icon: "⚙️", baseVal: 20, desc: "古い機械の一部。" },
-    { name: "真鍮のコイン", icon: "🪙", baseVal: 30, desc: "くすんだ硬貨。" },
-    { name: "水晶", icon: "🔮", baseVal: 140, desc: "透き通った石。" },
-    { name: "レアメタル鉱石", icon: "🪨", baseVal: 250, desc: "工業的価値が高い。" },
-    { name: "銀の延べ棒", icon: "🥈", baseVal: 400, desc: "ずっしりと重い銀。" },
-    { name: "金の延べ棒", icon: "🧱", baseVal: 1200, desc: "まばゆい光を放つ黄金。" },
-    { name: "プラチナインゴット", icon: "🤍", baseVal: 2000, desc: "希少価値が極めて高い金属。" },
-    { name: "翡翠の勾玉", icon: "🟢", baseVal: 350, desc: "古の呪術具。" },
-    { name: "ルビーの原石", icon: "🟥", baseVal: 450, desc: "未加工の宝石。" },
-    { name: "サファイア", icon: "🟦", baseVal: 500, desc: "青く輝く宝石。" },
-    { name: "エメラルド", icon: "🟩", baseVal: 550, desc: "緑の宝石。" },
-    { name: "ダイヤモンド", icon: "💎", baseVal: 1500, desc: "最高硬度の輝き。" },
-    { name: "指輪", icon: "💍", baseVal: 300, desc: "キラキラ。" },
-    { name: "首飾り", icon: "📿", baseVal: 280, desc: "豪華な装飾。" },
-    { name: "古代コイン", icon: "🪙", baseVal: 150, desc: "歴史的価値。" },
-    { name: "お札", icon: "💵", baseVal: 80, desc: "旧紙幣。" },
-    { name: "金塊", icon: "👑", baseVal: 900, desc: "純金の塊。" },
-    { name: "宝石箱", icon: "🧰", baseVal: 800, desc: "宝物が詰まっている。" },
-    { name: "剣", icon: "⚔️", baseVal: 200, desc: "武器。" },
-    { name: "盾", icon: "🛡️", baseVal: 150, desc: "防具。" },
-    { name: "杖", icon: "🪄", baseVal: 180, desc: "魔法。" },
-    { name: "魔導書", icon: "📕", baseVal: 300, desc: "禁断の知識。" },
-    { name: "古文書", icon: "📜", baseVal: 220, desc: "失われた歴史。" },
-    { name: "アンモナイトの化石", icon: "🐌", baseVal: 130, desc: "太古のロマン。" },
-    { name: "琥珀", icon: "🟠", baseVal: 140, desc: "樹脂の化石。" },
-    { name: "真珠", icon: "⚪", baseVal: 200, desc: "海の宝。" },
-    { name: "黒曜石", icon: "⬛", baseVal: 90, desc: "鋭い断面を持つ火山ガラス。" },
-    { name: "隕石の欠片", icon: "☄️", baseVal: 400, desc: "星の欠片。" },
-    { name: "金杯", icon: "🏆", baseVal: 600, desc: "王の杯。" },
-    { name: "王冠", icon: "👑", baseVal: 1200, desc: "王の証。" },
-    { name: "割れたお茶碗", icon: "🥣", baseVal: 5, desc: "ただのゴミ。" },
-    { name: "空のペットボトル", icon: "🧴", baseVal: 2, desc: "リサイクルへ。" },
-    { name: "古いクツ", icon: "👞", baseVal: 8, desc: "ボロボロの靴。" },
-    { name: "謎の基盤", icon: "💻", baseVal: 50, desc: "機械のパーツ。" },
-    { name: "錆びたカギ", icon: "🗝️", baseVal: 10, desc: "もう使えない。" },
-    { name: "チタン鉱石", icon: "🪨", baseVal: 280, desc: "軽くて強い金属の元。" },
-    { name: "ミスリル鉱石", icon: "✨", baseVal: 700, desc: "伝説の金属。" },
-    { name: "オリハルコン鉱石", icon: "🔥", baseVal: 1000, desc: "幻の金属。" },
-    { name: "大理石の破片", icon: "🏛️", baseVal: 40, desc: "美しい石材。" },
-    { name: "アメジスト", icon: "🟪", baseVal: 300, desc: "紫の水晶。" },
-    { name: "トパーズ", icon: "🟨", baseVal: 250, desc: "黄色の宝石。" },
-    { name: "オパール", icon: "🌈", baseVal: 350, desc: "虹色に輝く石。" },
-    { name: "壺", icon: "🏺", baseVal: 50, desc: "年代物の器。" },
-    { name: "仮面", icon: "🎭", baseVal: 70, desc: "ミステリアスな顔当て。" },
-    { name: "羅針盤", icon: "🧭", baseVal: 90, desc: "方角を示す道具。" },
-    { name: "望遠鏡", icon: "🔭", baseVal: 120, desc: "遠くを見る道具。" },
-    { name: "アンティーク鍵", icon: "🗝️", baseVal: 60, desc: "古い扉の鍵。" }
+    { name: "ショートソード", icon: "Sword", baseVal: 50, desc: "基本的な剣。" },
+    { name: "ロングソード", icon: "Sword", baseVal: 80, desc: "リーチの長い剣。" },
+    { name: "ダガー", icon: "Sword", baseVal: 30, desc: "短剣。" },
+    { name: "バックラー", icon: "Shield", baseVal: 40, desc: "小さな盾。" },
+    { name: "カイトシールド", icon: "Shield", baseVal: 90, desc: "騎士の盾。" },
+    { name: "ウッドボウ", icon: "Crosshair", baseVal: 50, desc: "木の弓。" },
+    { name: "クロスボウ", icon: "Crosshair", baseVal: 120, desc: "強力な弦。" },
+    { name: "スタッフ", icon: "Wand2", baseVal: 60, desc: "魔法使いの杖。" },
+    { name: "ワンド", icon: "Wand2", baseVal: 100, desc: "魔力を集める。" },
+    { name: "メイス", icon: "Hammer", baseVal: 70, desc: "打撃武器。" },
+    { name: "スピア", icon: "Sword", baseVal: 70, desc: "槍。" },
+    { name: "ハルバード", icon: "Sword", baseVal: 110, desc: "斧槍。" },
+    { name: "レザーアーマー", icon: "Square", baseVal: 80, desc: "革の鎧。" },
+    { name: "チェインメイル", icon: "Square", baseVal: 150, desc: "鎖帷子。" },
+    { name: "プレートアーマー", icon: "Shield", baseVal: 300, desc: "鉄の鎧。" },
+    { name: "アイアンヘルム", icon: "Circle", baseVal: 90, desc: "鉄の兜。" },
+    { name: "ガントレット", icon: "Square", baseVal: 60, desc: "腕当て。" },
+    { name: "マント", icon: "Wind", baseVal: 50, desc: "風をはらむ。" },
+    { name: "ブーツ", icon: "Square", baseVal: 40, desc: "旅の靴。" },
+    { name: "ポーション", icon: "FlaskConical", baseVal: 20, desc: "回復薬。" },
+    { name: "エーテル", icon: "FlaskConical", baseVal: 50, desc: "魔力回復薬。" },
+    { name: "エリクサー", icon: "FlaskConical", baseVal: 500, desc: "万能薬。" },
+    { name: "魔導書", icon: "Book", baseVal: 200, desc: "魔法の書。" },
+    { name: "古文書", icon: "Scroll", baseVal: 150, desc: "古い記録。" },
+    { name: "アミュレット", icon: "Medal", baseVal: 250, desc: "護符。" },
+    { name: "リング", icon: "Circle", baseVal: 180, desc: "指輪。" },
+    { name: "ネックレス", icon: "Medal", baseVal: 200, desc: "首飾り。" },
+    { name: "ピアス", icon: "Sparkles", baseVal: 100, desc: "耳飾り。" },
+    { name: "ルビー", icon: "Diamond", baseVal: 400, desc: "赤い宝石。" },
+    { name: "サファイア", icon: "Diamond", baseVal: 400, desc: "青い宝石。" },
+    { name: "エメラルド", icon: "Diamond", baseVal: 400, desc: "緑の宝石。" },
+    { name: "ダイヤモンド", icon: "Diamond", baseVal: 1000, desc: "透明な宝石。" },
+    { name: "魔石", icon: "Gem", baseVal: 300, desc: "魔力を秘めた石。" },
+    { name: "ルーンストーン", icon: "Hex", baseVal: 250, desc: "文字が刻まれた石。" },
+    { name: "クリスタル", icon: "Gem", baseVal: 350, desc: "水晶。" },
+    { name: "鉄鉱石", icon: "Triangle", baseVal: 30, desc: "鉄の原料。" },
+    { name: "銀鉱石", icon: "Triangle", baseVal: 80, desc: "銀の原料。" },
+    { name: "金鉱石", icon: "Triangle", baseVal: 200, desc: "金の原料。" },
+    { name: "宝箱", icon: "PackageOpen", baseVal: 500, desc: "箱自体。" },
+    { name: "金貨袋", icon: "Coins", baseVal: 300, desc: "お金が入っている。" },
+    { name: "王冠", icon: "Crown", baseVal: 800, desc: "王の証。" },
+    { name: "ティアラ", icon: "Crown", baseVal: 600, desc: "王女の証。" },
+    { name: "聖杯", icon: "Droplet", baseVal: 1000, desc: "神聖な儀式の杯。" },
+    { name: "鍵", icon: "Key", baseVal: 100, desc: "扉を開く。" },
+    { name: "コンパス", icon: "Compass", baseVal: 80, desc: "方角を示す。" },
+    { name: "望遠鏡", icon: "Telescope", baseVal: 120, desc: "遠くを見る。" },
+    { name: "ランタン", icon: "Flame", baseVal: 60, desc: "暗闇を照らす。" },
+    { name: "スカル", icon: "Skull", baseVal: 40, desc: "骨。" },
+    { name: "牙", icon: "Bone", baseVal: 30, desc: "獣の牙。" },
+    { name: "鱗", icon: "Shield", baseVal: 50, desc: "竜の鱗。" }
 ];
 
-// 生成リストの作成 (50アイテム * 8プレフィックス = 400種)
 const GENERATED_TREASURES = [];
 BASE_ITEMS.forEach(item => {
     PREFIXES.forEach(prefix => {
@@ -208,23 +189,19 @@ BASE_ITEMS.forEach(item => {
     });
 });
 
-// Assign IDs 1-N for the Picture Book
-// 先頭100個はユニーク、以降は生成アイテム (合計500個)
 export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => ({
     ...item,
     catalogId: index + 1
 }));
 
-// 重み付けなどのロジックはなく、完全にランダムに選択する
 export const generateTreasure = async (): Promise<Treasure> => {
-  // 鑑定している演出のために少し待機時間を設ける
   await new Promise(resolve => setTimeout(resolve, 800));
 
   const randomIndex = Math.floor(Math.random() * TREASURE_REGISTRY.length);
   const selectedTreasure = TREASURE_REGISTRY[randomIndex];
 
   return {
-    id: crypto.randomUUID(), // Unique instance ID
+    id: crypto.randomUUID(), 
     ...selectedTreasure
   };
 };

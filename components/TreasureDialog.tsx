@@ -1,6 +1,7 @@
 import React from 'react';
 import { Treasure } from '../types';
 import { THEME, getRarity } from '../constants';
+import { TreasureIcon } from './TreasureIcon';
 
 interface TreasureDialogProps {
   treasure: Treasure;
@@ -37,8 +38,8 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
             </div>
           </div>
 
-          <div className="text-7xl my-2 animate-pulse filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-10 scale-125">
-            {treasure.icon}
+          <div className="text-7xl my-2 flex justify-center animate-pulse filter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] z-10 scale-125">
+            <TreasureIcon name={treasure.icon as string} className="w-20 h-20 text-white" />
           </div>
 
           <h2 className="text-2xl font-bold text-white pixel-text-shadow z-10 border-b-2 border-white/20 pb-2 w-full">
