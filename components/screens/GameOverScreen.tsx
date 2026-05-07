@@ -3,6 +3,7 @@ import { Clock, Skull, Trophy, Star, Loader2 } from 'lucide-react';
 import { GameState, Treasure } from '../../types';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
+import { TreasureIcon } from '../TreasureIcon';
 
 interface GameOverScreenProps {
   gameState: GameState;
@@ -159,7 +160,9 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
                 <div className="bg-gray-50 rounded-lg p-2 overflow-y-auto max-h-[25vh] border-2 border-gray-200 space-y-2 scrollbar-hide">
                     {collectedTreasures.map((t) => (
                         <div key={t.id} className="flex items-center gap-3 bg-white p-2 rounded border border-gray-100 shadow-sm">
-                            <div className="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-full">{t.icon}</div>
+                            <div className="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-full">
+                                <TreasureIcon name={t.icon} className="w-6 h-6 text-gray-700" />
+                            </div>
                             <div className="flex-1 min-w-0 text-left">
                                 <div className="text-sm font-bold truncate text-gray-800">{t.name}</div>
                                 <div className="text-[10px] text-gray-500 truncate">{t.description}</div>

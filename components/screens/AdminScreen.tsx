@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Database, Upload, RefreshCw, Key, DollarSign } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClient } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
+import { TreasureIcon } from '../TreasureIcon';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
 
@@ -450,7 +451,9 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     key={t.catalogId} 
                     className="flex items-center gap-2 py-2 px-2 border-b border-gray-700 text-xs hover:bg-gray-700 rounded transition-colors"
                 >
-                    <div className="text-2xl cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>{t.icon}</div>
+                    <div className="w-8 h-8 flex items-center justify-center cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
+                        <TreasureIcon name={t.icon as string} className="w-6 h-6 text-yellow-500" />
+                    </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
                         <div className="text-[10px] text-gray-500">ID: {t.catalogId}</div>
