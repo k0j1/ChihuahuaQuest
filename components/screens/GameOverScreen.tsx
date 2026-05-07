@@ -161,7 +161,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
                     {collectedTreasures.map((t) => (
                         <div key={t.id} className="flex items-center gap-3 bg-white p-2 rounded border border-gray-100 shadow-sm">
                             <div className="text-2xl bg-gray-100 w-10 h-10 flex items-center justify-center rounded-full">
-                                <TreasureIcon name={t.icon} className="w-6 h-6 text-gray-700" />
+                                <TreasureIcon name={t.icon} value={t.value} className="w-6 h-6 text-gray-700" />
                             </div>
                             <div className="flex-1 min-w-0 text-left">
                                 <div className="text-sm font-bold truncate text-gray-800">{t.name}</div>

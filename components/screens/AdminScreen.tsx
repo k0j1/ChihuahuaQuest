@@ -452,7 +452,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     className="flex items-center gap-2 py-2 px-2 border-b border-gray-700 text-xs hover:bg-gray-700 rounded transition-colors"
                 >
                     <div className="w-8 h-8 flex items-center justify-center cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
-                        <TreasureIcon name={t.icon as string} className="w-6 h-6 text-yellow-500" />
+                        <TreasureIcon name={t.icon as string} value={t.value} className="w-6 h-6 text-yellow-500" />
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>

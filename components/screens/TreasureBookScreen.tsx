@@ -200,7 +200,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps> = ({ discoveredIds, 
                                 <>
                                     {/* Icon */}
                                     <div className="text-4xl md:text-5xl flex justify-center mb-3 filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)] animate-bounce-in z-10 mt-1">
-                                        <TreasureIcon name={treasure.icon as string} className="w-12 h-12 text-[#f4ecd8]" />
+                                <TreasureIcon name={treasure.icon as string} value={treasure.value} className="w-12 h-12 text-[#f4ecd8]" />
                                     </div>
                                     
                                     {/* Name Plaque */}
