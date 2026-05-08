@@ -61,6 +61,7 @@ export interface Treasure {
   description: string;
   descriptionEn?: string;
   value: number; // Gold value
+  baseValue?: number; // Original default value
   icon: string; // Emoji or icon name
 }
 

@@ -307,7 +307,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const autofillDefaults = () => {
       const newEditable: Record<string, string> = {};
       totalTreasures.forEach(t => {
-          newEditable[t.catalogId.toString()] = t.value.toString();
+          newEditable[t.catalogId.toString()] = (t.baseValue ?? t.value).toString();
       });
       setEditableAmounts(prev => ({ ...prev, ...newEditable }));
       setStatusMsg("デフォルトの報酬額をセットしました。バッチ更新してください。");
@@ -324,7 +324,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
 
     totalTreasures.forEach(t => {
       const idStr = t.catalogId.toString();
-      const defaultVal = t.value.toString();
+      const defaultVal = (t.baseValue ?? t.value).toString();
       const registeredVal = registeredSettings[idStr];
       
       const currentValStr = registeredVal !== undefined ? registeredVal : "-1"; 
@@ -544,7 +544,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
-                        <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {t.value.toLocaleString()}</div>
+                        <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {(t.baseValue ?? t.value).toLocaleString()}</div>
                     </div>
                     <input 
                         type="number"
@@ -555,7 +555,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     />
                     <span className="w-8">CHH</span>
                     <button
-                        onClick={() => updateIndividualReward(t.catalogId.toString(), editableAmounts[t.catalogId] || '0')}
+                        onClick={() => updateIndividualReward(t.catalogId.toString(), editableAmounts[t.catalogId.toString()] || editableAmounts[t.catalogId] || '0')}
                         disabled={isLoading || !isConnected}
                         className="px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded text-[10px] font-bold disabled:opacity-50 min-w-10"
                     >

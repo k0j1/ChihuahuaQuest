@@ -231,6 +231,7 @@ initialRegistry.forEach((item, index) => {
     }
     
     item.value = newValue;
+    item.baseValue = newValue;
 });
 
 initialRegistry.sort((a, b) => a.catalogId - b.catalogId);
