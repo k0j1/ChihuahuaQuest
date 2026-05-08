@@ -189,7 +189,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         address: TREASURE_CONTRACT_ADDRESS,
         abi: TREASURE_CONTRACT_ABI,
         functionName: 'setTreasureRewardsBatch',
-        args: [[BigInt(id)], [parseUnits(amount, 18)]],
+        args: [[BigInt(id)], [BigInt(Math.floor(Number(amount)))]],
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
@@ -221,7 +221,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         const chunkIds = allIds.slice(i, i + BATCH_SIZE);
         const chunkAmounts = chunkIds.map(id => {
             const amountStr = editableAmounts[id] || (totalTreasures.find(t => t.catalogId === id)?.value.toString() || '0');
-            return parseUnits(amountStr, 18);
+            return BigInt(Math.floor(Number(amountStr)));
         });
 
         setStatusMsg(`バッチ更新中... (${i + 1} - ${i + chunkIds.length} / ${allIds.length})`);
@@ -307,9 +307,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const autofillDefaults = () => {
       const newEditable = { ...editableAmounts };
       totalTreasures.forEach(t => {
-          if (!newEditable[t.catalogId]) {
-              newEditable[t.catalogId] = t.value.toString();
-          }
+          newEditable[t.catalogId] = t.value.toString();
       });
       setEditableAmounts(newEditable);
       setStatusMsg("デフォルトの報酬額をセットしました。バッチ更新してください。");
@@ -333,7 +331,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       
       if (currentValStr !== defaultVal) {
           idsToUpdate.push(BigInt(t.catalogId));
-          amountsToUpdate.push(parseUnits(defaultVal, 18));
+          amountsToUpdate.push(BigInt(Math.floor(Number(defaultVal))));
       }
     });
 
