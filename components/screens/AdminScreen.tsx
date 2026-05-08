@@ -546,10 +546,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
-                        <div className="text-[10px] text-gray-500 flex gap-2">
-                            <span>ID: {t.catalogId}</span>
-                            <span>(規定値: {t.value})</span>
-                        </div>
+                        <div className="text-[10px] text-gray-500">ID: {t.catalogId}</div>
                     </div>
                     <input 
                         type="number"
