@@ -199,8 +199,27 @@ export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, .
 export const generateTreasure = async (): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));
 
-  const randomIndex = Math.floor(Math.random() * TREASURE_REGISTRY.length);
-  const selectedTreasure = TREASURE_REGISTRY[randomIndex];
+  let totalWeight = 0;
+  const weightedRegistry = TREASURE_REGISTRY.map(t => {
+      let weight = 100; // Common
+      if (t.value >= 15000) weight = 1; // Legendary
+      else if (t.value >= 5000) weight = 5; // Epic
+      else if (t.value >= 1000) weight = 20; // Rare
+      else if (t.value >= 100) weight = 50; // Uncommon
+
+      totalWeight += weight;
+      return { item: t, weight };
+  });
+
+  let random = Math.random() * totalWeight;
+  let selectedTreasure = TREASURE_REGISTRY[0];
+  for (const wt of weightedRegistry) {
+      if (random < wt.weight) {
+          selectedTreasure = wt.item;
+          break;
+      }
+      random -= wt.weight;
+  }
 
   return {
     id: crypto.randomUUID(), 
