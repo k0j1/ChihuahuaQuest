@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { parseAbi, formatUnits } from 'viem';
 import { usePublicClient } from 'wagmi';
+import { CHH_CONTRACT_ADDRESS } from '../constants';
 
-const CHH_CONTRACT_ADDRESS = '0xb0525542E3D818460546332e76E511562dFf9B07';
 const CHH_ABI = parseAbi(['function balanceOf(address) view returns (uint256)']);
 
 export const useTokenBalance = (addresses: string[] | undefined) => {

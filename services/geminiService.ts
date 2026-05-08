@@ -191,10 +191,17 @@ BASE_ITEMS.forEach(item => {
     });
 });
 
-export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => ({
-    ...item,
-    catalogId: index + 1
-}));
+export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => {
+    let finalValue = item.value;
+    if (item.name.includes("伝説") && finalValue < 15000) {
+        finalValue = 15000;
+    }
+    return {
+        ...item,
+        value: finalValue,
+        catalogId: index + 1
+    };
+});
 
 export const generateTreasure = async (): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));

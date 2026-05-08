@@ -4,7 +4,7 @@ import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClien
 import { formatUnits, parseUnits } from 'viem';
 import { TreasureIcon } from '../TreasureIcon';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
-import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
+import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI, CHH_CONTRACT_ADDRESS } from '../../constants';
 
 interface AdminScreenProps {
   onBack: () => void;
@@ -32,14 +32,6 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const fetchBalances = async () => {
     if (!publicClient) return;
     try {
-      const ethBal = await publicClient.getBalance({ address: TREASURE_CONTRACT_ADDRESS as `0x${string}` });
-      
-      const pToken = await publicClient.readContract({
-        address: TREASURE_CONTRACT_ADDRESS as `0x${string}`,
-        abi: TREASURE_CONTRACT_ABI,
-        functionName: 'paymentToken',
-      }).catch(() => null) as `0x${string}` | null;
-
       const erc20Abi = [
         {
           "inputs": [{ "internalType": "address", "name": "account", "type": "address" }],
@@ -56,6 +48,19 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
           "type": "function"
         }
       ] as const;
+
+      const chhBal = await publicClient.readContract({
+        address: CHH_CONTRACT_ADDRESS as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [TREASURE_CONTRACT_ADDRESS as `0x${string}`],
+      }).catch(() => 0n);
+
+      const pToken = await publicClient.readContract({
+        address: TREASURE_CONTRACT_ADDRESS as `0x${string}`,
+        abi: TREASURE_CONTRACT_ABI,
+        functionName: 'paymentToken',
+      }).catch(() => null) as `0x${string}` | null;
 
       let usdcFormatted = '0';
       if (pToken) {
@@ -76,7 +81,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       }
 
       setContractBalances({
-        chh: formatUnits(ethBal, 18),
+        chh: formatUnits(chhBal as bigint, 18),
         usdc: usdcFormatted
       });
 
@@ -184,7 +189,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         address: TREASURE_CONTRACT_ADDRESS,
         abi: TREASURE_CONTRACT_ABI,
         functionName: 'setTreasureRewardsBatch',
-        args: [[BigInt(id)], [BigInt(Math.floor(parseFloat(amount)))]],
+        args: [[BigInt(id)], [parseUnits(amount, 18)]],
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
@@ -216,7 +221,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         const chunkIds = allIds.slice(i, i + BATCH_SIZE);
         const chunkAmounts = chunkIds.map(id => {
             const amountStr = editableAmounts[id] || (totalTreasures.find(t => t.catalogId === id)?.value.toString() || '0');
-            return BigInt(Math.floor(parseFloat(amountStr)));
+            return parseUnits(amountStr, 18);
         });
 
         setStatusMsg(`バッチ更新中... (${i + 1} - ${i + chunkIds.length} / ${allIds.length})`);
@@ -328,7 +333,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       
       if (currentValStr !== defaultVal) {
           idsToUpdate.push(BigInt(t.catalogId));
-          amountsToUpdate.push(BigInt(defaultVal));
+          amountsToUpdate.push(parseUnits(defaultVal, 18));
       }
     });
 
