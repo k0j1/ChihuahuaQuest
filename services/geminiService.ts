@@ -191,7 +191,7 @@ BASE_ITEMS.forEach(item => {
     });
 });
 
-export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => {
+const initialRegistry = [...UNIQUE_TREASURES, ...GENERATED_TREASURES].map((item, index) => {
     let finalValue = item.value;
     if (item.name.includes("伝説") && finalValue < 15000) {
         finalValue = 15000;
@@ -203,16 +203,50 @@ export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = [...UNIQUE_TREASURES, .
     };
 });
 
+initialRegistry.sort((a, b) => {
+    const aDen = a.name.includes("伝説");
+    const bDen = b.name.includes("伝説");
+    if (aDen && !bDen) return 1;
+    if (!aDen && bDen) return -1;
+    return a.value - b.value;
+});
+
+initialRegistry.forEach((item, index) => {
+    let newValue = item.value;
+    if (index < 50) {
+        newValue = Math.max(1, Math.min(99, item.value));
+        if (newValue >= 100) newValue = 99;
+    } else if (index < 200) {
+        newValue = Math.max(100, Math.min(999, item.value));
+    } else if (index < 350) {
+        newValue = Math.max(1000, Math.min(4999, item.value));
+    } else if (index < 449) {
+        newValue = Math.max(5000, Math.min(14999, item.value));
+    } else {
+        newValue = Math.max(15000, Math.min(100000, item.value));
+    }
+    
+    if (item.name.includes("伝説") && newValue < 15000) {
+        newValue = 15000;
+    }
+    
+    item.value = newValue;
+});
+
+initialRegistry.sort((a, b) => a.catalogId - b.catalogId);
+
+export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = initialRegistry;
+
 export const generateTreasure = async (): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));
 
   let totalWeight = 0;
   const weightedRegistry = TREASURE_REGISTRY.map(t => {
-      let weight = 100; // Common
-      if (t.value >= 15000) weight = 1; // Legendary
-      else if (t.value >= 5000) weight = 5; // Epic
-      else if (t.value >= 1000) weight = 20; // Rare
-      else if (t.value >= 100) weight = 50; // Uncommon
+      let weight = 233; // Common
+      if (t.value >= 15000) weight = 17; // Legendary
+      else if (t.value >= 5000) weight = 305; // Epic
+      else if (t.value >= 1000) weight = 288; // Rare
+      else if (t.value >= 100) weight = 224; // Uncommon
 
       totalWeight += weight;
       return { item: t, weight };
