@@ -189,7 +189,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
         address: TREASURE_CONTRACT_ADDRESS,
         abi: TREASURE_CONTRACT_ABI,
         functionName: 'setTreasureRewardsBatch',
-        args: [[BigInt(id)], [BigInt(Math.floor(Number(amount)))]],
+        args: [[BigInt(id)], [parseUnits(amount, 18)]],
       });
 
       setStatusMsg(`トランザクション送信完了: ${hash.slice(0, 10)}... 承認待ち`);
@@ -220,8 +220,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
         const chunkIds = allIds.slice(i, i + BATCH_SIZE);
         const chunkAmounts = chunkIds.map(id => {
-            const amountStr = editableAmounts[id] || (totalTreasures.find(t => t.catalogId === id)?.value.toString() || '0');
-            return BigInt(Math.floor(Number(amountStr)));
+            const amountStr = editableAmounts[id.toString()] || editableAmounts[id] || (totalTreasures.find(t => t.catalogId === id)?.value.toString() || '0');
+            return parseUnits(amountStr, 18);
         });
 
         setStatusMsg(`バッチ更新中... (${i + 1} - ${i + chunkIds.length} / ${allIds.length})`);
@@ -305,11 +305,11 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   };
 
   const autofillDefaults = () => {
-      const newEditable = { ...editableAmounts };
+      const newEditable: Record<string, string> = {};
       totalTreasures.forEach(t => {
-          newEditable[t.catalogId] = t.value.toString();
+          newEditable[t.catalogId.toString()] = t.value.toString();
       });
-      setEditableAmounts(newEditable);
+      setEditableAmounts(prev => ({ ...prev, ...newEditable }));
       setStatusMsg("デフォルトの報酬額をセットしました。バッチ更新してください。");
   };
 
@@ -329,9 +329,9 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
       
       const currentValStr = registeredVal !== undefined ? registeredVal : "-1"; 
       
-      if (currentValStr !== defaultVal) {
+      if (Number(currentValStr) !== Number(defaultVal)) {
           idsToUpdate.push(BigInt(t.catalogId));
-          amountsToUpdate.push(BigInt(Math.floor(Number(defaultVal))));
+          amountsToUpdate.push(parseUnits(defaultVal, 18));
       }
     });
 
@@ -544,12 +544,12 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
-                        <div className="text-[10px] text-gray-500">ID: {t.catalogId}</div>
+                        <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {t.value.toLocaleString()}</div>
                     </div>
                     <input 
                         type="number"
-                        value={editableAmounts[t.catalogId] !== undefined ? editableAmounts[t.catalogId] : ''}
-                        onChange={(e) => updateAmount(t.catalogId, e.target.value)}
+                        value={editableAmounts[t.catalogId.toString()] !== undefined ? editableAmounts[t.catalogId.toString()] : (editableAmounts[t.catalogId] !== undefined ? editableAmounts[t.catalogId] : '')}
+                        onChange={(e) => updateAmount(t.catalogId.toString(), e.target.value)}
                         placeholder="設定なし"
                         className="w-16 bg-gray-900 border border-gray-600 rounded p-1 text-right text-yellow-400 font-mono"
                     />
