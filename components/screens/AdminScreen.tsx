@@ -103,8 +103,27 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     if (!publicClient) return;
     
     setIsLoading(true);
-    setStatusMsg('報酬設定を読み込み中...');
+    setStatusMsg('報酬設定と支払い情報を読み込み中...');
     try {
+      // 支払い情報取得
+      const [tokenAddress, feeAmount] = await Promise.all([
+        publicClient.readContract({
+          address: TREASURE_CONTRACT_ADDRESS,
+          abi: TREASURE_CONTRACT_ABI,
+          functionName: 'paymentToken',
+        }),
+        publicClient.readContract({
+          address: TREASURE_CONTRACT_ADDRESS,
+          abi: TREASURE_CONTRACT_ABI,
+          functionName: 'resetFee',
+        })
+      ]).catch(() => ['0x0000000000000000000000000000000000000000', 0n]);
+
+      // @ts-ignore
+      setPaymentToken(tokenAddress as string);
+      // @ts-ignore
+      setPaymentFee(formatUnits(feeAmount, 6)); // Assuming USDC 6 decimals default
+
       // 1-500までのIDリストを作成
       const ids = Array.from({ length: 500 }, (_, i) => i + 1);
       

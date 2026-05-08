@@ -121,7 +121,7 @@ const PREFIXES = [
   { name: "魔法の", nameEn: "Magic ", valueMod: 10, desc: "魔力を帯びた", descEn: "Imbued with magic. " },
   { name: "呪われた", nameEn: "Cursed ", valueMod: 0.5, desc: "不吉なオーラを放つ", descEn: "Emits an ominous aura. " },
   { name: "ミスリル製", nameEn: "Mithril ", valueMod: 50, desc: "銀色に輝く", descEn: "Shining silver. " },
-  { name: "伝説の", nameEn: "Legendary ", valueMod: 200, desc: "神話に名高い", descEn: "Famous in myths. " },
+  { name: "伝説の", nameEn: "Legendary ", valueMod: 300, desc: "神話に名高い", descEn: "Famous in myths. " },
 ];
 
 const BASE_ITEMS = [
