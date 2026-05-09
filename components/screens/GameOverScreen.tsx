@@ -10,9 +10,10 @@ interface GameOverScreenProps {
   gold: number;
   collectedTreasures: Treasure[];
   onRestart: () => void;
+  onClaimSuccess?: () => void;
 }
 
-const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collectedTreasures, onRestart }) => {
+const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collectedTreasures, onRestart, onClaimSuccess }) => {
   const isTimeUp = gameState === GameState.TIME_UP;
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -93,6 +94,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
         }
 
         setClaimStatus("報酬の獲得に成功しました！");
+        if (onClaimSuccess) onClaimSuccess();
 
     } catch (err: any) {
         console.error(err);

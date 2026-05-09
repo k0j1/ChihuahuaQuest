@@ -243,11 +243,11 @@ export const generateTreasure = async (): Promise<Treasure> => {
 
   let totalWeight = 0;
   const weightedRegistry = TREASURE_REGISTRY.map(t => {
-      let weight = 233; // Common
-      if (t.value >= 15000) weight = 17; // Legendary
-      else if (t.value >= 5000) weight = 305; // Epic
-      else if (t.value >= 1000) weight = 288; // Rare
-      else if (t.value >= 100) weight = 224; // Uncommon
+      let weight = 600; // Common (< 100): 50items * 600 = 30,000 (約 30%)
+      if (t.value >= 15000) weight = 20; // Legendary (>= 15000): 51items * 20 = 1020 (約 1%)
+      else if (t.value >= 5000) weight = 40; // Epic (>= 5000): 99items * 40 = 3960 (約 4%)
+      else if (t.value >= 1000) weight = 167; // Rare (>= 1000): 150items * 167 = 25050 (約 25%)
+      else if (t.value >= 100) weight = 267; // Uncommon (>= 100): 150items * 267 = 40050 (約 40%)
 
       totalWeight += weight;
       return { item: t, weight };
