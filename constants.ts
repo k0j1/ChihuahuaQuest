@@ -175,6 +175,13 @@ export const TREASURE_CONTRACT_ABI = [
   },
   {
     "type": "function",
+    "name": "withdrawCHHTokens",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "resetClaimCooldown",
     "inputs": [],
     "outputs": [],

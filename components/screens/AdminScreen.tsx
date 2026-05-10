@@ -331,6 +331,33 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
     }
   };
 
+  const withdrawCHH = async () => {
+    if (!isConnected || !address) {
+      setStatusMsg('ウォレットを接続してください');
+      return;
+    }
+    setIsLoading(true);
+    setStatusMsg('CHHを引き出し中...');
+    
+    try {
+      const hash = await writeContractAsync({
+        address: TREASURE_CONTRACT_ADDRESS,
+        abi: TREASURE_CONTRACT_ABI,
+        functionName: 'withdrawCHHTokens',
+      });
+
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setStatusMsg(`CHHの引き出しが完了しました！`);
+    } catch (error: any) {
+      console.error(error);
+      setStatusMsg(`CHH引き出しエラー: ${error.message || '引き出しに失敗しました'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const checkInventory = async () => {
     if (!publicClient || !targetAddress) return;
     setIsLoading(true);
@@ -575,7 +602,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
                disabled={isLoading || !isConnected}
                className="px-4 py-2 bg-green-600 hover:bg-green-500 font-bold rounded text-sm disabled:opacity-50"
              >
-               資金を取り出す
+               USDCを取り出す
              </button>
           </div>
         </div>
