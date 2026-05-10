@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Gem, BookOpen } from 'lucide-react';
+import { Home, Gem, BookOpen, LayoutGrid } from 'lucide-react';
 import { GameState } from '../types';
 
 interface BottomNavProps {
@@ -12,6 +12,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentGameState, onNavigate }) =
     { name: 'Home', icon: Home, state: GameState.TITLE },
     { name: 'Treasure', icon: Gem, state: GameState.TREASURE_BOOK },
     { name: 'Paper', icon: BookOpen, state: GameState.LITEPAPER },
+    { name: 'Apps', icon: LayoutGrid, state: GameState.OTHER_APPS },
   ];
 
   return (

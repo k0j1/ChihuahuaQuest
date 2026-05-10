@@ -15,6 +15,7 @@ import TitleScreen from './components/screens/TitleScreen';
 import GameOverScreen from './components/screens/GameOverScreen';
 import TreasureBookScreen from './components/screens/TreasureBookScreen';
 import LitepaperScreen from './components/screens/LitepaperScreen';
+import OtherAppsScreen from './components/screens/OtherAppsScreen';
 import UserBadge from './components/UserBadge';
 import UserInfoModal from './components/UserInfoModal';
 
@@ -232,7 +233,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.42
+                   Ver 0.3.44
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -258,7 +259,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.42
+                   Ver 0.3.44
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
@@ -278,6 +279,16 @@ const App: React.FC = () => {
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="flex-1 overflow-hidden">
                     <LitepaperScreen onBack={resetGame} lang={lang} />
+                </div>
+                <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
+            </div>
+        );
+
+        case GameState.OTHER_APPS:
+        return (
+            <div className="h-[100dvh] flex flex-col bg-slate-900">
+                <div className="flex-1 overflow-hidden">
+                    <OtherAppsScreen onBack={resetGame} lang={lang} />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
             </div>

@@ -9,6 +9,7 @@ export enum GameState {
   TREASURE_BOOK = 'TREASURE_BOOK', // 図鑑画面
   LITEPAPER = 'LITEPAPER', // ライトペーパー画面
   ADMIN = 'ADMIN', // 管理画面
+  OTHER_APPS = 'OTHER_APPS', // その他のアプリ
 }
 
 export enum MapTheme {
