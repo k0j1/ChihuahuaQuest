@@ -19,6 +19,8 @@ import OtherAppsScreen from './components/screens/OtherAppsScreen';
 import UserBadge from './components/UserBadge';
 import UserInfoModal from './components/UserInfoModal';
 
+import MaintenanceScreen from './components/screens/MaintenanceScreen';
+
 import AdminScreen from './components/screens/AdminScreen';
 import BottomNav from './components/BottomNav';
 
@@ -61,7 +63,7 @@ const App: React.FC = () => {
   } = useGameEngine();
 
 // Farcaster User Integration
-  const { user } = useFarcasterUser();
+  const { user, isBlocked, setIsBlocked } = useFarcasterUser();
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
   const isAdmin = user?.fid === 406233;
   
@@ -228,12 +230,16 @@ const App: React.FC = () => {
 
   // Screen Routing based on GameState
   const renderScreen = () => {
+    if (isBlocked && gameState !== GameState.ADMIN) {
+      return <MaintenanceScreen isAdmin={isAdmin} onOpenAdmin={openAdmin} />;
+    }
+
     switch (gameState) {
         case GameState.TITLE:
         return (
             <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.47
+                   Ver 0.3.50
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -244,6 +250,7 @@ const App: React.FC = () => {
                         onResetSuccess={() => setRefreshTrigger(prev => prev + 1)}
                         isAdmin={isAdmin}
                         canClaim={canClaim}
+                        isBlocked={isBlocked}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
@@ -252,14 +259,18 @@ const App: React.FC = () => {
 
         case GameState.ADMIN:
         return (
-            <AdminScreen onBack={resetGame} />
+            <AdminScreen 
+              onBack={resetGame} 
+              isBlocked={isBlocked} 
+              setIsBlocked={setIsBlocked} 
+            />
         );
 
         case GameState.TREASURE_BOOK:
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 0.3.47
+                   Ver 0.3.50
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 

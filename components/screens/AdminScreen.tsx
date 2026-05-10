@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Database, Upload, RefreshCw, Key, DollarSign } from 'lucide-react';
+import { ArrowLeft, Database, Upload, RefreshCw, Key, DollarSign, AlertTriangle } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClient } from 'wagmi';
 import { formatUnits, parseUnits } from 'viem';
 import { TreasureIcon } from '../TreasureIcon';
@@ -8,9 +8,11 @@ import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI, CHH_CONTRACT_ADDRESS 
 
 interface AdminScreenProps {
   onBack: () => void;
+  isBlocked?: boolean;
+  setIsBlocked?: (val: boolean) => void;
 }
 
-const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
+const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlocked }) => {
   const [registeredSettings, setRegisteredSettings] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
@@ -476,12 +478,17 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
             </p>
           </div>
           {!isConnected ? (
-            <button 
-              onClick={connectWallet}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold"
-            >
-              接続
-            </button>
+            <div className="flex flex-col gap-2">
+              {connectors.map(connector => (
+                 <button 
+                   key={connector.uid}
+                   onClick={() => connect({ connector })}
+                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold"
+                 >
+                   {connector.name} に接続
+                 </button>
+              ))}
+            </div>
           ) : (
             <button 
               onClick={() => disconnect()}
@@ -491,6 +498,25 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
             </button>
           )}
         </div>
+
+        {/* Maintenance Testing */}
+        {setIsBlocked && (
+          <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700 flex justify-between items-center">
+            <div>
+              <h3 className="text-gray-400 text-sm mb-1 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-500" />
+                メンテナンス画面テスト
+              </h3>
+              <p className="text-xs text-gray-500">オンにするとタイトル画面などでメンテナンス状態になります</p>
+            </div>
+            <button 
+              onClick={() => setIsBlocked(!isBlocked)}
+              className={`px-4 py-2 rounded text-sm font-bold transition-colors ${isBlocked ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-gray-600 hover:bg-gray-500'}`}
+            >
+              {isBlocked ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        )}
 
         {/* Payment Configuration */}
         <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700 flex flex-col gap-4">

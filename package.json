@@ -12,6 +12,7 @@
     "@farcaster/frame-sdk": "^0.2.0",
     "@farcaster/frame-wagmi-connector": "^2.0.0",
     "@farcaster/miniapp-wagmi-connector": "^2.0.0",
+    "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.99.0",
     "@vitejs/plugin-react": "^5.1.2",
     "@wagmi/core": "^3.4.3",

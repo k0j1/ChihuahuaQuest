@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import sdk from '@farcaster/frame-sdk';
 import { FarcasterUser } from '../types';
+import { supabase } from '../lib/supabase';
 
 export const useFarcasterUser = () => {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -28,6 +30,45 @@ export const useFarcasterUser = () => {
             verifications: contextUser.verifications || [], // Array of connected addresses
             custodyAddress: contextUser.custodyAddress, // Custody address
           });
+
+          if (supabase) {
+            try {
+              // Check blocked_users table
+              const { data: blockedData, error: blockErr } = await supabase
+                .from('blocked_users')
+                .select('fid')
+                .eq('fid', contextUser.fid)
+                .maybeSingle();
+                
+              if (blockedData) {
+                setIsBlocked(true);
+              }
+              
+              const address = (contextUser.verifications && contextUser.verifications.length > 0)
+                ? contextUser.verifications[0]
+                : contextUser.custodyAddress;
+
+              const { error } = await supabase
+                .from('farcaster_users')
+                .upsert(
+                  {
+                    fid: contextUser.fid,
+                    address: address || null,
+                    username: contextUser.username,
+                    display_name: contextUser.displayName || null,
+                    pfp_url: contextUser.pfpUrl || null,
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: 'fid' }
+                );
+                
+              if (error) {
+                console.error('Failed to save user to Supabase:', error);
+              }
+            } catch (err) {
+              console.error('Error during Supabase upsert:', err);
+            }
+          }
         }
       } catch (error) {
         console.warn('Failed to load Farcaster context:', error);
@@ -39,5 +80,5 @@ export const useFarcasterUser = () => {
     loadUser();
   }, []);
 
-  return { user, isLoaded };
+  return { user, isLoaded, isBlocked, setIsBlocked };
 };

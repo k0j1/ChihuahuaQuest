@@ -1,5 +1,6 @@
 import { http, createConfig } from 'wagmi';
 import { base } from 'wagmi/chains';
+import { injected, metaMask, coinbaseWallet } from 'wagmi/connectors';
 import { farcasterFrame } from '@farcaster/frame-wagmi-connector';
 
 export const config = createConfig({
@@ -7,5 +8,10 @@ export const config = createConfig({
   transports: {
     [base.id]: http(`https://base-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY_API_KEY}`),
   },
-  connectors: [farcasterFrame()],
+  connectors: [
+    farcasterFrame(),
+    metaMask(),
+    coinbaseWallet({ appName: 'Chihuahua Quest' }),
+    injected()
+  ],
 });
