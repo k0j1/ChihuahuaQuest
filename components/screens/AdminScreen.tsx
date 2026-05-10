@@ -20,6 +20,10 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
   const [paymentToken, setPaymentToken] = useState('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'); // USDC on Base
   const [paymentFee, setPaymentFee] = useState('1'); // 1 USDC
 
+  // User Inventory Check Check State
+  const [targetAddress, setTargetAddress] = useState<string>('');
+  const [targetInventory, setTargetInventory] = useState<{ id: number, count: number }[] | null>(null);
+
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
@@ -304,6 +308,33 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
     }
   };
 
+  const checkInventory = async () => {
+    if (!publicClient || !targetAddress) return;
+    setIsLoading(true);
+    setStatusMsg(`[${targetAddress}]のインベントリを取得中...`);
+    try {
+        const [ids, counts] = (await publicClient.readContract({
+            address: TREASURE_CONTRACT_ADDRESS,
+            abi: TREASURE_CONTRACT_ABI,
+            functionName: 'getPlayerInventory',
+            args: [targetAddress as `0x${string}`]
+        })) as [readonly bigint[], readonly bigint[]];
+        
+        const inventoryList = ids.map((id, index) => ({
+            id: Number(id),
+            count: Number(counts[index])
+        }));
+        setTargetInventory(inventoryList);
+        setStatusMsg(`インベントリ取得完了`);
+    } catch (error: any) {
+        console.error(error);
+        setStatusMsg(`取得エラー: ${error.message || '取得に失敗しました'}`);
+        setTargetInventory(null);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const autofillDefaults = () => {
       const newEditable: Record<string, string> = {};
       totalTreasures.forEach(t => {
@@ -494,6 +525,57 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack }) => {
                資金を取り出す
              </button>
           </div>
+        </div>
+
+        {/* User Inventory Check */}
+        <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700 flex flex-col gap-4">
+          <h3 className="text-gray-400 text-sm flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            プレイヤーインベントリ確認
+          </h3>
+          
+          <div className="flex flex-col gap-2">
+             <label className="text-xs text-gray-500">プレイヤーアドレス</label>
+             <input type="text" value={targetAddress} onChange={(e) => setTargetAddress(e.target.value)} className="bg-gray-900 border border-gray-600 rounded p-2 text-sm text-mono w-full" placeholder="0x..." />
+          </div>
+          
+          <div className="flex gap-2 justify-end mt-2">
+             <button
+               onClick={checkInventory}
+               disabled={isLoading || !targetAddress}
+               className="px-4 py-2 bg-blue-600 hover:bg-blue-500 font-bold rounded text-sm disabled:opacity-50"
+             >
+               確認
+             </button>
+          </div>
+
+          {targetInventory && (
+             <div className="mt-4">
+               <h4 className="text-xs text-gray-400 mb-2">取得結果 (種類: {targetInventory.length} / 合計: {targetInventory.reduce((acc, curr) => acc + curr.count, 0)})</h4>
+               <div className="max-h-60 overflow-y-auto bg-black/30 p-2 rounded flex flex-col gap-2">
+                 {targetInventory.length > 0 ? targetInventory.map((item) => {
+                     const t = TREASURE_REGISTRY.find(t => t.catalogId === item.id);
+                     if (!t) return null;
+                     return (
+                         <div key={item.id} className="flex justify-between items-center py-2 border-b border-gray-700/50 last:border-0 pl-1 pr-2">
+                           <div className="flex items-center gap-2">
+                             <div className="flex-none bg-black/50 p-1 rounded">
+                               <TreasureIcon name={t.icon as string} value={t.value} className="w-6 h-6 text-yellow-500" />
+                             </div>
+                             <div>
+                               <div className="text-sm font-bold text-gray-200">{t.name}</div>
+                               <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {(t.baseValue ?? t.value).toLocaleString()}</div>
+                             </div>
+                           </div>
+                           <span className="text-sm font-mono text-gray-400">x{item.count}</span>
+                         </div>
+                     );
+                 }) : (
+                     <div className="text-sm text-gray-500 text-center py-4">インベントリが空です</div>
+                 )}
+               </div>
+             </div>
+          )}
         </div>
 
         {/* Catalog */}
