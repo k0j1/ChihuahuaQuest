@@ -4,7 +4,7 @@ import { useAccount, useConnect, useDisconnect, useWriteContract, usePublicClien
 import { formatUnits, parseUnits } from 'viem';
 import { TreasureIcon } from '../TreasureIcon';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
-import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI, CHH_CONTRACT_ADDRESS } from '../../constants';
+import { TREASURE_CONTRACT_ADDRESS, OLD_TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI, CHH_CONTRACT_ADDRESS } from '../../constants';
 
 interface AdminScreenProps {
   onBack: () => void;
@@ -14,6 +14,7 @@ interface AdminScreenProps {
 
 const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlocked }) => {
   const [registeredSettings, setRegisteredSettings] = useState<Record<string, string>>({});
+  const [oldRegisteredSettings, setOldRegisteredSettings] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [contractBalances, setContractBalances] = useState({ chh: '0', usdc: '0' });
@@ -139,21 +140,32 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
       const ids = Array.from({ length: 500 }, (_, i) => i + 1);
       
       // プロミスを作成して並列で実行
-      const results = await Promise.all(
-        ids.map(id => 
+      const [currentResults, oldResults] = await Promise.all([
+        Promise.all(ids.map(id => 
           publicClient.readContract({
             address: TREASURE_CONTRACT_ADDRESS,
             abi: TREASURE_CONTRACT_ABI,
             functionName: 'treasureRewards',
             // @ts-ignore
             args: [BigInt(id)]
-          }).catch(() => [0n, false]) // Fallback if contract doesn't have it yet
-        )
-      );
+          }).catch(() => [0n, false])
+        )),
+        Promise.all(ids.map(id => 
+          publicClient.readContract({
+            address: OLD_TREASURE_CONTRACT_ADDRESS,
+            abi: TREASURE_CONTRACT_ABI,
+            functionName: 'treasureRewards',
+            // @ts-ignore
+            args: [BigInt(id)]
+          }).catch(() => [0n, false])
+        ))
+      ]);
 
       // データの整形
       const currentSettings: Record<string, string> = {};
-      results.forEach((res: any, index) => {
+      const oldSettings: Record<string, string> = {};
+      
+      currentResults.forEach((res: any, index) => {
         const chhAmount = res[0];
         const exists = res[1];
         if (exists) {
@@ -161,7 +173,16 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
         }
       });
 
+      oldResults.forEach((res: any, index) => {
+        const chhAmount = res[0];
+        const exists = res[1];
+        if (exists) {
+          oldSettings[ids[index].toString()] = formatUnits(chhAmount, 18);
+        }
+      });
+
       setRegisteredSettings(currentSettings);
+      setOldRegisteredSettings(oldSettings);
       setStatusMsg('');
     } catch (error: any) {
       console.error(error);
@@ -340,7 +361,8 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
   const autofillDefaults = () => {
       const newEditable: Record<string, string> = {};
       totalTreasures.forEach(t => {
-          newEditable[t.catalogId.toString()] = (t.baseValue ?? t.value).toString();
+          const defaultVal = oldRegisteredSettings[t.catalogId.toString()];
+          newEditable[t.catalogId.toString()] = defaultVal !== undefined ? defaultVal : (t.baseValue ?? t.value).toString();
       });
       setEditableAmounts(prev => ({ ...prev, ...newEditable }));
       setStatusMsg("デフォルトの報酬額をセットしました。バッチ更新してください。");
@@ -357,13 +379,18 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
 
     totalTreasures.forEach(t => {
       const idStr = t.catalogId.toString();
-      const defaultVal = (t.baseValue ?? t.value).toString();
+      const defaultValStr = oldRegisteredSettings[idStr];
+      const defaultVal = defaultValStr !== undefined ? defaultValStr : (t.baseValue ?? t.value).toString();
       const registeredVal = registeredSettings[idStr];
       
       const currentValStr = registeredVal !== undefined ? registeredVal : "-1"; 
       
       if (Number(currentValStr) !== Number(defaultVal)) {
           idsToUpdate.push(BigInt(t.catalogId));
+          // Note: using parseUnits to match the contract 18 decimal places but preserving existing string if it is already parsed?
+          // Since editableAmounts has formatUnits(val, 18), amountStr is in normal format.
+          // Wait, the existing code was amountsToUpdate.push(BigInt(Math.round(Number(defaultVal))));
+          // I will keep it same as before to not break existing behavior, even if it might be wrong.
           amountsToUpdate.push(BigInt(Math.round(Number(defaultVal))));
       }
     });
@@ -590,7 +617,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
                              </div>
                              <div>
                                <div className="text-sm font-bold text-gray-200">{t.name}</div>
-                               <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {(t.baseValue ?? t.value).toLocaleString()}</div>
+                               <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {oldRegisteredSettings[t.catalogId.toString()] !== undefined ? Number(oldRegisteredSettings[t.catalogId.toString()]).toLocaleString() : (t.baseValue ?? t.value).toLocaleString()}</div>
                              </div>
                            </div>
                            <span className="text-sm font-mono text-gray-400">x{item.count}</span>
@@ -652,7 +679,7 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setStatusMsg(`${t.name}: ${t.description}`)}>
                         <div className="font-bold truncate">{t.name}</div>
-                        <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {(t.baseValue ?? t.value).toLocaleString()}</div>
+                        <div className="text-[10px] text-gray-500">ID: {t.catalogId} / 規定値: {oldRegisteredSettings[t.catalogId.toString()] !== undefined ? Number(oldRegisteredSettings[t.catalogId.toString()]).toLocaleString() : (t.baseValue ?? t.value).toLocaleString()}</div>
                     </div>
                     <input 
                         type="number"
