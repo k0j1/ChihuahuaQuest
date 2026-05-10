@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import sdk from '@farcaster/frame-sdk';
 import { FarcasterUser } from '../types';
 import { supabase } from '../lib/supabase';
+import { useAccount } from 'wagmi';
 
 export const useFarcasterUser = () => {
   const [user, setUser] = useState<FarcasterUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  
+  const { address: wagmiAddress, isConnected } = useAccount();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -61,33 +64,27 @@ export const useFarcasterUser = () => {
                 }
               }
 
+              const upsertData: any = {
+                fid: contextUser.fid,
+                username: contextUser.username,
+                display_name: contextUser.displayName || null,
+                pfp_url: contextUser.pfpUrl || null,
+                updated_at: new Date().toISOString(),
+              };
+
               if (address) {
-                console.log('Attempting to save Farcaster user to Supabase:', { fid: contextUser.fid, address });
-                const { error } = await supabase
-                  .from('farcaster_users')
-                  .upsert(
-                    {
-                      fid: contextUser.fid,
-                      address: address,
-                      username: contextUser.username,
-                      display_name: contextUser.displayName || null,
-                      pfp_url: contextUser.pfpUrl || null,
-                      updated_at: new Date().toISOString(),
-                    },
-                    { onConflict: 'fid' }
-                  );
-                  
-                if (error) {
-                  console.error('Failed to save user to Supabase:', error);
-                } else {
-                  console.log('Successfully saved user to Supabase:', { fid: contextUser.fid, address });
-                }
+                upsertData.address = address;
+              }
+
+              console.log('Attempting to save Farcaster user to Supabase:', upsertData);
+              const { error } = await supabase
+                .from('farcaster_users')
+                .upsert(upsertData, { onConflict: 'fid' });
+                
+              if (error) {
+                console.error('Failed to save user to Supabase:', error);
               } else {
-                console.warn('Skipping Farcaster user save: Address not found.', {
-                  fid: contextUser.fid,
-                  verifications: contextUser.verifications,
-                  custodyAddress: contextUser.custodyAddress
-                });
+                console.log('Successfully saved user to Supabase:', upsertData);
               }
             } catch (err) {
               console.error('Error during Supabase upsert:', err);
@@ -103,6 +100,45 @@ export const useFarcasterUser = () => {
 
     loadUser();
   }, []);
+
+  // Sync vagmi address with supabase if not already saved
+  useEffect(() => {
+    if (user && isConnected && wagmiAddress && supabase) {
+      const isAddressKnown = 
+        user.custodyAddress === wagmiAddress || 
+        user.verifications?.includes(wagmiAddress);
+
+      if (!isAddressKnown) {
+        const updateAddressAndState = async () => {
+          console.log('Updating user address in Supabase from wagmi:', { fid: user.fid, address: wagmiAddress });
+          try {
+            const { error } = await supabase
+              .from('farcaster_users')
+              .upsert({
+                fid: user.fid,
+                address: wagmiAddress,
+                updated_at: new Date().toISOString(),
+              }, { onConflict: 'fid' });
+
+            if (error) {
+               console.error('Failed to update address in Supabase:', error);
+            } else {
+               console.log('Successfully updated address in Supabase.');
+               // Update local state to avoid infinite loops and keep user data accurate
+               setUser(prev => prev ? {
+                   ...prev,
+                   verifications: [...(prev.verifications || []), wagmiAddress]
+               } : null);
+            }
+          } catch (err) {
+            console.error('Error updating address from wagmi:', err);
+          }
+        };
+
+        updateAddressAndState();
+      }
+    }
+  }, [user, wagmiAddress, isConnected]);
 
   return { user, isLoaded, isBlocked, setIsBlocked };
 };
