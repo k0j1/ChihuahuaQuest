@@ -48,24 +48,33 @@ export const useFarcasterUser = () => {
                 ? contextUser.verifications[0]
                 : contextUser.custodyAddress;
 
-              const { error } = await supabase
-                .from('farcaster_users')
-                .upsert(
-                  {
-                    fid: contextUser.fid,
-                    address: address || null,
-                    username: contextUser.username,
-                    display_name: contextUser.displayName || null,
-                    pfp_url: contextUser.pfpUrl || null,
-                    updated_at: new Date().toISOString(),
-                  },
-                  { onConflict: 'fid' }
-                );
-                
-              if (error) {
-                console.error('Failed to save user to Supabase:', error);
+              if (address) {
+                console.log('Attempting to save Farcaster user to Supabase:', { fid: contextUser.fid, address });
+                const { error } = await supabase
+                  .from('farcaster_users')
+                  .upsert(
+                    {
+                      fid: contextUser.fid,
+                      address: address,
+                      username: contextUser.username,
+                      display_name: contextUser.displayName || null,
+                      pfp_url: contextUser.pfpUrl || null,
+                      updated_at: new Date().toISOString(),
+                    },
+                    { onConflict: 'fid' }
+                  );
+                  
+                if (error) {
+                  console.error('Failed to save user to Supabase:', error);
+                } else {
+                  console.log('Successfully saved user to Supabase:', { fid: contextUser.fid, address });
+                }
               } else {
-                console.log('Successfully saved user to Supabase.');
+                console.warn('Skipping Farcaster user save: Address not found.', {
+                  fid: contextUser.fid,
+                  verifications: contextUser.verifications,
+                  custodyAddress: contextUser.custodyAddress
+                });
               }
             } catch (err) {
               console.error('Error during Supabase upsert:', err);
