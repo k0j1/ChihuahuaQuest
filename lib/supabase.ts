@@ -7,3 +7,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+if (supabase) {
+  console.log('Supabase initialized successfully.');
+} else {
+  console.warn('Supabase not initialized: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY missing.');
+}
+
