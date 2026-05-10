@@ -222,10 +222,16 @@ export const useGameEngine = () => {
         
         // Check for Treasure
         if (currentMapData.treasureMap[tileY][tileX]) {
-            // Found Treasure! 
             // Remove from hidden map
             const newTreasureMap = currentMapData.treasureMap.map(row => [...row]);
             newTreasureMap[tileY][tileX] = false;
+
+            // Limit max 10 treasures per game
+            if (collectedTreasures.length >= 10) {
+                setMapData({ tiles: newTiles, treasureMap: newTreasureMap }); 
+                setIsDigging(false);
+                return;
+            }
             
             // Update map state
             setMapData({ tiles: newTiles, treasureMap: newTreasureMap }); 
@@ -235,7 +241,7 @@ export const useGameEngine = () => {
             setIsGeneratingTreasure(true);
 
             try {
-                const treasure = await generateTreasure();
+                const treasure = await generateTreasure(collectedTreasures.map(t => t.catalogId));
                 setFoundTreasure(treasure);
                 setCollectedTreasures(prev => [...prev, treasure]);
                 setGold(prev => prev + treasure.value);

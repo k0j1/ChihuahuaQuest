@@ -238,11 +238,16 @@ initialRegistry.sort((a, b) => a.catalogId - b.catalogId);
 
 export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = initialRegistry;
 
-export const generateTreasure = async (): Promise<Treasure> => {
+export const generateTreasure = async (excludedIds: number[] = []): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));
 
+  let availableRegistry = TREASURE_REGISTRY.filter(t => !excludedIds.includes(t.catalogId));
+  if (availableRegistry.length === 0) {
+      availableRegistry = TREASURE_REGISTRY;
+  }
+
   let totalWeight = 0;
-  const weightedRegistry = TREASURE_REGISTRY.map(t => {
+  const weightedRegistry = availableRegistry.map(t => {
       let weight = 600; // Common (< 100): 50items * 600 = 30,000 (約 30%)
       if (t.value >= 15000) weight = 20; // Legendary (>= 15000): 51items * 20 = 1020 (約 1%)
       else if (t.value >= 5000) weight = 40; // Epic (>= 5000): 99items * 40 = 3960 (約 4%)
@@ -254,7 +259,7 @@ export const generateTreasure = async (): Promise<Treasure> => {
   });
 
   let random = Math.random() * totalWeight;
-  let selectedTreasure = TREASURE_REGISTRY[0];
+  let selectedTreasure = availableRegistry[0];
   for (const wt of weightedRegistry) {
       if (random < wt.weight) {
           selectedTreasure = wt.item;
