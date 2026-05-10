@@ -65,7 +65,7 @@ const App: React.FC = () => {
 // Farcaster User Integration
   const { user, isBlocked, setIsBlocked } = useFarcasterUser();
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(true); // Force maintenance on
+  const [maintenanceMode, setMaintenanceMode] = useState(false); // Force maintenance off
   const isAdmin = user?.fid === 406233;
   
   // Blockchain-based Treasure Discovery
