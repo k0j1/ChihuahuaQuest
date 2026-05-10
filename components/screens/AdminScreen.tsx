@@ -553,22 +553,30 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
           )}
         </div>
 
-        {/* Maintenance Testing */}
+        {/* Maintenance */}
         {setIsBlocked && (
           <div className="bg-gray-800 p-4 rounded-xl border-2 border-gray-700 flex justify-between items-center">
             <div>
               <h3 className="text-gray-400 text-sm mb-1 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                メンテナンス画面テスト
+                メンテナンス管理
               </h3>
-              <p className="text-xs text-gray-500">オンにするとタイトル画面などでメンテナンス状態になります</p>
+              <p className="text-xs text-gray-500">現在の状態: {isBlocked ? 'メンテナンス中' : '稼働中'}</p>
             </div>
-            <button 
-              onClick={() => setIsBlocked(!isBlocked)}
-              className={`px-4 py-2 rounded text-sm font-bold transition-colors ${isBlocked ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-gray-600 hover:bg-gray-500'}`}
-            >
-              {isBlocked ? 'ON' : 'OFF'}
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setIsBlocked(!isBlocked)}
+                className={`px-4 py-2 rounded text-sm font-bold transition-colors ${isBlocked ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-gray-600 hover:bg-gray-500'}`}
+              >
+                {isBlocked ? 'ON' : 'OFF'}
+              </button>
+              <button 
+                onClick={() => setIsBlocked(false)}
+                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded text-sm font-bold transition-colors"
+              >
+                メンテナンスを解除
+              </button>
+            </div>
           </div>
         )}
 
@@ -603,6 +611,13 @@ const AdminScreen: React.FC<AdminScreenProps> = ({ onBack, isBlocked, setIsBlock
                className="px-4 py-2 bg-green-600 hover:bg-green-500 font-bold rounded text-sm disabled:opacity-50"
              >
                USDCを取り出す
+             </button>
+             <button
+               onClick={withdrawCHH}
+               disabled={isLoading || !isConnected}
+               className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 font-bold rounded text-sm disabled:opacity-50"
+             >
+               CHHを取り出す
              </button>
           </div>
         </div>
