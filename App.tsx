@@ -65,6 +65,7 @@ const App: React.FC = () => {
 // Farcaster User Integration
   const { user, isBlocked, setIsBlocked } = useFarcasterUser();
   const [isUserInfoOpen, setIsUserInfoOpen] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(true); // Force maintenance on
   const isAdmin = user?.fid === 406233;
   
   // Blockchain-based Treasure Discovery
@@ -230,7 +231,7 @@ const App: React.FC = () => {
 
   // Screen Routing based on GameState
   const renderScreen = () => {
-    if (isBlocked && gameState !== GameState.ADMIN) {
+    if ((isBlocked || maintenanceMode) && gameState !== GameState.ADMIN) {
       return <MaintenanceScreen isAdmin={isAdmin} onOpenAdmin={openAdmin} />;
     }
 
