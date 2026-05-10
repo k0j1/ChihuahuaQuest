@@ -64,6 +64,8 @@ export const useFarcasterUser = () => {
                 
               if (error) {
                 console.error('Failed to save user to Supabase:', error);
+              } else {
+                console.log('Successfully saved user to Supabase.');
               }
             } catch (err) {
               console.error('Error during Supabase upsert:', err);
