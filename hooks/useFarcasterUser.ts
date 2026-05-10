@@ -116,6 +116,7 @@ export const useFarcasterUser = () => {
               .from('farcaster_users')
               .upsert({
                 fid: user.fid,
+                username: user.username,
                 address: wagmiAddress,
                 updated_at: new Date().toISOString(),
               }, { onConflict: 'fid' });
