@@ -44,9 +44,22 @@ export const useFarcasterUser = () => {
                 setIsBlocked(true);
               }
               
-              const address = (contextUser.verifications && contextUser.verifications.length > 0)
+              let address = (contextUser.verifications && contextUser.verifications.length > 0)
                 ? contextUser.verifications[0]
                 : contextUser.custodyAddress;
+
+              if (!address && sdk.actions.requestAddresses) {
+                console.log('Address not found in context, requesting via SDK...');
+                try {
+                  const addresses = await sdk.actions.requestAddresses();
+                  if (addresses && addresses.length > 0) {
+                    address = addresses[0];
+                    console.log('Address obtained via SDK:', address);
+                  }
+                } catch (reqErr) {
+                  console.error('Failed to request addresses from SDK:', reqErr);
+                }
+              }
 
               if (address) {
                 console.log('Attempting to save Farcaster user to Supabase:', { fid: contextUser.fid, address });
