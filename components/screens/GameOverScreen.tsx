@@ -11,9 +11,10 @@ interface GameOverScreenProps {
   collectedTreasures: Treasure[];
   onRestart: () => void;
   onClaimSuccess?: () => void;
+  lang: 'en' | 'ja';
 }
 
-const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collectedTreasures, onRestart, onClaimSuccess }) => {
+const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collectedTreasures, onRestart, onClaimSuccess, lang }) => {
   const isTimeUp = gameState === GameState.TIME_UP;
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -107,7 +108,16 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
 
   const handleShare = () => {
     const treasuresText = collectedTreasures.map(t => `- ${t.name}`).join('\n');
-    const text = `獲得報酬:
+    
+    const textEn = `Rewards Obtained:
+CHH Amount: ${gold} $CHH
+Treasures:
+${treasuresText}
+
+#ChihuahuaQuest
+https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
+
+    const textJa = `獲得報酬:
 CHH枚数: ${gold} $CHH
 宝物:
 ${treasuresText}
@@ -115,8 +125,10 @@ ${treasuresText}
 #ChihuahuaQuest
 https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
+    const text = lang === 'en' ? textEn : textJa;
+
     navigator.clipboard.writeText(text);
-    alert('共有用の文章をテキストコピーしました！');
+    alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
   };
 
   return (

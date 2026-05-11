@@ -347,6 +347,7 @@ const App: React.FC = () => {
             collectedTreasures={collectedTreasures} 
             onRestart={resetGame} 
             onClaimSuccess={() => setCanClaim(false)}
+            lang={lang}
             />
         );
 

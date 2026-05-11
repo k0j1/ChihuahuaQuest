@@ -90,7 +90,16 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja'
         .map(([stars, count]) => `★${stars}: ${count}`)
         .join('\n');
 
-    const text = `図鑑進捗: ${discoveredCount}/${total}
+    const textEn = `Catalog Progress: ${discoveredCount}/${total}
+Total Acquired: ${totalAcquired}/500
+
+【Rarity Stats】
+${rarityText}
+
+#ChihuahuaQuest
+https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
+
+    const textJa = `図鑑進捗: ${discoveredCount}/${total}
 累計獲得数: ${totalAcquired}/500
 
 【レアリティ別集計】
@@ -99,8 +108,10 @@ ${rarityText}
 #ChihuahuaQuest
 https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
+    const text = lang === 'en' ? textEn : textJa;
+
     navigator.clipboard.writeText(text);
-    alert('共有用の文章をテキストコピーしました！');
+    alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
   };
 
   const handleTreasureClick = (treasure: typeof TREASURE_REGISTRY[0]) => {
@@ -137,7 +148,7 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
             </button>
             <button 
                 onClick={handleShare}
-                className="absolute right-6 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
+                className="absolute right-20 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
             >
                 <Share2 className="w-7 h-7 drop-shadow-md" />
             </button>
