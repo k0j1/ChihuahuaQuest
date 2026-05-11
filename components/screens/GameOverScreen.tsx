@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Skull, Trophy, Star, Loader2 } from 'lucide-react';
+import { Clock, Skull, Trophy, Star, Loader2, Share2 } from 'lucide-react';
 import { GameState, Treasure } from '../../types';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
@@ -103,6 +103,20 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
     } finally {
         setIsClaiming(false);
     }
+  };
+
+  const handleShare = () => {
+    const treasuresText = collectedTreasures.map(t => `- ${t.name}`).join('\n');
+    const text = `獲得報酬:
+CHH枚数: ${gold} $CHH
+宝物:
+${treasuresText}
+
+#ChihuahuaQuest
+https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
+
+    navigator.clipboard.writeText(text);
+    alert('共有用の文章をテキストコピーしました！');
   };
 
   return (
@@ -209,6 +223,16 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
                 {isClaiming ? <Loader2 className="animate-spin w-5 h-5" /> : null}
                 {claimStatus?.includes('成功') ? '獲得済み！' : '報酬を獲得する ($CHH)'}
             </button>
+
+            {claimStatus?.includes('成功') && (
+              <button 
+                  onClick={handleShare}
+                  className="w-full py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 pixel-corners active:scale-95 transition-transform shadow-blue-200 shadow-lg border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2"
+              >
+                  <Share2 className="w-5 h-5" />
+                  共有する
+              </button>
+            )}
 
             <button 
                 onClick={onRestart}

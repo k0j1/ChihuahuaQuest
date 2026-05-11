@@ -71,6 +71,7 @@ const App: React.FC = () => {
   // Blockchain-based Treasure Discovery
   const [discoveredIds, setDiscoveredIds] = useState<number[]>([]);
   const [canClaim, setCanClaim] = useState(true); // Default to true for preview/fallback
+  const [remainingTime, setRemainingTime] = useState<string>('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [rewardsLoaded, setRewardsLoaded] = useState(false);
 
@@ -166,6 +167,36 @@ const App: React.FC = () => {
         fetchRewards();
     }, [publicClient, address, refreshTrigger]);
 
+  useEffect(() => {
+    if (canClaim) {
+        setRemainingTime('');
+        return;
+    }
+
+    const timer = setInterval(() => {
+      const now = new Date();
+      const nextReset = new Date(now);
+      nextReset.setUTCDate(nextReset.getUTCDate() + 1);
+      nextReset.setUTCHours(0, 0, 0, 0); // Assuming daily reset at 00:00 UTC
+      
+      const diff = nextReset.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setRefreshTrigger(prev => prev + 1);
+        clearInterval(timer);
+        return;
+      }
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setRemainingTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [canClaim]);
+
   // Ensure refresh when returning to TITLE
   useEffect(() => {
       if (gameState === GameState.TITLE) {
@@ -252,6 +283,7 @@ const App: React.FC = () => {
                         isAdmin={isAdmin}
                         canClaim={canClaim}
                         isBlocked={isBlocked}
+                        remainingTime={remainingTime}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />

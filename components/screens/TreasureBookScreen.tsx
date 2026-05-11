@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { TREASURE_REGISTRY } from '../../services/geminiService';
 import { Treasure } from '../../types';
-import { ArrowLeft, BookOpen, Star, Sparkles, Trophy } from 'lucide-react';
+import { ArrowLeft, BookOpen, Star, Sparkles, Trophy, Share2 } from 'lucide-react';
 import TreasureDialog from '../TreasureDialog';
 import { getRarity } from '../../constants';
 import { TreasureIcon } from '../TreasureIcon';
@@ -78,6 +78,31 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja'
     return Object.values(inventory).reduce((acc, item) => acc + item.count, 0);
   }, [inventory]);
 
+  const handleShare = () => {
+    const rarityStats = TREASURE_REGISTRY.reduce((acc, t) => {
+        const rarity = getRarity(t.value);
+        acc[rarity.stars] = (acc[rarity.stars] || 0) + (inventory[t.catalogId]?.count || 0);
+        return acc;
+    }, {} as Record<number, number>);
+
+    const rarityText = Object.entries(rarityStats)
+        .reverse()
+        .map(([stars, count]) => `★${stars}: ${count}`)
+        .join('\n');
+
+    const text = `図鑑進捗: ${discoveredCount}/${total}
+累計獲得数: ${totalAcquired}/500
+
+【レアリティ別集計】
+${rarityText}
+
+#ChihuahuaQuest
+https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
+
+    navigator.clipboard.writeText(text);
+    alert('共有用の文章をテキストコピーしました！');
+  };
+
   const handleTreasureClick = (treasure: typeof TREASURE_REGISTRY[0]) => {
       // Show dialog if discovered OR admin mode enabled
       if (discoveredIds.includes(treasure.catalogId) || (isAdmin && showAllAsAdmin)) {
@@ -109,6 +134,12 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja'
                 className="absolute left-6 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
             >
                 <ArrowLeft className="w-7 h-7 drop-shadow-md" />
+            </button>
+            <button 
+                onClick={handleShare}
+                className="absolute right-6 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
+            >
+                <Share2 className="w-7 h-7 drop-shadow-md" />
             </button>
             
             <div className="flex items-center gap-4 mb-4 relative">
