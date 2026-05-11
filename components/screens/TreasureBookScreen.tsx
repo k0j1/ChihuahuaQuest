@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import sdk from "@farcaster/frame-sdk";
 import { TREASURE_REGISTRY } from '../../services/geminiService';
 import { Treasure } from '../../types';
 import { ArrowLeft, BookOpen, Star, Sparkles, Trophy, Share2 } from 'lucide-react';
@@ -111,14 +112,9 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
     const text = lang === 'en' ? textEn : textJa;
 
     try {
-        if ((window as any).farcaster) {
-            await (window as any).farcaster.share({
-                text: text,
-            });
-        } else {
-            navigator.clipboard.writeText(text);
-            alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
-        }
+        await sdk.actions.share({
+            text: text,
+        });
     } catch (e) {
         navigator.clipboard.writeText(text);
         alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');

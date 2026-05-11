@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import sdk from "@farcaster/frame-sdk";
 import { Clock, Skull, Trophy, Star, Loader2, Share2 } from 'lucide-react';
 import { GameState, Treasure } from '../../types';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
@@ -128,14 +129,9 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
     const text = lang === 'en' ? textEn : textJa;
 
     try {
-        if ((window as any).farcaster) {
-            await (window as any).farcaster.share({
-                text: text,
-            });
-        } else {
-            navigator.clipboard.writeText(text);
-            alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
-        }
+        await sdk.actions.share({
+            text: text,
+        });
     } catch (e) {
         navigator.clipboard.writeText(text);
         alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
