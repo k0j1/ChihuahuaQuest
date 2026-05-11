@@ -126,14 +126,20 @@ ${treasuresText}
 #ChihuahuaQuest
 https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
-    const text = lang === 'en' ? textEn : textJa;
+    const baseText = lang === 'en' ? textEn : textJa;
+    
+    // Extract the URL and hashtag
+    const urlMatches = baseText.match(/(https?:\/\/[^\s]+)/g);
+    const appUrl = urlMatches ? urlMatches[urlMatches.length - 1] : 'https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest';
+    
+    // Text without the app URL (to pass as embed instead)
+    const textWithoutUrl = baseText.replace(appUrl, '').trim();
 
     try {
-        await sdk.actions.share({
-            text: text,
-        });
+        const intentUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(textWithoutUrl)}&embeds[]=${encodeURIComponent(appUrl)}`;
+        sdk.actions.openUrl(intentUrl);
     } catch (e) {
-        navigator.clipboard.writeText(text);
+        navigator.clipboard.writeText(baseText);
         alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
     }
   };
