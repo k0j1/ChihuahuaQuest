@@ -106,7 +106,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const treasuresText = collectedTreasures.map(t => `- ${t.name}`).join('\n');
     
     const textEn = `Rewards Obtained:
@@ -127,8 +127,19 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
     const text = lang === 'en' ? textEn : textJa;
 
-    navigator.clipboard.writeText(text);
-    alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+    try {
+        if ((window as any).farcaster) {
+            await (window as any).farcaster.share({
+                text: text,
+            });
+        } else {
+            navigator.clipboard.writeText(text);
+            alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+        }
+    } catch (e) {
+        navigator.clipboard.writeText(text);
+        alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+    }
   };
 
   return (

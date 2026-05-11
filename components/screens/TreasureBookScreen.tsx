@@ -78,7 +78,7 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja'
     return Object.values(inventory).reduce((acc, item) => acc + item.count, 0);
   }, [inventory]);
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const rarityStats = TREASURE_REGISTRY.reduce((acc, t) => {
         const rarity = getRarity(t.value);
         acc[rarity.stars] = (acc[rarity.stars] || 0) + (inventory[t.catalogId]?.count || 0);
@@ -110,8 +110,19 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
     const text = lang === 'en' ? textEn : textJa;
 
-    navigator.clipboard.writeText(text);
-    alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+    try {
+        if ((window as any).farcaster) {
+            await (window as any).farcaster.share({
+                text: text,
+            });
+        } else {
+            navigator.clipboard.writeText(text);
+            alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+        }
+    } catch (e) {
+        navigator.clipboard.writeText(text);
+        alert(lang === 'en' ? 'Copied to clipboard!' : '共有用の文章をテキストコピーしました！');
+    }
   };
 
   const handleTreasureClick = (treasure: typeof TREASURE_REGISTRY[0]) => {
@@ -145,12 +156,6 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                 className="absolute left-6 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
             >
                 <ArrowLeft className="w-7 h-7 drop-shadow-md" />
-            </button>
-            <button 
-                onClick={handleShare}
-                className="absolute right-20 top-10 p-2 text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 rounded-full transition-all active:scale-95 z-30"
-            >
-                <Share2 className="w-7 h-7 drop-shadow-md" />
             </button>
             
             <div className="flex items-center gap-4 mb-4 relative">
@@ -194,9 +199,17 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                 
                 <div className="flex flex-col items-center hidden md:flex">
                     <span className="text-[10px] md:text-xs text-[#daa520] tracking-widest uppercase font-bold mb-1">{lang === 'en' ? 'COMPLETION' : 'コンプリート率'}</span>
-                    <span className="font-mono font-bold text-xl md:text-2xl text-[#ffd700] drop-shadow-[0_2px_2px_rgba(184,134,11,0.8)]">
-                        {percentage}%
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-xl md:text-2xl text-[#ffd700] drop-shadow-[0_2px_2px_rgba(184,134,11,0.8)]">
+                          {percentage}%
+                      </span>
+                      <button 
+                          onClick={handleShare}
+                          className="p-1 rounded-full text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 transition-all active:scale-95"
+                      >
+                          <Share2 className="w-5 h-5" />
+                      </button>
+                    </div>
                 </div>
             </div>
             
@@ -204,6 +217,12 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
             <div className="flex md:hidden items-center justify-center gap-2 mt-3 text-sm">
                 <span className="text-[#daa520] font-bold">{lang === 'en' ? 'COMPLETION:' : 'コンプリート率:'}</span>
                 <span className="font-mono font-bold text-[#ffd700] drop-shadow-md pb-0.5">{percentage}%</span>
+                <button 
+                    onClick={handleShare}
+                    className="p-1 rounded-full text-[#daa520] hover:text-[#ffd700] hover:bg-white/5 transition-all active:scale-95"
+                >
+                    <Share2 className="w-4 h-4" />
+                </button>
             </div>
         </div>
 
