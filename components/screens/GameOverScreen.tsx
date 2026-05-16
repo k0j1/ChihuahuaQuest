@@ -27,22 +27,22 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   const copyError = () => {
     if (errorDetail) {
       navigator.clipboard.writeText(errorDetail);
-      setClaimStatus(prev => prev + " (コピーしました！)");
+      setClaimStatus(prev => prev + (lang === 'en' ? " (Copied!)" : " (コピーしました！)"));
     }
   };
 
   const handleClaim = async () => {
     if (!isConnected || !address) {
-       setClaimStatus("ウォレットが接続されていません");
+       setClaimStatus(lang === 'en' ? 'Wallet not connected' : 'ウォレットが接続されていません');
        return;
     }
     if (collectedTreasures.length === 0) {
-       setClaimStatus("獲得した財宝がありません");
+       setClaimStatus(lang === 'en' ? 'No treasures collected' : '獲得した財宝がありません');
        return;
     }
 
     setIsClaiming(true);
-    setClaimStatus("署名を取得中...");
+    setClaimStatus(lang === 'en' ? 'Fetching signature...' : '署名を取得中...');
     setErrorDetail(null); // Reset error
 
     try {
@@ -70,17 +70,17 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
 
         if (!res.ok) {
             const errorText = await res.text();
-            throw new Error(`署名の取得に失敗しました (Status: ${res.status}): ${errorText}`);
+            throw new Error(lang === 'en' ? `Failed to get signature (Status: ${res.status}): ${errorText}` : `署名の取得に失敗しました (Status: ${res.status}): ${errorText}`);
         }
 
         const data = await res.json();
         const signature = data.signature;
 
         if (!signature || !signature.startsWith('0x')) {
-            throw new Error("無効な署名データを受信しました: " + JSON.stringify(data));
+            throw new Error(lang === 'en' ? "Received invalid signature data: " + JSON.stringify(data) : "無効な署名データを受信しました: " + JSON.stringify(data));
         }
 
-        setClaimStatus("トランザクション送信中...");
+        setClaimStatus(lang === 'en' ? "Sending transaction..." : "トランザクション送信中...");
 
         const hash = await writeContractAsync({
             address: TREASURE_CONTRACT_ADDRESS,
@@ -89,18 +89,18 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
             args: [treasureIds.map(id => BigInt(id)), nonce, signature as `0x${string}`]
         });
 
-        setClaimStatus(`承認待ち... (${hash.slice(0, 10)}...)`);
+        setClaimStatus(lang === 'en' ? `Waiting for confirmation... (${hash.slice(0, 10)}...)` : `承認待ち... (${hash.slice(0, 10)}...)`);
 
         if (publicClient) {
             await publicClient.waitForTransactionReceipt({ hash });
         }
 
-        setClaimStatus("報酬の獲得に成功しました！");
+        setClaimStatus(lang === 'en' ? "Successfully claimed rewards!" : "報酬の獲得に成功しました！");
         if (onClaimSuccess) onClaimSuccess();
 
     } catch (err: any) {
         console.error(err);
-        setClaimStatus(`エラー: ${err.message || '不明なエラー'}`);
+        setClaimStatus(lang === 'en' ? `Error: ${err.message || 'Unknown error'}` : `エラー: ${err.message || '不明なエラー'}`);
         setErrorDetail(err.toString());
     } finally {
         setIsClaiming(false);
@@ -169,12 +169,12 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
              {isTimeUp ? (
                 <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-100 px-4 py-1 rounded-full">
                     <Clock size={18} /> 
-                    <span>タイムアップ！</span>
+                    <span>{lang === 'en' ? 'Time Up!' : 'タイムアップ！'}</span>
                 </div>
              ) : (
                 <div className="flex items-center justify-center gap-2 text-red-500 bg-red-100 px-4 py-1 rounded-full">
                     <Skull size={18} /> 
-                    <span>力尽きてしまった...</span>
+                    <span>{lang === 'en' ? 'You exhausted your energy...' : '力尽きてしまった...'}</span>
                 </div>
              )}
         </div>
@@ -189,13 +189,13 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
         {/* Treasure List */}
         <div className="w-full flex-1 min-h-0 flex flex-col mb-4">
             <h3 className="text-center text-gray-500 text-xs font-bold mb-2 tracking-widest uppercase flex items-center justify-center gap-2">
-                <span>獲得したお宝</span>
+                <span>{lang === 'en' ? 'Treasures Collected' : '獲得したお宝'}</span>
                 <span className="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{collectedTreasures.length}</span>
             </h3>
             
             {collectedTreasures.length === 0 ? (
                 <div className="bg-gray-100 rounded-lg p-8 text-center text-gray-400 border-2 border-dashed border-gray-300 font-bold">
-                    お宝ゼロ...次は頑張ろう！
+                    {lang === 'en' ? 'No treasures... Better luck next time!' : 'お宝ゼロ...次は頑張ろう！'}
                 </div>
             ) : (
                 <div className="bg-gray-50 rounded-lg p-2 overflow-y-auto max-h-[25vh] border-2 border-gray-200 space-y-2 scrollbar-hide">
@@ -205,8 +205,8 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                                 <TreasureIcon name={t.icon} value={t.value} className="w-6 h-6 text-gray-700" />
                             </div>
                             <div className="flex-1 min-w-0 text-left">
-                                <div className="text-sm font-bold truncate text-gray-800">{t.name}</div>
-                                <div className="text-[10px] text-gray-500 truncate">{t.description}</div>
+                                <div className="text-sm font-bold truncate text-gray-800">{lang === 'en' ? t.nameEn || t.name : t.name}</div>
+                                <div className="text-[10px] text-gray-500 truncate">{lang === 'en' ? (t.descriptionEn || t.description) : t.description}</div>
                             </div>
                             <div className="text-sm font-bold font-mono text-yellow-600">
                                 {t.value} $CHH
@@ -220,7 +220,7 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
         {/* Claim Status Message */}
         {claimStatus && (
             <div className="w-full mb-4">
-                <div className={`p-2 text-xs font-bold text-center rounded border ${claimStatus.includes('エラー') ? 'bg-red-100 text-red-600 border-red-300' : claimStatus.includes('成功') ? 'bg-green-100 text-green-600 border-green-300' : 'bg-blue-100 text-blue-600 border-blue-300'}`}>
+                <div className={`p-2 text-xs font-bold text-center rounded border ${claimStatus.includes('エラー') || claimStatus.includes('Error') ? 'bg-red-100 text-red-600 border-red-300' : claimStatus.includes('成功') || claimStatus.includes('Successfully') ? 'bg-green-100 text-green-600 border-green-300' : 'bg-blue-100 text-blue-600 border-blue-300'}`}>
                     {claimStatus}
                 </div>
                 {errorDetail && (
@@ -230,7 +230,7 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                             onClick={copyError}
                             className="block mt-1 w-full bg-slate-700 hover:bg-slate-600 text-white py-1 rounded"
                         >
-                            詳細をコピー
+                            {lang === 'en' ? 'Copy Details' : '詳細をコピー'}
                         </button>
                     </div>
                 )}
@@ -242,20 +242,20 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
         <div className="w-full flex flex-col gap-3">
             <button 
                 onClick={handleClaim}
-                disabled={isClaiming || collectedTreasures.length === 0 || claimStatus?.includes('成功')}
+                disabled={isClaiming || collectedTreasures.length === 0 || !!(claimStatus && (claimStatus.includes('成功') || claimStatus.includes('Successfully')))}
                 className="w-full py-3 bg-yellow-400 text-gray-900 font-bold rounded hover:bg-yellow-500 pixel-corners disabled:bg-gray-300 disabled:text-gray-500 transition-transform active:scale-95 shadow-lg border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2"
             >
                 {isClaiming ? <Loader2 className="animate-spin w-5 h-5" /> : null}
-                {claimStatus?.includes('成功') ? '獲得済み！' : '報酬を獲得する ($CHH)'}
+                {claimStatus && (claimStatus.includes('成功') || claimStatus.includes('Successfully')) ? (lang === 'en' ? 'Already Claimed!' : '獲得済み！') : (lang === 'en' ? 'Claim Rewards ($CHH)' : '報酬を獲得する ($CHH)')}
             </button>
 
-            {claimStatus?.includes('成功') && (
+            {claimStatus && (claimStatus.includes('成功') || claimStatus.includes('Successfully')) && (
               <button 
                   onClick={handleShare}
                   className="w-full py-3 bg-blue-500 text-white font-bold rounded hover:bg-blue-600 pixel-corners active:scale-95 transition-transform shadow-blue-200 shadow-lg border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 flex items-center justify-center gap-2"
               >
                   <Share2 className="w-5 h-5" />
-                  共有する
+                  {lang === 'en' ? 'Share' : '共有する'}
               </button>
             )}
 
@@ -263,7 +263,7 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                 onClick={onRestart}
                 className="w-full py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 pixel-corners active:scale-95 transition-transform shadow-red-200 shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1"
             >
-                タイトルへ戻る
+                {lang === 'en' ? 'Back to Title' : 'タイトルへ戻る'}
             </button>
         </div>
 

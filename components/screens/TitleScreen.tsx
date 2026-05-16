@@ -16,9 +16,10 @@ interface TitleScreenProps {
   canClaim: boolean;
   isBlocked?: boolean;
   remainingTime?: string;
+  lang: 'en' | 'ja';
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang }) => {
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
       
@@ -156,7 +157,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
               </div>
 
               {!canClaim && (
-                 <ResetCooldownButton onSuccess={onResetSuccess} />
+                 <ResetCooldownButton onSuccess={onResetSuccess} lang={lang} />
               )}
 
               {isAdmin && (

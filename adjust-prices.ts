@@ -186,7 +186,7 @@ for (let line of lines) {
         
         const nameMatchPrefix = line.match(/name:\s*"([^"]+)"/);
         if (nameMatchPrefix && nameMatchPrefix[1] && prefixVals[nameMatchPrefix[1]]) {
-            let pStr = typeof prefixVals[nameMatchPrefix[1]] === 'number' ? prefixVals[nameMatchPrefix[1]].toFixed(1) : prefixVals[nameMatchPrefix[1]];
+            let pStr = typeof prefixVals[nameMatchPrefix[1]] === 'number' ? prefixVals[nameMatchPrefix[1]].toFixed(1) : String(prefixVals[nameMatchPrefix[1]]);
             if (pStr.endsWith(".0")) pStr = pStr.substring(0, pStr.length - 2); 
             line = line.replace(/valueMod: [\d\.]+/, `valueMod: ${pStr}`);
         }
