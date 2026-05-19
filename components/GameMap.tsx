@@ -377,15 +377,6 @@ const GameMap: React.FC<GameMapProps> = ({
               <h1 className="text-6xl md:text-8xl font-bold text-red-600 pixel-text-shadow tracking-tighter animate-bounce-in">
                   GAME OVER
               </h1>
-              <style>{`
-                  @keyframes fade-in-slow {
-                      0% { opacity: 0; }
-                      100% { opacity: 1; }
-                  }
-                  .animate-fade-in-slow {
-                      animation: fade-in-slow 1s ease-out forwards;
-                  }
-              `}</style>
           </div>
       )}
     </div>

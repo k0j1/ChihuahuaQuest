@@ -24,23 +24,6 @@ const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
 
     return (
       <div className={`${wrapperClass} animate-wiggle`}>
-        <style>{`
-          @keyframes wiggle {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-2px) rotate(-5deg); }
-            75% { transform: translateX(2px) rotate(5deg); }
-          }
-          .animate-wiggle {
-            animation: wiggle 0.5s infinite ease-in-out;
-          }
-          @keyframes poison-splash {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(3); opacity: 0; }
-          }
-          .animate-poison {
-            animation: poison-splash 0.5s ease-out forwards;
-          }
-        `}</style>
         
         {isDefeated && isVenomous && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -75,20 +58,6 @@ const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
   if (enemy.type === 'GHOST') {
     return (
         <div className={`${wrapperClass} animate-float opacity-80`}>
-          <style>{`
-            @keyframes float {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-4px); }
-            }
-            .animate-float {
-              animation: float 2s infinite ease-in-out;
-            }
-            @keyframes ghost-die {
-              0% { transform: scale(1); opacity: 0.8; }
-              100% { transform: scale(2); opacity: 0; }
-            }
-            .animate-ghost-die { animation: ghost-die 0.5s forwards; }
-          `}</style>
           
           {isDefeated && (
             <div className="absolute w-12 h-12 rounded-full border-4 border-blue-300 animate-ghost-die"></div>
@@ -120,30 +89,6 @@ const Enemy: React.FC<EnemyProps> = ({ enemy }) => {
 
   return (
     <div className={`${wrapperClass} animate-bounce-slow`}>
-      <style>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: scale(1, 1) translateY(0); }
-          50% { transform: scale(1.1, 0.9) translateY(4px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 1.5s infinite ease-in-out;
-        }
-        @keyframes split-left {
-          0% { transform: translate(0, 0) scale(1); opacity: 1; }
-          100% { transform: translate(-20px, -10px) scale(0.5); opacity: 0; }
-        }
-        @keyframes split-right {
-          0% { transform: translate(0, 0) scale(1); opacity: 1; }
-          100% { transform: translate(20px, -10px) scale(0.5); opacity: 0; }
-        }
-        .animate-split-left { animation: split-left 0.5s ease-out forwards; }
-        .animate-split-right { animation: split-right 0.5s ease-out forwards; }
-        @keyframes slime-die {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
-        }
-        .animate-slime-die { animation: slime-die 0.5s ease-out forwards; }
-      `}</style>
       
       {isDefeated && isSplitting ? (
           // Split animation rendering

@@ -108,7 +108,7 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   };
 
   const handleShare = async () => {
-    const treasuresText = collectedTreasures.map(t => `- ${t.name}`).join('\n');
+    const treasuresText = collectedTreasures.map(t => `- ${lang === 'en' ? t.nameEn || t.name : t.name}`).join('\n');
     
     const textEn = `Rewards Obtained:
 CHH Amount: ${gold} $CHH
@@ -268,24 +268,6 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
         </div>
 
       </div>
-
-      <style>{`
-        @keyframes bounce-in {
-          0% { transform: scale(0.9); opacity: 0; }
-          50% { transform: scale(1.02); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-bounce-in {
-          animation: bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };

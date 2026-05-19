@@ -22,63 +22,6 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, i
   // CSS for pixel art chihuahua and digging effect
   return (
     <div className={`relative w-full h-full flex items-center justify-center ${animationClass}`}>
-      <style>{`
-        @keyframes bounce-short {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
-        }
-        .animate-bounce-short {
-          animation: bounce-short 0.3s infinite;
-        }
-
-        @keyframes dig {
-          0% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(2px) rotate(-10deg); }
-          50% { transform: translateY(4px) rotate(0deg); }
-          75% { transform: translateY(2px) rotate(10deg); }
-          100% { transform: translateY(0) rotate(0deg); }
-        }
-        .animate-dig {
-          animation: dig 0.2s infinite;
-        }
-
-        @keyframes defeat {
-            0% { transform: scale(1) rotate(0deg); filter: grayscale(0%); }
-            20% { transform: scale(1.3) rotate(-20deg); filter: grayscale(0%); }
-            50% { transform: scale(1.0) rotate(180deg); filter: grayscale(50%); }
-            100% { transform: scale(0.8) rotate(360deg) translateY(10px); opacity: 0.6; filter: grayscale(100%); }
-        }
-        .animate-defeat {
-            animation: defeat 1.5s forwards ease-in-out;
-        }
-        
-        @keyframes throw-left {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(-25px, -15px) scale(0.5) rotate(-180deg); opacity: 0; }
-        }
-        .animate-throw-left {
-            animation: throw-left 0.4s infinite ease-out;
-        }
-
-        @keyframes throw-right {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(25px, -15px) scale(0.5) rotate(180deg); opacity: 0; }
-        }
-        .animate-throw-right {
-            animation: throw-right 0.4s infinite ease-out 0.2s; /* Delayed for staggered effect */
-        }
-
-        @keyframes shovel-dig {
-             0% { transform: rotate(15deg) translateY(0) translateX(2px); }
-             50% { transform: rotate(-25deg) translateY(8px) translateX(-4px); }
-             100% { transform: rotate(15deg) translateY(0) translateX(2px); }
-        }
-        .animate-shovel {
-            animation: shovel-dig 0.4s infinite ease-in-out;
-            transform-origin: bottom center;
-        }
-      `}</style>
-      
       {/* Dirt Particles & Shovel (Visible only when digging) */}
       {isDigging && (
         <>
