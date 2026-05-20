@@ -238,6 +238,34 @@ initialRegistry.sort((a, b) => a.catalogId - b.catalogId);
 
 export const TREASURE_REGISTRY: Omit<Treasure, 'id'>[] = initialRegistry;
 
+interface ProbMods {
+    legendary: number;
+    epic: number;
+    common: number;
+}
+
+const DEFAULT_MODS: ProbMods = {
+    legendary: 20,
+    epic: 40,
+    common: 600
+};
+
+const getProbMods = (): ProbMods => {
+    if (typeof window === 'undefined') return { ...DEFAULT_MODS };
+    try {
+        const stored = localStorage.getItem('cq_prob_mods');
+        if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return { ...DEFAULT_MODS };
+};
+
+const saveProbMods = (mods: ProbMods) => {
+    if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem('cq_prob_mods', JSON.stringify(mods));
+    } catch (e) {}
+};
+
 export const generateTreasure = async (excludedIds: number[] = []): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -246,13 +274,14 @@ export const generateTreasure = async (excludedIds: number[] = []): Promise<Trea
       availableRegistry = TREASURE_REGISTRY;
   }
 
+  const mods = getProbMods();
   let totalWeight = 0;
   const weightedRegistry = availableRegistry.map(t => {
-      let weight = 600; // Common (< 100): 50items * 600 = 30,000 (約 30%)
-      if (t.value >= 15000) weight = 20; // Legendary (>= 15000): 51items * 20 = 1020 (約 1%)
-      else if (t.value >= 5000) weight = 40; // Epic (>= 5000): 99items * 40 = 3960 (約 4%)
-      else if (t.value >= 1000) weight = 167; // Rare (>= 1000): 150items * 167 = 25050 (約 25%)
-      else if (t.value >= 100) weight = 267; // Uncommon (>= 100): 150items * 267 = 40050 (約 40%)
+      let weight = mods.common; // Common (< 100)
+      if (t.value >= 15000) weight = mods.legendary; // Legendary (>= 15000)
+      else if (t.value >= 5000) weight = mods.epic; // Epic (>= 5000)
+      else if (t.value >= 1000) weight = 167; // Rare (>= 1000)
+      else if (t.value >= 100) weight = 267; // Uncommon (>= 100)
 
       totalWeight += weight;
       return { item: t, weight };
@@ -267,6 +296,45 @@ export const generateTreasure = async (excludedIds: number[] = []): Promise<Trea
       }
       random -= wt.weight;
   }
+  
+  const val = selectedTreasure.value;
+  let modified = false;
+
+  const getCount = (minVal: number, maxVal: number) => TREASURE_REGISTRY.filter(t => t.value >= minVal && t.value < maxVal).length;
+  const legCount = getCount(15000, Infinity);
+  const epiCount = getCount(5000, 15000);
+  const comCount = getCount(0, 100);
+
+  if (val >= 15000) { 
+      const dec = mods.legendary / 2;
+      mods.legendary -= dec;
+      mods.common += (dec * legCount) / comCount;
+      modified = true;
+  } else if (val >= 5000 && val < 15000) { 
+      const dec = mods.epic / 2;
+      mods.epic -= dec;
+      mods.common += (dec * epiCount) / comCount;
+      modified = true;
+  } else if (val < 100) {
+      const legIncrRate = 50 / (legCount || 1);
+      const epiIncrRate = 50 / (epiCount || 1);
+      
+      let actualLegIncr = Math.max(0, Math.min(legIncrRate, DEFAULT_MODS.legendary - mods.legendary));
+      let actualEpiIncr = Math.max(0, Math.min(epiIncrRate, DEFAULT_MODS.epic - mods.epic));
+      
+      if (actualLegIncr > 0 || actualEpiIncr > 0) {
+          mods.legendary += actualLegIncr;
+          mods.epic += actualEpiIncr;
+          
+          const totalInc = (actualLegIncr * legCount) + (actualEpiIncr * epiCount);
+          mods.common -= totalInc / (comCount || 1);
+          if (mods.common < 50) mods.common = 50; 
+          
+          modified = true;
+      }
+  }
+
+  if (modified) saveProbMods(mods);
 
   return {
     id: crypto.randomUUID(), 

@@ -20,6 +20,14 @@ interface TitleScreenProps {
 }
 
 const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang }) => {
+const [isLocallyReset, setIsLocallyReset] = React.useState(false);
+  const actualCanClaim = canClaim || isLocallyReset;
+
+  const handleResetSuccess = () => {
+    setIsLocallyReset(true);
+    onResetSuccess();
+  };
+
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
       
@@ -142,13 +150,13 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
               {/* START BUTTON */}
               <button 
                 onClick={onStart}
-                disabled={!canClaim || !!isBlocked}
-                className={`group relative flex items-center justify-center w-full py-6 bg-gradient-to-b ${!isBlocked && canClaim ? 'from-red-500 to-red-700 hover:from-red-400 hover:to-red-600' : 'from-gray-500 to-gray-700'} text-white border-2 border-white/40 shadow-[0_6px_0_#7f1d1d,0_10px_10px_rgba(0,0,0,0.5)] active:shadow-[0_2px_0_#7f1d1d,0_4px_4px_rgba(0,0,0,0.5)] active:translate-y-1 transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
+                disabled={!actualCanClaim || !!isBlocked}
+                className={`group relative flex items-center justify-center w-full py-6 bg-gradient-to-b ${!isBlocked && actualCanClaim ? 'from-red-500 to-red-700 hover:from-red-400 hover:to-red-600' : 'from-gray-500 to-gray-700'} text-white border-2 border-white/40 shadow-[0_6px_0_#7f1d1d,0_10px_10px_rgba(0,0,0,0.5)] active:shadow-[0_2px_0_#7f1d1d,0_4px_4px_rgba(0,0,0,0.5)] active:translate-y-1 transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="absolute inset-0 rounded-xl border-4 border-white/10"></div>
                 <Play className="w-8 h-8 mr-3 fill-current group-hover:animate-pulse filter drop-shadow-md" />
                 <span className="text-3xl font-bold tracking-widest pixel-text-shadow">
-                  {isBlocked ? 'MAINTENANCE' : canClaim ? 'START' : `RESET IN ${remainingTime || '...'}`}
+                  {isBlocked ? 'MAINTENANCE' : actualCanClaim ? 'START' : `RESET IN ${remainingTime || '...'}`}
                 </span>
               </button>
 
@@ -156,8 +164,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLi
               <div className="flex gap-4 w-full">
               </div>
 
-              {!canClaim && (
-                 <ResetCooldownButton onSuccess={onResetSuccess} lang={lang} />
+              {!actualCanClaim && (
+                 <ResetCooldownButton onSuccess={handleResetSuccess} lang={lang} />
               )}
 
               {isAdmin && (
