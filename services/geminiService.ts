@@ -266,6 +266,23 @@ const saveProbMods = (mods: ProbMods) => {
     } catch (e) {}
 };
 
+let sessionProbMods: ProbMods | null = null;
+
+export const startGameSession = () => {
+    sessionProbMods = getProbMods();
+};
+
+export const commitGameSession = () => {
+    if (sessionProbMods) {
+        saveProbMods(sessionProbMods);
+    }
+    sessionProbMods = null; // reset for next time (or next game)
+};
+
+export const revertGameSession = () => {
+    sessionProbMods = null;
+};
+
 export const generateTreasure = async (excludedIds: number[] = []): Promise<Treasure> => {
   await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -274,7 +291,8 @@ export const generateTreasure = async (excludedIds: number[] = []): Promise<Trea
       availableRegistry = TREASURE_REGISTRY;
   }
 
-  const mods = getProbMods();
+  // Use session mods if available, else fallback to stored mods
+  const mods = sessionProbMods ? { ...sessionProbMods } : getProbMods();
   let totalWeight = 0;
   const weightedRegistry = availableRegistry.map(t => {
       let weight = mods.common; // Common (< 100)
@@ -334,7 +352,13 @@ export const generateTreasure = async (excludedIds: number[] = []): Promise<Trea
       }
   }
 
-  if (modified) saveProbMods(mods);
+  if (modified) {
+      if (sessionProbMods) {
+          Object.assign(sessionProbMods, mods);
+      } else {
+          sessionProbMods = mods;
+      }
+  }
 
   return {
     id: crypto.randomUUID(), 

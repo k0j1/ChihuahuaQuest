@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePublicClient, useAccount } from 'wagmi';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from './constants';
-import { TREASURE_REGISTRY } from './services/geminiService';
+import { TREASURE_REGISTRY, commitGameSession, revertGameSession } from './services/geminiService';
 import { GameState } from './types';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useFarcasterUser } from './hooks/useFarcasterUser';
@@ -270,7 +270,7 @@ const App: React.FC = () => {
         return (
          <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.5
+                   Ver 1.0.6
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -303,7 +303,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.5
+                   Ver 1.0.6
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
@@ -346,7 +346,7 @@ const App: React.FC = () => {
             gold={gold} 
             collectedTreasures={collectedTreasures} 
             onRestart={resetGame} 
-            onClaimSuccess={() => setCanClaim(false)}
+            onClaimSuccess={() => { setCanClaim(false); commitGameSession(); }}
             lang={lang}
             />
         );

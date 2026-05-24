@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { GameState, TileType, Position, Direction, Treasure, Enemy, EnemyTypeStr } from '../types';
 import { GAME_CONFIG, ENEMY_STATS } from '../constants';
 import { generateMap } from '../utils/mapGenerator';
-import { generateTreasure } from '../services/geminiService';
+import { generateTreasure, startGameSession, revertGameSession } from '../services/geminiService';
 import { findPath, isWalkable } from '../utils/pathfinding'; // Import pathfinding and isWalkable
 
 export const useGameEngine = () => {
@@ -102,6 +102,7 @@ export const useGameEngine = () => {
 
   // Initialize Game
   const startGame = useCallback(() => {
+    startGameSession();
     const { tiles, startPos, treasureMap, enemies: initialEnemies } = generateMap(GAME_CONFIG.MAP_WIDTH, GAME_CONFIG.MAP_HEIGHT);
     const initialMapData = { tiles, treasureMap };
     setMapData(initialMapData);
@@ -134,6 +135,7 @@ export const useGameEngine = () => {
   }, []);
 
   const resetGame = useCallback(() => {
+    revertGameSession();
     setGameState(GameState.TITLE);
   }, []);
 
