@@ -1,14 +1,15 @@
 import React from 'react';
-import { Direction } from '../types';
+import { Direction, SkinType } from '../types';
 
 interface ChihuahuaProps {
   direction: Direction;
   isMoving: boolean;
   isDigging: boolean;
   isDefeated?: boolean;
+  skin?: SkinType;
 }
 
-const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, isDefeated = false }) => {
+const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, isDefeated = false, skin = SkinType.DEFAULT }) => {
   // Determine animation class
   let animationClass = "";
   if (isDefeated) {
@@ -18,6 +19,44 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, i
   } else if (isMoving) {
     animationClass = "animate-bounce-short";
   }
+
+  // Skin color configs
+  const skinColors = {
+    [SkinType.DEFAULT]: {
+      head: "bg-yellow-200",
+      ears: "bg-yellow-700",
+      body: "bg-yellow-600",
+      tail: "bg-yellow-200",
+      legs: "bg-yellow-800",
+      paws: "bg-yellow-500"
+    },
+    [SkinType.WHITE]: {
+      head: "bg-slate-100",
+      ears: "bg-slate-300",
+      body: "bg-slate-200",
+      tail: "bg-slate-100",
+      legs: "bg-slate-400",
+      paws: "bg-slate-300"
+    },
+    [SkinType.BLACK]: {
+      head: "bg-zinc-800",
+      ears: "bg-zinc-950",
+      body: "bg-zinc-700",
+      tail: "bg-zinc-800",
+      legs: "bg-black",
+      paws: "bg-zinc-600"
+    },
+    [SkinType.GOLD]: {
+      head: "bg-yellow-300",
+      ears: "bg-amber-500",
+      body: "bg-yellow-400",
+      tail: "bg-yellow-300",
+      legs: "bg-amber-600",
+      paws: "bg-amber-400"
+    }
+  };
+
+  const colors = skinColors[skin] || skinColors[SkinType.DEFAULT];
 
   // CSS for pixel art chihuahua and digging effect
   return (
@@ -46,15 +85,15 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, i
         direction === Direction.LEFT && !isDefeated ? 'scale-x-[-1]' : ''
       }`}>
         {/* Head */}
-        <div className="absolute top-1 left-2 w-6 h-5 bg-yellow-200 pixel-corners">
+        <div className={`absolute top-1 left-2 w-6 h-5 ${colors.head} pixel-corners`}>
           {/* Ears */}
-          <div className="absolute -top-2 -left-1 w-2 h-3 bg-yellow-700"></div>
-          <div className="absolute -top-2 right-0 w-2 h-3 bg-yellow-700"></div>
+          <div className={`absolute -top-2 -left-1 w-2 h-3 ${colors.ears}`}></div>
+          <div className={`absolute -top-2 right-0 w-2 h-3 ${colors.ears}`}></div>
           {/* Eyes (Change to X when defeated) */}
           {isDefeated ? (
              <>
-                <div className="absolute top-2 left-1 text-[8px] leading-none font-bold text-black">X</div>
-                <div className="absolute top-2 right-1 text-[8px] leading-none font-bold text-black">X</div>
+                <div className="absolute top-2 left-1 text-[8px] leading-none font-bold text-red-500">X</div>
+                <div className="absolute top-2 right-1 text-[8px] leading-none font-bold text-red-500">X</div>
              </>
           ) : (
              <>
@@ -67,18 +106,18 @@ const Chihuahua: React.FC<ChihuahuaProps> = ({ direction, isMoving, isDigging, i
         </div>
         
         {/* Body */}
-        <div className="absolute top-6 left-3 w-4 h-3 bg-yellow-600 pixel-corners">
+        <div className={`absolute top-6 left-3 w-4 h-3 ${colors.body} pixel-corners`}>
           {/* Tail */}
-          <div className={`absolute top-0 -left-2 w-2 h-1 bg-yellow-200 origin-right ${isDigging ? 'animate-bounce' : 'animate-pulse'}`}></div>
+          <div className={`absolute top-0 -left-2 w-2 h-1 ${colors.tail} origin-right ${isDigging ? 'animate-bounce' : 'animate-pulse'}`}></div>
         </div>
 
         {/* Legs (visible based on direction slightly) */}
-        <div className="absolute top-9 left-3 w-1 h-1 bg-yellow-800"></div>
-        <div className="absolute top-9 left-6 w-1 h-1 bg-yellow-800"></div>
+        <div className={`absolute top-9 left-3 w-1 h-1 ${colors.legs}`}></div>
+        <div className={`absolute top-9 left-6 w-1 h-1 ${colors.legs}`}></div>
         
         {/* Paws (Visible when digging) */}
         {isDigging && (
-            <div className="absolute top-8 left-2 w-6 h-2 bg-yellow-500 blur-[1px]"></div>
+            <div className={`absolute top-8 left-2 w-6 h-2 ${colors.paws} blur-[1px]`}></div>
         )}
       </div>
     </div>

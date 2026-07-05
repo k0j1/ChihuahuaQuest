@@ -1,9 +1,9 @@
 import React from 'react';
-import { MapPin, BookOpen, FileText, Play, Settings } from 'lucide-react';
+import { MapPin, BookOpen, FileText, Play, Settings, PaintBucket } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants';
 import Chihuahua from '../Chihuahua';
 import Enemy from '../Enemy';
-import { Direction } from '../../types';
+import { Direction, SkinType } from '../../types';
 import ResetCooldownButton from '../ResetCooldownButton';
 
 interface TitleScreenProps {
@@ -17,15 +17,24 @@ interface TitleScreenProps {
   isBlocked?: boolean;
   remainingTime?: string;
   lang: 'en' | 'ja';
+  currentSkin: SkinType;
+  unlockedSkins: SkinType[];
+  onChangeSkin: (skin: SkinType) => void;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang, currentSkin, unlockedSkins, onChangeSkin }) => {
 const [isLocallyReset, setIsLocallyReset] = React.useState(false);
   const actualCanClaim = canClaim || isLocallyReset;
 
   const handleResetSuccess = () => {
     setIsLocallyReset(true);
     onResetSuccess();
+  };
+
+  const handleNextSkin = () => {
+    const currentIndex = unlockedSkins.indexOf(currentSkin);
+    const nextIndex = (currentIndex + 1) % unlockedSkins.length;
+    onChangeSkin(unlockedSkins[nextIndex]);
   };
 
   return (
@@ -107,7 +116,15 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
 
       {/* Main Character: Chihuahua */}
       <div className="absolute bottom-[35%] left-[42%] z-40 scale-[2.5]">
-          <Chihuahua direction={Direction.RIGHT} isMoving={false} isDigging={false} />
+          <Chihuahua direction={Direction.RIGHT} isMoving={false} isDigging={false} skin={currentSkin} />
+          {unlockedSkins.length > 1 && (
+            <button 
+              onClick={handleNextSkin} 
+              className="absolute -top-4 -right-8 pointer-events-auto bg-white/20 hover:bg-white/40 p-1 rounded-full backdrop-blur-sm transition-colors text-white"
+            >
+              <PaintBucket size={10} />
+            </button>
+          )}
       </div>
 
       {/* Enemy: Slime */}

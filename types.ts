@@ -76,6 +76,13 @@ export interface FarcasterUser {
   custodyAddress?: string;
 }
 
+export enum SkinType {
+  DEFAULT = 'DEFAULT',
+  WHITE = 'WHITE',
+  BLACK = 'BLACK',
+  GOLD = 'GOLD',
+}
+
 // Config Types
 export interface MapConfig {
   width: number;
