@@ -126,7 +126,7 @@ export const useGameEngine = (lang: 'en' | 'ja' = 'ja') => {
     setCollectedTreasures([]);
     setTimeLeft(GAME_CONFIG.GAME_DURATION);
     setGameState(GameState.PLAYING);
-    setSysMessage("マップをタップして移動＆穴掘り！");
+    setSysMessage(lang === 'en' ? "Tap the map to move & dig!" : "マップをタップして移動＆穴掘り！");
     setTimeout(() => setSysMessage(null), 3000);
     setFoundTreasure(null);
     setIsGeneratingTreasure(false);
@@ -252,7 +252,7 @@ export const useGameEngine = (lang: 'en' | 'ja' = 'ja') => {
                 setGameState(GameState.TREASURE_FOUND);
             } catch (e) {
                 setGameState(GameState.PLAYING);
-                setSysMessage("...何かあったようだが消えてしまったワン");
+                setSysMessage(lang === 'en' ? "...Something was here but vanished, woof" : "...何かあったようだが消えてしまったワン");
                 setTimeout(() => setSysMessage(null), 1500);
             } finally {
                 setIsGeneratingTreasure(false);

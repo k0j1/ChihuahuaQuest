@@ -126,7 +126,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang
                 className="flex items-center justify-center gap-2 w-full py-3 bg-purple-600 text-white font-bold rounded pixel-corners hover:bg-purple-700 active:translate-y-1 transition-all"
             >
                 <ExternalLink size={16} />
-                Warpcastで見る
+                {lang === 'en' ? 'View on Warpcast' : 'Warpcastで見る'}
             </a>
         </div>
       </div>
