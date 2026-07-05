@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePublicClient, useAccount } from 'wagmi';
 import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from './constants';
 import { TREASURE_REGISTRY, commitGameSession, revertGameSession } from './services/geminiService';
-import { GameState, SkinType } from './types';
+import { GameState, CharacterType } from './types';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useFarcasterUser } from './hooks/useFarcasterUser';
 
@@ -28,14 +28,14 @@ const App: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [treasureInventory, setTreasureInventory] = useState<Record<string, { count: number, lastFound: number }>>({});
   
-  const [currentSkin, setCurrentSkin] = useState<SkinType>(() => {
-      const saved = localStorage.getItem('playerSkin');
-      return (saved as SkinType) || SkinType.DEFAULT;
+  const [currentCharacter, setCurrentCharacter] = useState<CharacterType>(() => {
+      const saved = localStorage.getItem('playerCharacter');
+      return (saved as CharacterType) || CharacterType.CHIHUAHUA;
   });
 
   useEffect(() => {
-      localStorage.setItem('playerSkin', currentSkin);
-  }, [currentSkin]);
+      localStorage.setItem('playerCharacter', currentCharacter);
+  }, [currentCharacter]);
   const publicClient = usePublicClient();
   const { address } = useAccount();
 
@@ -247,13 +247,13 @@ const App: React.FC = () => {
     }
   }, [gameState]);
 
-  const unlockedSkins = React.useMemo(() => {
+  const unlockedCharacters = React.useMemo(() => {
     const totalAcquired = Object.values(treasureInventory).reduce((acc, item) => acc + item.count, 0);
-    const skins = [SkinType.DEFAULT];
-    if (totalAcquired >= 20) skins.push(SkinType.WHITE);
-    if (totalAcquired >= 50) skins.push(SkinType.BLACK);
-    if (totalAcquired >= 100) skins.push(SkinType.GOLD);
-    return skins;
+    const characters = [CharacterType.CHIHUAHUA];
+    if (totalAcquired >= 20) characters.push(CharacterType.CAT);
+    if (totalAcquired >= 50) characters.push(CharacterType.SHIBA);
+    if (totalAcquired >= 100) characters.push(CharacterType.RABBIT);
+    return characters;
   }, [treasureInventory]);
 
   // Common UI Wrapper logic to include User Badge everywhere
@@ -302,9 +302,9 @@ const App: React.FC = () => {
                         isBlocked={isBlocked}
                         remainingTime={remainingTime}
                         lang={lang}
-                        currentSkin={currentSkin}
-                        unlockedSkins={unlockedSkins}
-                        onChangeSkin={setCurrentSkin}
+                        currentCharacter={currentCharacter}
+                        unlockedCharacters={unlockedCharacters}
+                        onChangeCharacter={setCurrentCharacter}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
@@ -393,7 +393,7 @@ const App: React.FC = () => {
                 panCamera={panCamera}
                 isPendingDig={isPendingDig}
                 isDefeated={gameState === GameState.DYING}
-                skin={currentSkin}
+                characterType={currentCharacter}
                 />
             )}
 

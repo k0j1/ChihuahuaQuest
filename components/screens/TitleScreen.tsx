@@ -1,9 +1,9 @@
 import React from 'react';
 import { MapPin, BookOpen, FileText, Play, Settings, PaintBucket } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants';
-import Chihuahua from '../Chihuahua';
+import PlayerCharacter from '../PlayerCharacter';
 import Enemy from '../Enemy';
-import { Direction, SkinType } from '../../types';
+import { Direction, CharacterType } from '../../types';
 import ResetCooldownButton from '../ResetCooldownButton';
 
 interface TitleScreenProps {
@@ -17,12 +17,12 @@ interface TitleScreenProps {
   isBlocked?: boolean;
   remainingTime?: string;
   lang: 'en' | 'ja';
-  currentSkin: SkinType;
-  unlockedSkins: SkinType[];
-  onChangeSkin: (skin: SkinType) => void;
+  currentCharacter: CharacterType;
+  unlockedCharacters: CharacterType[];
+  onChangeCharacter: (character: CharacterType) => void;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang, currentSkin, unlockedSkins, onChangeSkin }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang, currentCharacter, unlockedCharacters, onChangeCharacter }) => {
 const [isLocallyReset, setIsLocallyReset] = React.useState(false);
   const actualCanClaim = canClaim || isLocallyReset;
 
@@ -31,10 +31,10 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
     onResetSuccess();
   };
 
-  const handleNextSkin = () => {
-    const currentIndex = unlockedSkins.indexOf(currentSkin);
-    const nextIndex = (currentIndex + 1) % unlockedSkins.length;
-    onChangeSkin(unlockedSkins[nextIndex]);
+  const handleNextCharacter = () => {
+    const currentIndex = unlockedCharacters.indexOf(currentCharacter);
+    const nextIndex = (currentIndex + 1) % unlockedCharacters.length;
+    onChangeCharacter(unlockedCharacters[nextIndex]);
   };
 
   return (
@@ -114,12 +114,12 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
            </div>
       </div>
 
-      {/* Main Character: Chihuahua */}
+      {/* Main Character: Player */}
       <div className="absolute bottom-[35%] left-[42%] z-40 scale-[2.5]">
-          <Chihuahua direction={Direction.RIGHT} isMoving={false} isDigging={false} skin={currentSkin} />
-          {unlockedSkins.length > 1 && (
+          <PlayerCharacter direction={Direction.RIGHT} isMoving={false} isDigging={false} characterType={currentCharacter} />
+          {unlockedCharacters.length > 1 && (
             <button 
-              onClick={handleNextSkin} 
+              onClick={handleNextCharacter} 
               className="absolute -top-4 -right-8 pointer-events-auto bg-white/20 hover:bg-white/40 p-1 rounded-full backdrop-blur-sm transition-colors text-white"
             >
               <PaintBucket size={10} />

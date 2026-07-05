@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useRef, useEffect, memo } from 'react';
-import { TileType, Position, Direction, Enemy as EnemyType, SkinType } from '../types';
+import { TileType, Position, Direction, Enemy as EnemyType, CharacterType } from '../types';
 import { GAME_CONFIG } from '../constants';
-import Chihuahua from './Chihuahua';
+import PlayerCharacter from './PlayerCharacter';
 import Enemy from './Enemy';
 import { Shovel } from 'lucide-react';
 
@@ -19,7 +19,7 @@ interface GameMapProps {
   panCamera: (dx: number, dy: number) => void;
   isPendingDig?: boolean;
   isDefeated?: boolean;
-  skin?: SkinType;
+  characterType?: CharacterType;
 }
 
 const getTileClass = (type: TileType) => {
@@ -132,7 +132,7 @@ const GameMap: React.FC<GameMapProps> = ({
     panCamera,
     isPendingDig = false,
     isDefeated = false,
-    skin
+    characterType
 }) => {
   const tileSize = GAME_CONFIG.TILE_SIZE;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -368,7 +368,7 @@ const GameMap: React.FC<GameMapProps> = ({
             transform: `translate3d(${playerPos.x * tileSize}px, ${playerPos.y * tileSize}px, 0)`
           }}
         >
-          <Chihuahua direction={direction} isMoving={isMoving} isDigging={isDigging} isDefeated={isDefeated} skin={skin} />
+          <PlayerCharacter direction={direction} isMoving={isMoving} isDigging={isDigging} isDefeated={isDefeated} characterType={characterType} />
         </div>
 
       </div>

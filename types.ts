@@ -76,11 +76,11 @@ export interface FarcasterUser {
   custodyAddress?: string;
 }
 
-export enum SkinType {
-  DEFAULT = 'DEFAULT',
-  WHITE = 'WHITE',
-  BLACK = 'BLACK',
-  GOLD = 'GOLD',
+export enum CharacterType {
+  CHIHUAHUA = 'CHIHUAHUA',
+  CAT = 'CAT',
+  SHIBA = 'SHIBA',
+  RABBIT = 'RABBIT',
 }
 
 // Config Types
