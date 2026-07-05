@@ -59,7 +59,7 @@ const App: React.FC = () => {
     closeTreasureDialog,
     panCamera,
     currentPath // Added
-  } = useGameEngine();
+  } = useGameEngine(lang);
 
 // Farcaster User Integration
   const { user, isBlocked, setIsBlocked } = useFarcasterUser();
@@ -394,10 +394,11 @@ const App: React.FC = () => {
                 message={sysMessage}
                 timeLeft={timeLeft}
                 isGeneratingTreasure={isGeneratingTreasure}
+                lang={lang}
             />
 
             {foundTreasure && (
-                <TreasureDialog treasure={foundTreasure} onClose={closeTreasureDialog} />
+                <TreasureDialog treasure={foundTreasure} onClose={closeTreasureDialog} lang={lang} />
             )}
             </div>
         );

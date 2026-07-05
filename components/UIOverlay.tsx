@@ -9,9 +9,10 @@ interface UIOverlayProps {
   message: string | null;
   timeLeft: number;
   isGeneratingTreasure?: boolean;
+  lang: 'en' | 'ja';
 }
 
-const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGeneratingTreasure }) => {
+const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGeneratingTreasure, lang }) => {
   // Format time mm:ss
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -66,7 +67,7 @@ const UIOverlay: React.FC<UIOverlayProps> = ({ gold, message, timeLeft, isGenera
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl">✨</div>
                 </div>
                 <div className="text-xl font-bold text-white pixel-text-shadow tracking-widest animate-pulse">
-                    お宝を鑑定中...
+                    {lang === 'en' ? 'Appraising...' : 'お宝を鑑定中...'}
                 </div>
              </div>
         </div>

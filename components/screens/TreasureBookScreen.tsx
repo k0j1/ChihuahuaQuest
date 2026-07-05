@@ -315,6 +315,7 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                 treasure={selectedTreasure} 
                 onClose={() => setSelectedTreasure(null)}
                 buttonLabel={lang === 'en' ? 'CLOSE' : '閉じる'}
+                lang={lang}
             />
         )}
         

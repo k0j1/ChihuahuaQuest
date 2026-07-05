@@ -4,13 +4,17 @@ import { THEME, getRarity } from '../constants';
 import { TreasureIcon } from './TreasureIcon';
 
 interface TreasureDialogProps {
-  treasure: Treasure;
+  treasure: Treasure & { nameEn?: string, descriptionEn?: string };
   onClose: () => void;
   buttonLabel?: string;
+  lang?: 'en' | 'ja';
 }
 
-const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, buttonLabel = "ポケットに入れる" }) => {
+const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, buttonLabel, lang = 'ja' }) => {
   const rarity = getRarity(treasure.value);
+  const finalButtonLabel = buttonLabel || (lang === 'en' ? "Put in pocket" : "ポケットに入れる");
+  const displayName = lang === 'en' && treasure.nameEn ? treasure.nameEn : treasure.name;
+  const displayDesc = lang === 'en' && treasure.descriptionEn ? treasure.descriptionEn : treasure.description;
 
   // Generate stars string
   const starsDisplay = "★".repeat(rarity.stars) + "☆".repeat(5 - rarity.stars);
@@ -43,11 +47,11 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
           </div>
 
           <h2 className="text-2xl font-bold text-white pixel-text-shadow z-10 border-b-2 border-white/20 pb-2 w-full">
-            {treasure.name}
+            {displayName}
           </h2>
 
           <p className="text-sm leading-relaxed text-white/90 z-10 bg-black/20 p-2 rounded">
-            {treasure.description}
+            {displayDesc}
           </p>
 
           <div className="mt-2 px-6 py-2 bg-black/40 rounded-full border border-white/30 text-yellow-300 font-mono text-xl font-bold z-10">
@@ -58,7 +62,7 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
             onClick={onClose}
             className="mt-6 px-8 py-3 bg-red-500 hover:bg-red-600 border-b-4 border-red-800 text-white font-bold rounded pixel-corners active:translate-y-1 active:border-b-0 transition-all z-10 w-full"
           >
-            {buttonLabel}
+            {finalButtonLabel}
           </button>
         </div>
       </div>

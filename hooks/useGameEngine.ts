@@ -5,7 +5,7 @@ import { generateMap } from '../utils/mapGenerator';
 import { generateTreasure, startGameSession, revertGameSession } from '../services/geminiService';
 import { findPath, isWalkable } from '../utils/pathfinding'; // Import pathfinding and isWalkable
 
-export const useGameEngine = () => {
+export const useGameEngine = (lang: 'en' | 'ja' = 'ja') => {
   // Game State
   const [gameState, setGameState] = useState<GameState>(GameState.TITLE);
   const [timeLeft, setTimeLeft] = useState(GAME_CONFIG.GAME_DURATION);
@@ -205,14 +205,14 @@ export const useGameEngine = () => {
         
         // Cannot dig hard surfaces, already dug holes, or treasure marks
         if (tileType === TileType.WATER || tileType === TileType.ROCK) {
-            setSysMessage("ここは硬くて掘れないワン...");
+            setSysMessage(lang === 'en' ? "Too hard to dig here, woof..." : "ここは硬くて掘れないワン...");
             setIsDigging(false);
             setTimeout(() => setSysMessage(null), 1000);
             return;
         }
         
         if (tileType === TileType.HOLE || tileType === TileType.TREASURE_MARK) {
-            setSysMessage("ここはもう掘ったワン...");
+            setSysMessage(lang === 'en' ? "Already dug here, woof..." : "ここはもう掘ったワン...");
             setIsDigging(false);
             setTimeout(() => setSysMessage(null), 1000);
             return;
@@ -369,10 +369,10 @@ export const useGameEngine = () => {
                  currentPathRef.current = [];
                  setIsMoving(false);
                  
-                 setSysMessage("船で移動したワン！");
+                 setSysMessage(lang === 'en' ? "Moved by boat, woof!" : "船で移動したワン！");
                  setTimeout(() => setSysMessage(null), 1500);
              } else {
-                 setSysMessage("そこには行けないワン...");
+                 setSysMessage(lang === 'en' ? "Can't go there, woof..." : "そこには行けないワン...");
                  setTimeout(() => setSysMessage(null), 1000);
              }
         }
@@ -598,7 +598,7 @@ export const useGameEngine = () => {
                     const newSpawns = spawnEnemy(1, newTiles, playerPosRef.current);
                     spawnedEnemies.push(...newSpawns);
                     
-                    setSysMessage(`敵を倒した！`);
+                    setSysMessage(lang === 'en' ? "Enemy defeated!" : `敵を倒した！`);
                     setTimeout(() => setSysMessage(null), 1000);
                     
                     // --- EMERGENCY UNSTUCK LOGIC ---
