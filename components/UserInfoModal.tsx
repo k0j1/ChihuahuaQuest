@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { FarcasterUser } from '../types';
-import { X, User, ExternalLink, Wallet } from 'lucide-react';
+import { X, User, ExternalLink, Wallet, Medal } from 'lucide-react';
 import { THEME } from '../constants';
 import { useTokenBalance } from '../hooks/useTokenBalance';
 import { useAccount } from 'wagmi';
+import { getHighestPriorityTitle } from '../utils/titles';
 
 interface UserInfoModalProps {
   user: FarcasterUser;
@@ -11,9 +12,10 @@ interface UserInfoModalProps {
   gold: number;
   lang: 'en' | 'ja';
   setLang: (l: 'en' | 'ja') => void;
+  inventory: Record<string, { count: number, lastFound: number }>;
 }
 
-const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang, setLang }) => {
+const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang, setLang, inventory }) => {
   const { address, isConnected } = useAccount();
 
   // Aggregate all addresses to check
@@ -26,6 +28,8 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang
   }, [user]);
 
   const { balance: chhBalance, isLoading: isChhLoading } = useTokenBalance(allAddresses);
+  
+  const currentTitle = useMemo(() => getHighestPriorityTitle(inventory), [inventory]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
@@ -69,9 +73,17 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({ user, onClose, gold, lang
             <h2 className="text-2xl font-bold text-gray-800 pixel-text-shadow truncate">
                 {user.displayName || user.username}
             </h2>
-            <div className="text-gray-500 font-mono text-sm mb-4">
+            <div className="text-gray-500 font-mono text-sm mb-2">
                 @{user.username} (FID: {user.fid})
             </div>
+            
+            {/* Player Title */}
+            {currentTitle && (
+                <div className="mb-4 inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full border border-yellow-300 shadow-sm" title={lang === 'en' ? currentTitle.conditionEn : currentTitle.conditionJa}>
+                    <Medal size={12} className="text-yellow-600" />
+                    {lang === 'en' ? currentTitle.nameEn : currentTitle.nameJa}
+                </div>
+            )}
             
             {/* Wallet Address Display */}
             {isConnected && address && (

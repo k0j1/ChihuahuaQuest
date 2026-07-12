@@ -1,10 +1,11 @@
 import React from 'react';
-import { MapPin, BookOpen, FileText, Play, Settings, PaintBucket } from 'lucide-react';
+import { MapPin, BookOpen, FileText, Play, Settings, PaintBucket, Medal } from 'lucide-react';
 import { GAME_CONFIG } from '../../constants';
 import PlayerCharacter from '../PlayerCharacter';
 import Enemy from '../Enemy';
 import { Direction, CharacterType } from '../../types';
 import ResetCooldownButton from '../ResetCooldownButton';
+import { TITLES } from '../../utils/titles';
 
 interface TitleScreenProps {
   onStart: () => void;
@@ -18,11 +19,10 @@ interface TitleScreenProps {
   remainingTime?: string;
   lang: 'en' | 'ja';
   currentCharacter: CharacterType;
-  unlockedCharacters: CharacterType[];
-  onChangeCharacter: (character: CharacterType) => void;
+  currentTitleId: string;
 }
 
-const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang, currentCharacter, unlockedCharacters, onChangeCharacter }) => {
+const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenBook, onOpenLitepaper, onOpenAdmin, onResetSuccess, isAdmin, canClaim, isBlocked, remainingTime, lang, currentCharacter, currentTitleId }) => {
 const [isLocallyReset, setIsLocallyReset] = React.useState(false);
   const actualCanClaim = canClaim || isLocallyReset;
 
@@ -31,11 +31,7 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
     onResetSuccess();
   };
 
-  const handleNextCharacter = () => {
-    const currentIndex = unlockedCharacters.indexOf(currentCharacter);
-    const nextIndex = (currentIndex + 1) % unlockedCharacters.length;
-    onChangeCharacter(unlockedCharacters[nextIndex]);
-  };
+  const currentTitle = TITLES.find(t => t.id === currentTitleId);
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-dotgothic select-none">
@@ -117,14 +113,6 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
       {/* Main Character: Player */}
       <div className="absolute bottom-[35%] left-[42%] z-40 scale-[2.5]">
           <PlayerCharacter direction={Direction.RIGHT} isMoving={false} isDigging={false} characterType={currentCharacter} />
-          {unlockedCharacters.length > 1 && (
-            <button 
-              onClick={handleNextCharacter} 
-              className="absolute -top-4 -right-8 pointer-events-auto bg-white/20 hover:bg-white/40 p-1 rounded-full backdrop-blur-sm transition-colors text-white"
-            >
-              <PaintBucket size={10} />
-            </button>
-          )}
       </div>
 
       {/* Enemy: Slime */}
@@ -154,7 +142,14 @@ const [isLocallyReset, setIsLocallyReset] = React.useState(false);
                   </h1>
               </div>
               <div className="bg-black/60 px-6 py-2 rounded-xl backdrop-blur-sm border-2 border-[#9F7928] flex flex-col items-center gap-1">
-                  <p className="text-[#FDB931] text-sm md:text-base font-bold tracking-wider uppercase">Digging Trap RPG</p>
+                  {currentTitle ? (
+                      <div className="flex items-center gap-1">
+                          <Medal size={16} className="text-yellow-400" />
+                          <p className="text-[#FDB931] text-sm md:text-base font-bold tracking-wider uppercase">{lang === 'en' ? currentTitle.nameEn : currentTitle.nameJa}</p>
+                      </div>
+                  ) : (
+                      <p className="text-[#FDB931] text-sm md:text-base font-bold tracking-wider uppercase">Digging Trap RPG</p>
+                  )}
                   <div className="w-full h-px bg-[#9F7928]/50 my-0.5"></div>
                   <p className="text-[#FDB931] text-xs font-bold tracking-wider uppercase">TIME LIMIT: {GAME_CONFIG.GAME_DURATION}s</p>
                   <p className="text-[#FDB931] text-xs font-bold tracking-wider uppercase">DAILY QUEST LIMIT: 1/1</p>

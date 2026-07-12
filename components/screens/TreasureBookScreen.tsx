@@ -1,17 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import sdk from "@farcaster/frame-sdk";
 import { TREASURE_REGISTRY } from '../../services/geminiService';
-import { Treasure } from '../../types';
-import { ArrowLeft, BookOpen, Star, Sparkles, Trophy, Share2 } from 'lucide-react';
+import { Treasure, CharacterType } from '../../types';
+import { ArrowLeft, BookOpen, Star, Sparkles, Trophy, Share2, Medal, User, Filter, X } from 'lucide-react';
 import TreasureDialog from '../TreasureDialog';
 import { getRarity } from '../../constants';
 import { TreasureIcon } from '../TreasureIcon';
+import { TITLES, getUnlockedTitles } from '../../utils/titles';
 
 interface TreasureBookScreenProps {
   discoveredIds: number[];
   inventory: Record<string, { count: number, lastFound: number }>;
   onBack: () => void;
   isAdmin?: boolean;
+  currentCharacter: CharacterType;
+  unlockedCharacters: CharacterType[];
+  onChangeCharacter: (character: CharacterType) => void;
+  currentTitleId: string;
+  onChangeTitleId: (titleId: string) => void;
 }
 
 const getLuxuryRarityStyle = (stars: number) => {
@@ -65,9 +71,15 @@ const getLuxuryRarityStyle = (stars: number) => {
     }
 };
 
-const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja' }> = ({ discoveredIds, inventory, onBack, isAdmin, lang }) => {
+const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja' }> = ({ discoveredIds, inventory, onBack, isAdmin, lang, currentCharacter, unlockedCharacters, onChangeCharacter, currentTitleId, onChangeTitleId }) => {
   const [selectedTreasure, setSelectedTreasure] = useState<Treasure | null>(null);
   const [showAllAsAdmin, setShowAllAsAdmin] = useState(false);
+  const [activeTab, setActiveTab] = useState<'treasures' | 'titles' | 'characters'>('treasures');
+  const [filterAcquiredOnly, setFilterAcquiredOnly] = useState(false);
+  const [filterRarity, setFilterRarity] = useState<number | 'all'>('all');
+  const [filterMinPrice, setFilterMinPrice] = useState<string>('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState<string>('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Calculate completion percentage
   const total = TREASURE_REGISTRY.length;
@@ -78,6 +90,22 @@ const TreasureBookScreen: React.FC<TreasureBookScreenProps & { lang: 'en' | 'ja'
   const totalAcquired = useMemo(() => {
     return Object.values(inventory).reduce((acc, item) => acc + item.count, 0);
   }, [inventory]);
+
+  const filteredTreasures = useMemo(() => {
+      return TREASURE_REGISTRY.filter(treasure => {
+          const isDiscovered = discoveredIds.includes(treasure.catalogId) || (isAdmin && showAllAsAdmin);
+          
+          if (filterAcquiredOnly && !isDiscovered) return false;
+          
+          const rarity = getRarity(treasure.value);
+          if (filterRarity !== 'all' && rarity.stars !== filterRarity) return false;
+          
+          if (filterMinPrice !== '' && treasure.value < Number(filterMinPrice)) return false;
+          if (filterMaxPrice !== '' && treasure.value > Number(filterMaxPrice)) return false;
+          
+          return true;
+      });
+  }, [discoveredIds, isAdmin, showAllAsAdmin, filterAcquiredOnly, filterRarity, filterMinPrice, filterMaxPrice]);
 
   const handleShare = async () => {
     const rarityStats = TREASURE_REGISTRY.reduce((acc, t) => {
@@ -228,6 +256,31 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
             </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex items-center justify-center gap-2 bg-[#0a0502] pt-2 pb-2 z-20 border-b border-[#302010]">
+            <button 
+                onClick={() => setActiveTab('treasures')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-t-lg transition-colors border-t border-x ${activeTab === 'treasures' ? 'bg-[#2c1810] border-[#8b6508] text-[#ffd700]' : 'bg-[#150a06] border-[#302010] text-[#8b6508] hover:text-[#daa520]'}`}
+            >
+                <Star size={16} />
+                <span className="font-bold text-sm">{lang === 'en' ? 'TREASURES' : 'お宝'}</span>
+            </button>
+            <button 
+                onClick={() => setActiveTab('titles')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-t-lg transition-colors border-t border-x ${activeTab === 'titles' ? 'bg-[#2c1810] border-[#8b6508] text-[#ffd700]' : 'bg-[#150a06] border-[#302010] text-[#8b6508] hover:text-[#daa520]'}`}
+            >
+                <Medal size={16} />
+                <span className="font-bold text-sm">{lang === 'en' ? 'TITLES' : '称号'}</span>
+            </button>
+            <button 
+                onClick={() => setActiveTab('characters')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-t-lg transition-colors border-t border-x ${activeTab === 'characters' ? 'bg-[#2c1810] border-[#8b6508] text-[#ffd700]' : 'bg-[#150a06] border-[#302010] text-[#8b6508] hover:text-[#daa520]'}`}
+            >
+                <User size={16} />
+                <span className="font-bold text-sm">{lang === 'en' ? 'CHARACTERS' : 'キャラ'}</span>
+            </button>
+        </div>
+
         {/* Fancy Progress Bar */}
         <div className="w-full h-2 bg-[#0a0502] relative z-20 shadow-[inset_0_2px_4px_rgba(0,0,0,1)] border-b border-[#302010]">
             <div 
@@ -243,8 +296,74 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
             {/* Page texture */}
             <div className="absolute inset-0 bg-[#fbf5e6] opacity-[0.03] pointer-events-none mix-blend-overlay"></div>
             
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-5 pb-16 relative z-10 w-full max-w-6xl mx-auto">
-                {TREASURE_REGISTRY.map((treasure) => {
+            {activeTab === 'treasures' && (
+            <div className="w-full max-w-6xl mx-auto flex flex-col gap-4">
+                {/* Filter UI */}
+                <div className="flex flex-col gap-2">
+                    <button 
+                        onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        className={`self-end flex items-center gap-2 px-3 py-1.5 rounded transition-colors border ${isFilterOpen ? 'bg-[#2c1810] border-[#8b6508] text-[#ffd700]' : 'bg-[#150a06] border-[#302010] text-[#8b6508] hover:text-[#daa520]'}`}
+                    >
+                        <Filter size={16} />
+                        <span className="font-bold text-sm">{lang === 'en' ? 'FILTERS' : '絞り込み'}</span>
+                    </button>
+                    {isFilterOpen && (
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#150a06] p-4 rounded-lg border border-[#302010] animate-drop-in">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={filterAcquiredOnly} 
+                                        onChange={(e) => setFilterAcquiredOnly(e.target.checked)}
+                                        className="accent-[#8b6508]"
+                                    />
+                                    <span className="text-sm font-bold text-[#f4ecd8]">{lang === 'en' ? 'Acquired Only' : '獲得済みのみ'}</span>
+                                </label>
+                                <select 
+                                    value={filterRarity} 
+                                    onChange={(e) => setFilterRarity(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                                    className="bg-[#0a0502] text-[#f4ecd8] border border-[#302010] p-1 rounded text-sm font-bold"
+                                >
+                            <option value="all">{lang === 'en' ? 'All Rarities' : '全レアリティ'}</option>
+                            <option value={1}>★1</option>
+                            <option value={2}>★2</option>
+                            <option value={3}>★3</option>
+                            <option value={4}>★4</option>
+                            <option value={5}>★5</option>
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                        <span className="font-bold text-[#daa520]">¥</span>
+                        <input 
+                            type="number" 
+                            placeholder="Min" 
+                            value={filterMinPrice}
+                            onChange={(e) => setFilterMinPrice(e.target.value)}
+                            className="w-20 bg-[#0a0502] text-[#f4ecd8] border border-[#302010] p-1 rounded placeholder-[#503020]"
+                        />
+                        <span className="text-[#8b6508]">-</span>
+                        <input 
+                            type="number" 
+                            placeholder="Max" 
+                            value={filterMaxPrice}
+                            onChange={(e) => setFilterMaxPrice(e.target.value)}
+                            className="w-20 bg-[#0a0502] text-[#f4ecd8] border border-[#302010] p-1 rounded placeholder-[#503020]"
+                        />
+                        {(filterAcquiredOnly || filterRarity !== 'all' || filterMinPrice !== '' || filterMaxPrice !== '') && (
+                            <button 
+                                onClick={() => { setFilterAcquiredOnly(false); setFilterRarity('all'); setFilterMinPrice(''); setFilterMaxPrice(''); }}
+                                className="p-1 text-[#8b6508] hover:text-[#daa520] transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+                )}
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-5 pb-16 relative z-10 w-full">
+                    {filteredTreasures.map((treasure) => {
                     const isDiscovered = discoveredIds.includes(treasure.catalogId) || (isAdmin && showAllAsAdmin);
                     const rarity = getRarity(treasure.value);
                     const itemCount = inventory[treasure.catalogId]?.count || 0;
@@ -266,12 +385,10 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                             {isDiscovered && (
                                 <div className={`absolute inset-0 border-[1.5px] ${style.innerBorder} opacity-60 m-1 rounded-[4px] pointer-events-none`}></div>
                             )}
-
                             {/* ID Badge */}
                             <div className={`absolute top-1 left-1.5 text-[9px] md:text-[10px] font-mono z-10 font-bold ${isDiscovered ? 'text-white/60' : 'text-[#503020]'}`}>
                                 No.{treasure.catalogId.toString().padStart(3, '0')}
                             </div>
-
                             {isDiscovered ? (
                                 <>
                                     {/* Icon */}
@@ -285,12 +402,10 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                                             {lang === 'en' ? (treasure.nameEn || treasure.name) : treasure.name}
                                         </div>
                                     </div>
-
                                     {/* Amount Badge */}
                                     <div className={`absolute top-1.5 right-1.5 flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 ${style.badgeBg} border ${style.border} rounded-full text-[9px] font-mono font-extrabold text-white shadow-[0_2px_4px_rgba(0,0,0,0.6)] z-20`}>
                                         x{itemCount}
                                     </div>
-
                                     {/* Rarity Stars */}
                                     <div className="absolute bottom-5 inset-x-0 flex justify-center z-10 opacity-90 mb-0.5">
                                         <div className={`text-[8px] md:text-[9px] tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,1)] ${rarity.stars === 5 ? 'text-[#ffb6c1]' : rarity.stars === 4 ? 'text-[#e9d5ff]' : rarity.stars === 3 ? 'text-[#fef08a]' : rarity.stars === 2 ? 'text-[#bfdbfe]' : 'text-gray-300'}`}>
@@ -307,6 +422,109 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                     );
                 })}
             </div>
+            </div>
+            )}
+
+            {activeTab === 'titles' && (
+                <div className="flex flex-col gap-3 pb-16 relative z-10 w-full max-w-2xl mx-auto">
+                    {TITLES.map((title) => {
+                        const isUnlocked = title.isUnlocked(inventory) || (isAdmin && showAllAsAdmin);
+                        const isSelected = currentTitleId === title.id;
+                        return (
+                            <div 
+                                key={title.id}
+                                onClick={() => isUnlocked && onChangeTitleId(title.id)}
+                                className={`
+                                    relative rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-4 transition-all duration-300 border-2
+                                    ${isUnlocked 
+                                        ? isSelected 
+                                            ? 'bg-gradient-to-r from-[#4a3500] to-[#2a1d00] border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.4)] cursor-pointer' 
+                                            : 'bg-[#1a0f0a] border-[#8b6508] hover:border-[#daa520] cursor-pointer'
+                                        : 'bg-[#0a0502] border-[#301a10] opacity-70 grayscale'
+                                    }
+                                `}
+                            >
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Medal size={20} className={isUnlocked ? 'text-[#ffd700]' : 'text-[#503020]'} />
+                                        <h3 className={`font-bold text-lg ${isUnlocked ? 'text-[#fffacd]' : 'text-[#8b6508]'}`}>
+                                            {isUnlocked ? (lang === 'en' ? title.nameEn : title.nameJa) : '???'}
+                                        </h3>
+                                        {isSelected && (
+                                            <span className="ml-2 text-xs font-bold text-black bg-[#ffd700] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                {lang === 'en' ? 'SELECTED' : '選択中'}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className={`text-sm ${isUnlocked ? 'text-[#daa520]' : 'text-[#503020]'}`}>
+                                        {lang === 'en' ? title.conditionEn : title.conditionJa}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {activeTab === 'characters' && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pb-16 relative z-10 w-full max-w-4xl mx-auto">
+                    {Object.values(CharacterType).map((charType) => {
+                        const isUnlocked = unlockedCharacters.includes(charType) || (isAdmin && showAllAsAdmin);
+                        const isSelected = currentCharacter === charType;
+                        
+                        let conditionEn = "";
+                        let conditionJa = "";
+                        if (charType === CharacterType.CHIHUAHUA) {
+                            conditionEn = "Default";
+                            conditionJa = "初期キャラクター";
+                        } else if (charType === CharacterType.CAT) {
+                            conditionEn = "Acquire 20 treasures";
+                            conditionJa = "財宝を累計20個獲得";
+                        } else if (charType === CharacterType.SHIBA) {
+                            conditionEn = "Acquire 50 treasures";
+                            conditionJa = "財宝を累計50個獲得";
+                        } else if (charType === CharacterType.RABBIT) {
+                            conditionEn = "Acquire 100 treasures";
+                            conditionJa = "財宝を累計100個獲得";
+                        }
+
+                        return (
+                            <div 
+                                key={charType}
+                                onClick={() => isUnlocked && onChangeCharacter(charType)}
+                                className={`
+                                    relative rounded-lg p-4 flex flex-col items-center text-center gap-3 transition-all duration-300 border-2
+                                    ${isUnlocked 
+                                        ? isSelected 
+                                            ? 'bg-gradient-to-b from-[#2a1d00] to-[#1a0f0a] border-[#ffd700] shadow-[0_0_15px_rgba(255,215,0,0.4)] cursor-pointer' 
+                                            : 'bg-[#1a0f0a] border-[#8b6508] hover:border-[#daa520] cursor-pointer'
+                                        : 'bg-[#0a0502] border-[#301a10] opacity-70 grayscale'
+                                    }
+                                `}
+                            >
+                                <div className="text-4xl">
+                                    {charType === CharacterType.CHIHUAHUA ? '🐕' : 
+                                     charType === CharacterType.CAT ? '🐈' : 
+                                     charType === CharacterType.SHIBA ? '🦊' : '🐇'}
+                                </div>
+                                <div>
+                                    <h3 className={`font-bold ${isUnlocked ? 'text-[#fffacd]' : 'text-[#8b6508]'}`}>
+                                        {isUnlocked ? charType.toUpperCase() : '???'}
+                                    </h3>
+                                    <div className={`text-xs mt-1 h-8 ${isUnlocked ? 'text-[#daa520]' : 'text-[#503020]'}`}>
+                                        {lang === 'en' ? conditionEn : conditionJa}
+                                    </div>
+                                </div>
+                                {isSelected && (
+                                    <div className="absolute -top-3 right-2 text-[10px] font-bold text-black bg-[#ffd700] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        {lang === 'en' ? 'SELECTED' : '選択中'}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
         
         {/* Detail Modal */}

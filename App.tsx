@@ -23,19 +23,54 @@ import MaintenanceScreen from './components/screens/MaintenanceScreen';
 
 import AdminScreen from './components/screens/AdminScreen';
 import BottomNav from './components/BottomNav';
+import { getHighestPriorityTitle, Title } from './utils/titles';
+import TitleUnlockOverlay from './components/TitleUnlockOverlay';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [treasureInventory, setTreasureInventory] = useState<Record<string, { count: number, lastFound: number }>>({});
   
+  const [newlyUnlockedTitle, setNewlyUnlockedTitle] = useState<Title | null>(null);
+  const prevTitleIdRef = React.useRef<string | null>(null);
+  const isInitialLoadRef = React.useRef(true);
+
+  useEffect(() => {
+      // Avoid firing on initial load or empty
+      if (isInitialLoadRef.current) {
+          // If we have some inventory, or after first render cycle, consider initial load done
+          // We wait until we have some actual state updates before tracking unlocks
+          const timer = setTimeout(() => {
+              isInitialLoadRef.current = false;
+              prevTitleIdRef.current = getHighestPriorityTitle(treasureInventory)?.id || "novice";
+          }, 1000);
+          return () => clearTimeout(timer);
+      }
+      
+      const currentTitle = getHighestPriorityTitle(treasureInventory);
+      if (!currentTitle) return;
+      
+      if (prevTitleIdRef.current && prevTitleIdRef.current !== currentTitle.id) {
+          setNewlyUnlockedTitle(currentTitle);
+      }
+      prevTitleIdRef.current = currentTitle.id;
+  }, [treasureInventory]);
+
   const [currentCharacter, setCurrentCharacter] = useState<CharacterType>(() => {
       const saved = localStorage.getItem('playerCharacter');
       return (saved as CharacterType) || CharacterType.CHIHUAHUA;
   });
 
+  const [currentTitleId, setCurrentTitleId] = useState<string>(() => {
+      return localStorage.getItem('playerTitle') || "novice";
+  });
+
   useEffect(() => {
       localStorage.setItem('playerCharacter', currentCharacter);
   }, [currentCharacter]);
+
+  useEffect(() => {
+      localStorage.setItem('playerTitle', currentTitleId);
+  }, [currentTitleId]);
   const publicClient = usePublicClient();
   const { address } = useAccount();
 
@@ -271,6 +306,7 @@ const App: React.FC = () => {
               onClose={() => setIsUserInfoOpen(false)} 
               lang={lang}
               setLang={setLang}
+              inventory={treasureInventory}
           />
         )}
       </>
@@ -288,7 +324,7 @@ const App: React.FC = () => {
         return (
          <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.6
+                   Ver 1.0.9
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -303,8 +339,7 @@ const App: React.FC = () => {
                         remainingTime={remainingTime}
                         lang={lang}
                         currentCharacter={currentCharacter}
-                        unlockedCharacters={unlockedCharacters}
-                        onChangeCharacter={setCurrentCharacter}
+                        currentTitleId={currentTitleId}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
@@ -324,7 +359,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.6
+                   Ver 1.0.9
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 
@@ -333,6 +368,11 @@ const App: React.FC = () => {
                         onBack={resetGame}
                         isAdmin={isAdmin}
                         lang={lang}
+                        currentCharacter={currentCharacter}
+                        unlockedCharacters={unlockedCharacters}
+                        onChangeCharacter={setCurrentCharacter}
+                        currentTitleId={currentTitleId}
+                        onChangeTitleId={setCurrentTitleId}
                     />
                 </div>
                 <BottomNav currentGameState={gameState} onNavigate={(state) => setGameState(state)} />
@@ -434,6 +474,13 @@ const App: React.FC = () => {
     <>
         {renderScreen()}
         {renderUserLayer()}
+        {newlyUnlockedTitle && (
+            <TitleUnlockOverlay 
+                title={newlyUnlockedTitle} 
+                lang={lang} 
+                onClose={() => setNewlyUnlockedTitle(null)} 
+            />
+        )}
     </>
   );
 };
