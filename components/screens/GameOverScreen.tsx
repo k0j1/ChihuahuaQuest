@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import sdk from "@farcaster/frame-sdk";
 import { Clock, Skull, Trophy, Star, Loader2, Share2 } from 'lucide-react';
 import { GameState, Treasure } from '../../types';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
-import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI } from '../../constants';
+import { TREASURE_CONTRACT_ADDRESS, TREASURE_CONTRACT_ABI, getRarity } from '../../constants';
 import { TreasureIcon } from '../TreasureIcon';
 
 interface GameOverScreenProps {
@@ -23,6 +23,14 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimStatus, setClaimStatus] = useState<string | null>(null);
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [canClose, setCanClose] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCanClose(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const copyError = () => {
     if (errorDetail) {
@@ -108,7 +116,10 @@ const GameOverScreen: React.FC<GameOverScreenProps> = ({ gameState, gold, collec
   };
 
   const handleShare = async () => {
-    const treasuresText = collectedTreasures.map(t => `- ${lang === 'en' ? t.nameEn || t.name : t.name}`).join('\n');
+    const treasuresText = collectedTreasures.map(t => {
+      const rarityStars = getRarity(t.value).stars;
+      return `- [★${rarityStars}] ${lang === 'en' ? t.nameEn || t.name : t.name}`;
+    }).join('\n');
     
     const textEn = `Rewards Obtained:
 CHH Amount: ${gold} $CHH
@@ -261,7 +272,8 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
 
             <button 
                 onClick={onRestart}
-                className="w-full py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 pixel-corners active:scale-95 transition-transform shadow-red-200 shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1"
+                disabled={!canClose}
+                className="w-full py-3 bg-red-500 text-white font-bold rounded hover:bg-red-600 pixel-corners active:scale-95 transition-transform shadow-red-200 shadow-lg border-b-4 border-red-700 active:border-b-0 active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {lang === 'en' ? 'Back to Title' : 'タイトルへ戻る'}
             </button>
