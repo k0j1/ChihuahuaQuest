@@ -288,6 +288,9 @@ const App: React.FC = () => {
     if (totalAcquired >= 20) characters.push(CharacterType.CAT);
     if (totalAcquired >= 50) characters.push(CharacterType.SHIBA);
     if (totalAcquired >= 100) characters.push(CharacterType.RABBIT);
+    if (totalAcquired >= 200) characters.push(CharacterType.PENGUIN);
+    if (totalAcquired >= 500) characters.push(CharacterType.BEAR);
+    if (totalAcquired >= 1000) characters.push(CharacterType.DRAGON);
     return characters;
   }, [treasureInventory]);
 
@@ -324,7 +327,7 @@ const App: React.FC = () => {
         return (
          <div className="h-[100dvh] flex flex-col relative">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.10
+                   Ver 1.0.12
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TitleScreen 
@@ -359,7 +362,7 @@ const App: React.FC = () => {
         return (
             <div className="h-[100dvh] flex flex-col bg-slate-900">
                 <div className="absolute top-2 left-2 z-[60] text-white/50 text-[10px] bg-black/30 px-2 py-0.5 rounded backdrop-blur-sm">
-                   Ver 1.0.10
+                   Ver 1.0.12
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <TreasureBookScreen 

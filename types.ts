@@ -81,6 +81,9 @@ export enum CharacterType {
   CAT = 'CAT',
   SHIBA = 'SHIBA',
   RABBIT = 'RABBIT',
+  PENGUIN = 'PENGUIN',
+  BEAR = 'BEAR',
+  DRAGON = 'DRAGON',
 }
 
 // Config Types

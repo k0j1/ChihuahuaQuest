@@ -3,6 +3,38 @@ import { Treasure } from '../types';
 import { THEME, getRarity } from '../constants';
 import { TreasureIcon } from './TreasureIcon';
 
+const Confetti = ({ stars }: { stars: number }) => {
+  const count = stars * 15;
+  const particles = Array.from({ length: count }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    animationDelay: Math.random() * 0.5,
+    animationDuration: 1 + Math.random(),
+    color: ['#FFC107', '#FF5722', '#E91E63', '#9C27B0', '#2196F3', '#4CAF50', '#ffffff'][Math.floor(Math.random() * 7)],
+    size: 4 + Math.random() * 6
+  }));
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-[50]">
+      {particles.map(p => (
+        <div 
+          key={p.id}
+          className="absolute top-[-10%] animate-confetti-fall pixel-corners"
+          style={{
+            left: `${p.left}%`,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            animationDelay: `${p.animationDelay}s`,
+            animationDuration: `${p.animationDuration}s`,
+            opacity: 0.8
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 interface TreasureDialogProps {
   treasure: Treasure & { nameEn?: string, descriptionEn?: string };
   onClose: () => void;
@@ -21,8 +53,9 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
 
   return (
     <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <Confetti stars={rarity.stars} />
       <div 
-        className={`w-full max-w-md rounded-lg p-1 pixel-corners animate-bounce-in shadow-2xl ${rarity.shadowClass}`}
+        className={`w-full max-w-md rounded-lg p-1 pixel-corners animate-bounce-in shadow-2xl ${rarity.shadowClass} z-10`}
         style={{ border: `4px solid ${THEME.colors.border}` }}
       >
         <div className={`p-6 rounded-inner flex flex-col items-center gap-4 text-center ${rarity.bgClass} relative overflow-hidden`}>
@@ -74,6 +107,13 @@ const TreasureDialog: React.FC<TreasureDialogProps> = ({ treasure, onClose, butt
         }
         .animate-bounce-in {
           animation: bounce-in 0.4s ease-out forwards;
+        }
+        @keyframes confetti-fall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+        }
+        .animate-confetti-fall {
+          animation: confetti-fall linear forwards;
         }
       `}</style>
     </div>

@@ -158,6 +158,131 @@ const PlayerCharacter: React.FC<PlayerCharacterProps> = ({ direction, isMoving, 
           </>
         );
 
+      case CharacterType.PENGUIN:
+        return (
+          <>
+            {/* Penguin Head & Body */}
+            <div className="absolute top-1 left-2 w-6 h-8 bg-black pixel-corners rounded-t-full">
+               {/* White belly */}
+               <div className="absolute top-2 left-1 w-4 h-6 bg-white rounded-t-full"></div>
+               {/* Eyes */}
+               {isDefeated ? (
+                 <>
+                   <div className="absolute top-3 left-1 text-[6px] leading-none font-bold text-red-500">X</div>
+                   <div className="absolute top-3 right-1 text-[6px] leading-none font-bold text-red-500">X</div>
+                 </>
+               ) : (
+                 <>
+                   <div className="absolute top-3 left-1 w-1 h-1 bg-black rounded-full"></div>
+                   <div className="absolute top-3 right-1 w-1 h-1 bg-black rounded-full"></div>
+                 </>
+               )}
+               {/* Beak */}
+               <div className="absolute top-4 left-2 w-2 h-1.5 bg-yellow-400 rounded-b-full"></div>
+               {/* Flippers */}
+               <div className={`absolute top-4 -left-1 w-1 h-3 bg-black rounded-l-full origin-right ${isDigging ? 'animate-bounce' : ''}`}></div>
+               <div className={`absolute top-4 -right-1 w-1 h-3 bg-black rounded-r-full origin-left ${isDigging ? 'animate-bounce' : ''}`}></div>
+            </div>
+            {/* Feet */}
+            <div className="absolute top-9 left-2.5 w-1 h-1 bg-yellow-500"></div>
+            <div className="absolute top-9 left-5 w-1 h-1 bg-yellow-500"></div>
+            {/* Paws */}
+            {isDigging && (
+                <div className="absolute top-8 left-2 w-6 h-2 bg-yellow-200 blur-[1px]"></div>
+            )}
+          </>
+        );
+
+      case CharacterType.BEAR:
+        return (
+          <>
+            {/* Bear Head */}
+            <div className="absolute top-0 left-1 w-8 h-6 bg-amber-800 pixel-corners">
+              {/* Ears */}
+              <div className="absolute -top-2 -left-1 w-3 h-3 bg-amber-800 rounded-full"></div>
+              <div className="absolute -top-2 -right-1 w-3 h-3 bg-amber-800 rounded-full"></div>
+              {/* Inner Ears */}
+              <div className="absolute -top-1 left-0 w-1.5 h-1.5 bg-amber-900 rounded-full"></div>
+              <div className="absolute -top-1 right-0 w-1.5 h-1.5 bg-amber-900 rounded-full"></div>
+              {/* Eyes */}
+              {isDefeated ? (
+                <>
+                  <div className="absolute top-2 left-2 text-[8px] leading-none font-bold text-red-500">X</div>
+                  <div className="absolute top-2 right-2 text-[8px] leading-none font-bold text-red-500">X</div>
+                </>
+              ) : (
+                <>
+                  <div className="absolute top-2 left-2 w-1.5 h-1.5 bg-black rounded-full"></div>
+                  <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-black rounded-full"></div>
+                </>
+              )}
+              {/* Muzzle */}
+              <div className="absolute top-3 left-2 w-4 h-3 bg-amber-600 rounded-full"></div>
+              <div className="absolute top-3.5 left-3.5 w-1 h-1 bg-black rounded-full"></div>
+            </div>
+            
+            {/* Bear Body */}
+            <div className="absolute top-6 left-1 w-8 h-4 bg-amber-900 pixel-corners">
+              {/* Tail */}
+              <div className="absolute top-1 -left-1 w-2 h-2 bg-amber-800 rounded-full"></div>
+            </div>
+            {/* Legs */}
+            <div className="absolute top-9 left-2 w-2 h-1 bg-amber-950"></div>
+            <div className="absolute top-9 left-6 w-2 h-1 bg-amber-950"></div>
+            
+            {/* Paws */}
+            {isDigging && (
+                <div className="absolute top-8 left-1 w-8 h-2 bg-amber-700 blur-[1px]"></div>
+            )}
+          </>
+        );
+
+      case CharacterType.DRAGON:
+        return (
+          <>
+            {/* Dragon Head */}
+            <div className="absolute top-0 left-1 w-7 h-6 bg-green-600 pixel-corners">
+              {/* Horns */}
+              <div className="absolute -top-2 -left-1 w-2 h-3 bg-yellow-400"></div>
+              <div className="absolute -top-2 right-1 w-2 h-3 bg-yellow-400"></div>
+              {/* Eyes */}
+              {isDefeated ? (
+                <>
+                  <div className="absolute top-2 left-1 text-[8px] leading-none font-bold text-red-500">X</div>
+                  <div className="absolute top-2 right-2 text-[8px] leading-none font-bold text-red-500">X</div>
+                </>
+              ) : (
+                <>
+                  <div className="absolute top-2 left-1 w-2 h-1 bg-yellow-300"></div>
+                  <div className="absolute top-2 right-2 w-2 h-1 bg-yellow-300"></div>
+                </>
+              )}
+              {/* Snout */}
+              <div className="absolute top-3 left-1.5 w-5 h-3 bg-green-500 rounded-b-full"></div>
+              {/* Nostrils */}
+              <div className="absolute top-4 left-2.5 w-1 h-1 bg-black rounded-full"></div>
+              <div className="absolute top-4 right-1.5 w-1 h-1 bg-black rounded-full"></div>
+            </div>
+            
+            {/* Dragon Body */}
+            <div className="absolute top-6 left-1 w-8 h-4 bg-green-700 pixel-corners">
+              {/* Wings */}
+              <div className={`absolute -top-3 -left-2 w-4 h-4 bg-green-500 rounded-tl-full border-t-2 border-l-2 border-green-400 origin-bottom-right ${isMoving ? 'animate-bounce' : 'animate-pulse'}`}></div>
+              <div className={`absolute -top-3 right-0 w-4 h-4 bg-green-500 rounded-tr-full border-t-2 border-r-2 border-green-400 origin-bottom-left ${isMoving ? 'animate-bounce' : 'animate-pulse'}`}></div>
+              {/* Tail */}
+              <div className={`absolute top-1 -left-3 w-4 h-2 bg-green-600 rounded-l-full origin-right ${isDigging ? 'animate-bounce' : ''}`}></div>
+            </div>
+            {/* Legs */}
+            <div className="absolute top-9 left-2 w-2 h-1 bg-green-900"></div>
+            <div className="absolute top-9 left-6 w-2 h-1 bg-green-900"></div>
+            
+            {/* Paws */}
+            {isDigging && (
+                <div className="absolute top-8 left-1 w-8 h-2 bg-green-400 blur-[1px]"></div>
+            )}
+          </>
+        );
+
       case CharacterType.CHIHUAHUA:
       default:
         return (

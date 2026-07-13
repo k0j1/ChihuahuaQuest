@@ -486,6 +486,15 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                         } else if (charType === CharacterType.RABBIT) {
                             conditionEn = "Acquire 100 treasures";
                             conditionJa = "財宝を累計100個獲得";
+                        } else if (charType === CharacterType.PENGUIN) {
+                            conditionEn = "Acquire 200 treasures";
+                            conditionJa = "財宝を累計200個獲得";
+                        } else if (charType === CharacterType.BEAR) {
+                            conditionEn = "Acquire 500 treasures";
+                            conditionJa = "財宝を累計500個獲得";
+                        } else if (charType === CharacterType.DRAGON) {
+                            conditionEn = "Acquire 1000 treasures";
+                            conditionJa = "財宝を累計1000個獲得";
                         }
 
                         return (
@@ -505,7 +514,10 @@ https://farcaster.xyz/miniapps/EnmWQ9uvTlHa/chihuahuaquest`;
                                 <div className="text-4xl">
                                     {charType === CharacterType.CHIHUAHUA ? '🐕' : 
                                      charType === CharacterType.CAT ? '🐈' : 
-                                     charType === CharacterType.SHIBA ? '🦊' : '🐇'}
+                                     charType === CharacterType.SHIBA ? '🦊' : 
+                                     charType === CharacterType.RABBIT ? '🐇' :
+                                     charType === CharacterType.PENGUIN ? '🐧' :
+                                     charType === CharacterType.BEAR ? '🐻' : '🐉'}
                                 </div>
                                 <div>
                                     <h3 className={`font-bold ${isUnlocked ? 'text-[#fffacd]' : 'text-[#8b6508]'}`}>
